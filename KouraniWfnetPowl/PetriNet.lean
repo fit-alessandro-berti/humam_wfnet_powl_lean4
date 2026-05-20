@@ -174,6 +174,16 @@ theorem markedGraph_placePostset_subsingleton
           left = right :=
   hmarked.2 place
 
+theorem markedGraph_freeChoice
+    {net : PetriNet Place Trans}
+    (hmarked : markedGraph net) :
+    freeChoice net := by
+  intro place left right hleft hright other
+  have hsame : left = right :=
+    hmarked.2 place left right hleft hright
+  subst right
+  exact Iff.rfl
+
 theorem freeChoice_transPreset_iff_of_common_source
     {net : PetriNet Place Trans}
     (hfree : freeChoice net)

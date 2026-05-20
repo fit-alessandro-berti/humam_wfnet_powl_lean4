@@ -58,8 +58,9 @@ The current proof spine is:
   branch-subnet closure/disjointness API lemmas, exact unique-preset/postset
   API lemmas plus checked split/join consequences of the
   explicit-decision-point condition, and checked free-choice preset equality,
-  no-decision-place-to-marked-graph equivalence, and marked-graph non-boundary
-  unique-preset/postset consequences, plus the corresponding safe-and-sound,
+  no-decision-place-to-marked-graph equivalence, marked-graph-to-free-choice,
+  and marked-graph non-boundary unique-preset/postset consequences, plus the
+  corresponding safe-and-sound,
   explicit-decision, paired-decision, and branch-subnet requirement layers for
   semi-block-structured WF-nets.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
@@ -218,9 +219,11 @@ The current proof spine is:
   interface for Theorem 1, with explicit global and local single-transition
   base-case constructors and object-level successful-conversion constructors
   for XOR, loop, ordinary partial-order, and normalized partial-order recursive
-  cases, plus a global `SubtypeCertifiedConversion` interface with mapped
-  language preservation/equality and XOR, loop, and partial-order composition
-  wrappers over subtype trace decompositions. A `SemanticCertifiedConversion`
+  cases. Normalized partial-order component certificates now also expose direct
+  Theorem 1 language preservation/equality, semantic conversion, and existential
+  POWL-model equality wrappers. A global `SubtypeCertifiedConversion` interface
+  supplies mapped language preservation/equality and XOR, loop, and partial-order
+  composition wrappers over subtype trace decompositions. A `SemanticCertifiedConversion`
   interface now packages direct global language-equivalence certificates and
   can be built from structural `CertifiedConversion`s, full-transition subtype
   conversions, and subtype-composed XOR/loop/partial-order models, with
@@ -299,7 +302,9 @@ The current proof spine is:
   uniqueness,
   free-choice preset-equality,
   marked-graph/no-decision equivalence, semi-block no-decision
-  safe-and-sound marked-graph consequences, bundled marked-graph and
+  safe-and-sound marked-graph consequences, marked-graph/no-decision
+  free-choice consequences, a bundled semi-block no-decision
+  structural package that carries free-choiceness, bundled marked-graph and
   direct no-decision non-boundary unique-place-flow wrappers with exact `↔`
   rewrite forms and transition-equality corollaries, plus semi-block
   specializations used by the completeness argument, and Lemma 2 loop trace

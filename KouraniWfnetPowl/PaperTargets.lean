@@ -8904,6 +8904,141 @@ def theorem1_semantic_conversion_partial_order_of_subtype_conversions
   semantic_certified_conversion_partial_order_of_subtype_conversions
     branches hdecompose
 
+def theorem1_semantic_conversion_partial_order_normalized_of_component_certificates
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl
+            (PetriNet.NormalizedTrans
+              {trans : Trans // part.val trans})))
+    (ComponentPlace :
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        Powl
+          (PetriNet.NormalizedTrans
+            {trans : Trans // part.val trans})) -> Type x)
+    (componentDecidable :
+      ∀ branch, DecidableEq (ComponentPlace branch))
+    (componentNet :
+      ∀ branch,
+        WorkflowNet
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans}))
+    (certificates :
+      ∀ branch,
+        @ConversionCertificate
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          Activity
+          (componentDecidable branch)
+          (componentNet branch)
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.language
+                  (componentNet branch)
+                  (WorkflowNet.normalizedLabel
+                    (fun trans :
+                        {trans : Trans // branch.1.val trans} =>
+                      label trans.val))))
+            word) :
+    SemanticCertifiedConversion net label :=
+  semantic_certified_conversion_partial_order_normalized_of_component_certificates
+    branches ComponentPlace componentDecidable componentNet
+    certificates hdecompose
+
+theorem theorem1_partial_order_normalized_exists_model_language_eq_of_component_certificates
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl
+            (PetriNet.NormalizedTrans
+              {trans : Trans // part.val trans})))
+    (ComponentPlace :
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        Powl
+          (PetriNet.NormalizedTrans
+            {trans : Trans // part.val trans})) -> Type x)
+    (componentDecidable :
+      ∀ branch, DecidableEq (ComponentPlace branch))
+    (componentNet :
+      ∀ branch,
+        WorkflowNet
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans}))
+    (certificates :
+      ∀ branch,
+        @ConversionCertificate
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          Activity
+          (componentDecidable branch)
+          (componentNet branch)
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.language
+                  (componentNet branch)
+                  (WorkflowNet.normalizedLabel
+                    (fun trans :
+                        {trans : Trans // branch.1.val trans} =>
+                      label trans.val))))
+            word) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  theorem1_semantic_conversion_exists_model_language_eq
+    (theorem1_semantic_conversion_partial_order_normalized_of_component_certificates
+      branches ComponentPlace componentDecidable componentNet
+      certificates hdecompose)
+
 structure LocalCertifiedConversion
     {Place : Type u}
     {Trans : Type v}
@@ -13434,6 +13569,31 @@ theorem theorem2_no_decision_places_iff_marked_graph
       PetriNet.markedGraph net.toPetriNet :=
   WorkflowNet.noDecisionPlaces_iff_markedGraph
 
+theorem theorem2_marked_graph_free_choice
+    {Place : Type u}
+    {Trans : Type v}
+    {net : PetriNet Place Trans}
+    (hmarked : PetriNet.markedGraph net) :
+    PetriNet.freeChoice net :=
+  PetriNet.markedGraph_freeChoice hmarked
+
+theorem theorem2_workflow_marked_graph_free_choice
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet) :
+    PetriNet.freeChoice net.toPetriNet :=
+  PetriNet.markedGraph_freeChoice hmarked
+
+theorem theorem2_no_decision_places_free_choice
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hnoDecision : WorkflowNet.noDecisionPlaces net) :
+    PetriNet.freeChoice net.toPetriNet :=
+  theorem2_workflow_marked_graph_free_choice
+    (WorkflowNet.noDecisionPlaces_markedGraph hnoDecision)
+
 theorem theorem2_marked_graph_no_split_decision_place
     {Place : Type u}
     {Trans : Type v}
@@ -17073,6 +17233,105 @@ theorem theorem2_semi_block_subnet_no_decision_place_to_trans_eq_of_non_sink
     left = right :=
   WorkflowNet.semiBlockStructuredSubnetRequirements_noDecision_placeToTrans_eq_of_ne_sink
     hrequirements hnoDecision hplace hleft hright
+
+structure SemiBlockNoDecisionStructuralPackage
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) where
+  noDecision : WorkflowNet.noDecisionPlaces net
+  safeAndSound : WorkflowNet.safeAndSound net
+  markedGraph : PetriNet.markedGraph net.toPetriNet
+  freeChoice : PetriNet.freeChoice net.toPetriNet
+  noSplitDecision :
+    ∀ place, ¬ WorkflowNet.splitDecisionPlace net place
+  noJoinDecision :
+    ∀ place, ¬ WorkflowNet.joinDecisionPlace net place
+  uniquePresetOfNonSource :
+    ∀ {place : Place},
+      place ≠ net.source ->
+        WorkflowNet.uniquePresetOfPlace net place
+  uniquePostsetOfNonSink :
+    ∀ {place : Place},
+      place ≠ net.sink ->
+        WorkflowNet.uniquePostsetOfPlace net place
+  uniquePlaceFlowOfNonboundary :
+    ∀ {place : Place},
+      place ≠ net.source ->
+        place ≠ net.sink ->
+          WorkflowNet.uniquePresetOfPlace net place ∧
+            WorkflowNet.uniquePostsetOfPlace net place
+  transToPlaceIffOfNonSource :
+    ∀ {place : Place},
+      place ≠ net.source ->
+        ∀ {trans : Trans},
+          net.transToPlace trans place ->
+            ∀ other,
+              net.transToPlace other place ↔ other = trans
+  placeToTransIffOfNonSink :
+    ∀ {place : Place},
+      place ≠ net.sink ->
+        ∀ {trans : Trans},
+          net.placeToTrans place trans ->
+            ∀ other,
+              net.placeToTrans place other ↔ other = trans
+  transToPlaceEqOfNonSource :
+    ∀ {place : Place},
+      place ≠ net.source ->
+        ∀ {left right : Trans},
+          net.transToPlace left place ->
+            net.transToPlace right place ->
+              left = right
+  placeToTransEqOfNonSink :
+    ∀ {place : Place},
+      place ≠ net.sink ->
+        ∀ {left right : Trans},
+          net.placeToTrans place left ->
+            net.placeToTrans place right ->
+              left = right
+
+def theorem2_semi_block_subnet_no_decision_structural_package
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net) :
+    SemiBlockNoDecisionStructuralPackage net where
+  noDecision := hnoDecision
+  safeAndSound :=
+    theorem2_semi_block_subnet_safe_and_sound hrequirements
+  markedGraph :=
+    theorem2_semi_block_subnet_no_decision_marked_graph
+      hrequirements hnoDecision
+  freeChoice :=
+    theorem2_no_decision_places_free_choice hnoDecision
+  noSplitDecision :=
+    theorem2_no_decision_places_no_split hnoDecision
+  noJoinDecision :=
+    theorem2_no_decision_places_no_join hnoDecision
+  uniquePresetOfNonSource :=
+    theorem2_semi_block_subnet_no_decision_unique_preset_of_non_source_place
+      hrequirements hnoDecision
+  uniquePostsetOfNonSink :=
+    theorem2_semi_block_subnet_no_decision_unique_postset_of_non_sink_place
+      hrequirements hnoDecision
+  uniquePlaceFlowOfNonboundary :=
+    theorem2_semi_block_subnet_no_decision_unique_place_flow_of_nonboundary
+      hrequirements hnoDecision
+  transToPlaceIffOfNonSource :=
+    theorem2_semi_block_subnet_no_decision_trans_to_place_iff_of_non_source
+      hrequirements hnoDecision
+  placeToTransIffOfNonSink :=
+    theorem2_semi_block_subnet_no_decision_place_to_trans_iff_of_non_sink
+      hrequirements hnoDecision
+  transToPlaceEqOfNonSource :=
+    theorem2_semi_block_subnet_no_decision_trans_to_place_eq_of_non_source
+      hrequirements hnoDecision
+  placeToTransEqOfNonSink :=
+    theorem2_semi_block_subnet_no_decision_place_to_trans_eq_of_non_sink
+      hrequirements hnoDecision
 
 theorem theorem2_semi_block_subnet_pairing_exists
     {Place : Type u}
