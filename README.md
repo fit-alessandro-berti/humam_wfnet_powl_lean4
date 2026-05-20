@@ -298,8 +298,12 @@ The current proof spine is:
   requirements-level certificate builders,
   source-to-sink bridges from those bundled certificates into the main
   `SemiBlockCompletenessCase` XOR/partial-order cases and theorem-facing
-  certified-conversion, language-equality, and visible-activity witness
-  consequences,
+  certified-conversion, global language preservation/equality, explicit
+  concrete-model XOR/partial-order language preservation/equality with
+  safe-and-sound, original-transition existential model, concrete
+  visible-activity witness, and original-transition existential
+  visible-activity witness consequences, existential language-equality, and
+  abstract visible-activity witness consequences,
   conversion builders, and package-returning continuations from the explicit
   branch package, a
   `LocalCertifiedConversion` interface
