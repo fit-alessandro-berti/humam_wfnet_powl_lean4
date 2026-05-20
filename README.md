@@ -303,7 +303,12 @@ The current proof spine is:
   safe-and-sound, original-transition existential model, concrete
   visible-activity witness, and original-transition existential
   visible-activity witness consequences, existential language-equality, and
-  abstract visible-activity witness consequences,
+  abstract visible-activity witness consequences, plus package-level
+  source-to-sink global explicit language, safe existential language-equality,
+  and visible-activity witness wrappers for certified branch data,
+  requirements-to-package continuations for source-to-sink global explicit
+  language preservation/equality plus safe-and-sound paired global language
+  equality and existential model consequences,
   conversion builders, and package-returning continuations from the explicit
   branch package, a
   `LocalCertifiedConversion` interface
