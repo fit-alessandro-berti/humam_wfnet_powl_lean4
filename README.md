@@ -47,7 +47,9 @@ The current proof spine is:
   dead transitions and can complete from reachable markings.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
-  for Definition 5.
+  for Definition 5. XOR semantics is also exposed as a finite union of component
+  languages, and loop semantics has a component-language congruence theorem for
+  substituting equivalent body/redo models.
 - `KouraniWfnetPowl.NetLanguage`: WF-net trace language `L(N)` from firing
   sequences and checked single-transition/base-case language preservation
   lemmas. The language layer now records subtype-trace erasure and generic
@@ -57,7 +59,9 @@ The current proof spine is:
   labels and preserve trace words for original traces with silent normalization
   boundaries, yielding a checked original-language-to-normalized-language
   inclusion and an equivalence with the normalized language restricted to
-  boundary-shaped enter/original/exit traces.
+  boundary-shaped enter/original/exit traces. Under original proper completion,
+  arbitrary accepting traces of the normalized net are also erased back to
+  original accepting traces, yielding full normalized-language equivalence.
 - `KouraniWfnetPowl.Patterns`: partition, XOR, loop, and partial-order pattern
   predicates plus the corresponding projection constructions from Section 4;
   also includes checked facts that XOR projection paths lift to the original net
@@ -113,6 +117,8 @@ The current proof spine is:
 - `KouraniWfnetPowl.PaperTargets`: named Section 5 proof targets and checked
   semantic preservation theorems corresponding to the POWL-language side of
   Lemmas 4, 5, and 6, the checked base case for Theorem 1, and named checked
+  union-list/component-equivalence variants for the XOR and loop language
+  preservation arguments, plus named checked
   dependencies for Lemma 1 path restriction, reachable-marking lifting,
   selected-sequence restriction, safeness preservation, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection

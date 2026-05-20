@@ -291,6 +291,252 @@ theorem normalizedBoundaryLanguage_iff_original
   · exact original_language_of_normalizedBoundaryLanguage
   · exact normalizedBoundaryLanguage_of_original
 
+theorem normalized_firingSequence_from_original_or_final_aux
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : properCompletion net)
+    (label : Trans -> TransitionLabel Activity)
+    {before : Marking Place}
+    {start : Marking (PetriNet.NormalizedPlace Place)}
+    (hstart : start = Marking.normalize before)
+    (hbeforeReachable : reachable net (initial net) before)
+    {trace : List (PetriNet.NormalizedTrans Trans)}
+    {after : Marking (PetriNet.NormalizedPlace Place)}
+    (sequence :
+      FiringSequence
+        (normalizedNet net)
+        start
+        trace
+        after) :
+    (∃ originalAfter originalTrace,
+      reachable net (initial net) originalAfter ∧
+        after = Marking.normalize originalAfter ∧
+        FiringSequence net before originalTrace originalAfter ∧
+        traceWord (normalizedLabel label) trace =
+          traceWord label originalTrace) ∨
+      (∃ originalTrace,
+        FiringSequence net before originalTrace (final net) ∧
+          after = final (normalizedNet net) ∧
+          traceWord (normalizedLabel label) trace =
+            traceWord label originalTrace) := by
+  induction sequence generalizing before with
+  | nil =>
+      left
+      exact
+        ⟨before, [], hbeforeReachable, hstart,
+          FiringSequence.nil, rfl⟩
+  | cons hfires tail ih =>
+      rename_i middle after trans rest
+      rw [hstart] at hfires
+      cases trans with
+      | enter =>
+          exact False.elim
+            (normalized_original_marking_enter_not_enabled
+              net before hfires.1)
+      | original trans =>
+          have horiginalEnabled :
+              enabled net before trans :=
+            (normalized_original_enabled_iff net before trans).mp
+              hfires.1
+          let originalAfter := fire net before trans
+          have horiginalFires :
+              fires net before trans originalAfter :=
+            ⟨horiginalEnabled, rfl⟩
+          have hmiddle :
+              middle = Marking.normalize originalAfter := by
+            rw [hfires.2, normalized_original_fire_eq]
+          have horiginalAfterReachable :
+              reachable net (initial net) originalAfter := by
+            rcases hbeforeReachable with ⟨priorTrace, priorSequence⟩
+            exact ⟨priorTrace ++ [trans],
+              firingSequence_snoc priorSequence horiginalFires⟩
+          rcases ih hmiddle horiginalAfterReachable with hleft | hright
+          · rcases hleft with
+              ⟨finalOriginal, originalTrace, hfinalReachable,
+                hafter, originalSequence, hword⟩
+            left
+            refine
+              ⟨finalOriginal, trans :: originalTrace,
+                hfinalReachable, hafter,
+                FiringSequence.cons horiginalFires originalSequence,
+                ?_⟩
+            simp [traceWord, Powl.transitionWord, normalizedLabel, hword]
+          · rcases hright with
+              ⟨originalTrace, originalSequence, hafter, hword⟩
+            right
+            refine
+              ⟨trans :: originalTrace,
+                FiringSequence.cons horiginalFires originalSequence,
+                hafter, ?_⟩
+            simp [traceWord, Powl.transitionWord, normalizedLabel, hword]
+      | exit =>
+          have hsinkPositive :
+              before net.sink > 0 :=
+            (normalized_exit_enabled_iff net
+              (Marking.normalize before)).mp hfires.1
+          have hbeforeFinal :
+              before = final net :=
+            hproper before hbeforeReachable hsinkPositive
+          subst hbeforeFinal
+          have hmiddle :
+              middle = final (normalizedNet net) :=
+            hfires.2.trans (normalized_exit_fires net).2.symm
+          rw [hmiddle] at tail
+          rcases normalized_final_firingSequence_nil net tail with
+            ⟨hrest, hafter⟩
+          subst hrest
+          subst hafter
+          right
+          refine ⟨[], FiringSequence.nil, rfl, ?_⟩
+          simp [traceWord, Powl.transitionWord, normalizedLabel,
+            TransitionLabel.word]
+
+theorem normalized_firingSequence_from_original_or_final
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : properCompletion net)
+    (label : Trans -> TransitionLabel Activity)
+    {before : Marking Place}
+    (hbeforeReachable : reachable net (initial net) before)
+    {trace : List (PetriNet.NormalizedTrans Trans)}
+    {after : Marking (PetriNet.NormalizedPlace Place)}
+    (sequence :
+      FiringSequence
+        (normalizedNet net)
+        (Marking.normalize before)
+        trace
+        after) :
+    (∃ originalAfter originalTrace,
+      reachable net (initial net) originalAfter ∧
+        after = Marking.normalize originalAfter ∧
+        FiringSequence net before originalTrace originalAfter ∧
+        traceWord (normalizedLabel label) trace =
+          traceWord label originalTrace) ∨
+      (∃ originalTrace,
+        FiringSequence net before originalTrace (final net) ∧
+          after = final (normalizedNet net) ∧
+          traceWord (normalizedLabel label) trace =
+            traceWord label originalTrace) :=
+  normalized_firingSequence_from_original_or_final_aux
+    net hproper label rfl hbeforeReachable sequence
+
+theorem normalized_firingSequence_to_original_accepting_of_proper
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : properCompletion net)
+    (label : Trans -> TransitionLabel Activity)
+    {before : Marking Place}
+    (hbeforeReachable : reachable net (initial net) before)
+    {trace : List (PetriNet.NormalizedTrans Trans)}
+    (sequence :
+      FiringSequence
+        (normalizedNet net)
+        (Marking.normalize before)
+        trace
+        (final (normalizedNet net))) :
+    ∃ originalTrace,
+      FiringSequence net before originalTrace (final net) ∧
+        traceWord (normalizedLabel label) trace =
+          traceWord label originalTrace := by
+  rcases normalized_firingSequence_from_original_or_final
+      net hproper label hbeforeReachable sequence with hleft | hright
+  · rcases hleft with
+      ⟨originalAfter, originalTrace, _hreachable,
+        hafter, originalSequence, hword⟩
+    exact False.elim
+      (normalized_final_ne_normalize net originalAfter hafter)
+  · rcases hright with ⟨originalTrace, originalSequence, _hafter, hword⟩
+    exact ⟨originalTrace, originalSequence, hword⟩
+
+theorem normalized_accepting_firingSequence_to_original_of_proper
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : properCompletion net)
+    (label : Trans -> TransitionLabel Activity)
+    {trace : List (PetriNet.NormalizedTrans Trans)}
+    (sequence :
+      FiringSequence
+        (normalizedNet net)
+        (initial (normalizedNet net))
+        trace
+        (final (normalizedNet net))) :
+    ∃ originalTrace,
+      FiringSequence net (initial net) originalTrace (final net) ∧
+        traceWord (normalizedLabel label) trace =
+          traceWord label originalTrace := by
+  generalize hstart : initial (normalizedNet net) = start at sequence
+  generalize hfinish : final (normalizedNet net) = finish at sequence
+  cases sequence with
+  | nil =>
+      exact False.elim
+        (normalized_initial_ne_final net (hstart.trans hfinish.symm))
+  | cons hfires tail =>
+      rename_i middle trans rest
+      rw [← hstart] at hfires
+      rw [← hfinish] at tail
+      cases trans with
+      | enter =>
+          have hmiddle :
+              middle = Marking.normalize (initial net) :=
+            hfires.2.trans (normalized_enter_fire_eq net)
+          rw [hmiddle] at tail
+          exact
+            normalized_firingSequence_to_original_accepting_of_proper
+              (net := net) (hproper := hproper) (label := label)
+              (trace := rest) ⟨[], FiringSequence.nil⟩ tail
+      | original trans =>
+          exact False.elim
+            (normalized_initial_original_not_enabled net trans hfires.1)
+      | exit =>
+          exact False.elim
+            (normalized_initial_exit_not_enabled net hfires.1)
+
+theorem original_language_of_normalized_language_of_proper
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hproper : properCompletion net)
+    {word : List Activity}
+    (hlanguage : language (normalizedNet net) (normalizedLabel label) word) :
+    language net label word := by
+  rcases hlanguage with ⟨trace, sequence, hword⟩
+  rcases normalized_accepting_firingSequence_to_original_of_proper
+      net hproper label sequence with
+    ⟨originalTrace, originalSequence, htraceWord⟩
+  refine language_intro originalSequence ?_
+  rw [← hword]
+  exact htraceWord.symm
+
+theorem normalized_language_iff_original_of_proper
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity)
+    (hproper : properCompletion net)
+    (word : List Activity) :
+    language (normalizedNet net) (normalizedLabel label) word ↔
+      language net label word := by
+  constructor
+  · exact original_language_of_normalized_language_of_proper hproper
+  · exact normalized_language_of_original
+
 theorem restricted_language_of_typed_original_sequence
     {Place : Type u}
     {Trans : Type v}

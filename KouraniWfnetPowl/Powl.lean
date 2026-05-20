@@ -53,6 +53,45 @@ theorem listGet?_exists_mem
     ∃ member, member ∈ items ∧ member = item :=
   ⟨item, listGet?_mem hget, rfl⟩
 
+theorem listGet?_map_eq_some
+    {items : List alpha}
+    {f : alpha -> beta}
+    {index : Nat}
+    {item : alpha}
+    (hget : listGet? items index = some item) :
+    listGet? (items.map f) index = some (f item) := by
+  induction items generalizing index with
+  | nil =>
+      cases index <;> cases hget
+  | cons head tail ih =>
+      cases index with
+      | zero =>
+          simp [listGet?] at hget ⊢
+          exact congrArg f hget
+      | succ index =>
+          simp [listGet?] at hget ⊢
+          exact ih hget
+
+theorem listGet?_map_some
+    {items : List alpha}
+    {f : alpha -> beta}
+    {index : Nat}
+    {mapped : beta}
+    (hget : listGet? (items.map f) index = some mapped) :
+    ∃ item, listGet? items index = some item ∧ f item = mapped := by
+  induction items generalizing index with
+  | nil =>
+      cases index <;> cases hget
+  | cons head tail ih =>
+      cases index with
+      | zero =>
+          simp [listGet?] at hget
+          exact ⟨head, by simp [listGet?], hget⟩
+      | succ index =>
+          simp [listGet?] at hget
+          rcases ih hget with ⟨item, hitem, hmapped⟩
+          exact ⟨item, by simpa [listGet?] using hitem, hmapped⟩
+
 abbrev TaggedTrace (Activity : Type u) := List (Nat × Activity)
 
 def eraseTags : TaggedTrace Activity -> List Activity
@@ -180,6 +219,50 @@ def partialOrderLanguage
         listGet? models index = some model ->
           language label model (component index tagged)
 
+def partialOrderComponentLanguage
+    {Activity : Type u}
+    (order : Rel Nat)
+    (components : List (Language Activity)) :
+    Language Activity :=
+  fun word =>
+    ∃ tagged,
+      eraseTags tagged = word ∧
+      tagsBounded components.length tagged ∧
+      orderPreserving order tagged ∧
+      ∀ index componentLanguage,
+        listGet? components index = some componentLanguage ->
+          componentLanguage (component index tagged)
+
+theorem partialOrderLanguage_iff_componentLanguage
+    {Transition : Type u}
+    {Activity : Type v}
+    {label : Transition -> TransitionLabel Activity}
+    {order : Rel Nat}
+    {models : List (Powl Transition)}
+    {word : List Activity} :
+    partialOrderLanguage label order models word ↔
+      partialOrderComponentLanguage
+        order
+        (models.map (language label))
+        word := by
+  constructor
+  · intro h
+    rcases h with ⟨tagged, herase, hbounded, horder, hcomponents⟩
+    refine ⟨tagged, herase, ?_, horder, ?_⟩
+    · simpa using hbounded
+    · intro index componentLanguage hget
+      rcases listGet?_map_some hget with
+        ⟨model, hmodel, hcomponentEq⟩
+      subst hcomponentEq
+      exact hcomponents index model hmodel
+  · intro h
+    rcases h with ⟨tagged, herase, hbounded, horder, hcomponents⟩
+    refine ⟨tagged, herase, ?_, horder, ?_⟩
+    · simpa using hbounded
+    · intro index model hget
+      exact hcomponents index (language label model)
+        (listGet?_map_eq_some hget)
+
 theorem xor_language_iff
     {Transition : Type u}
     {Activity : Type v}
@@ -196,6 +279,28 @@ theorem xor_language_iff
   · intro h
     rcases h with ⟨model, hmem, hsem⟩
     exact Semantics.xor hmem hsem
+
+theorem xor_language_iff_unionList
+    {Transition : Type u}
+    {Activity : Type v}
+    {label : Transition -> TransitionLabel Activity}
+    {models : List (Powl Transition)}
+    {word : List Activity} :
+    language label (Powl.xor models) word ↔
+      Language.unionList (models.map (language label)) word := by
+  rw [xor_language_iff]
+  constructor
+  · intro h
+    rcases h with ⟨model, hmem, hsemantics⟩
+    exact Language.unionList_iff_exists_mem.mpr
+      ⟨language label model, List.mem_map.mpr ⟨model, hmem, rfl⟩,
+        hsemantics⟩
+  · intro h
+    rcases Language.unionList_iff_exists_mem.mp h with
+      ⟨component, hcomponent, hsemantics⟩
+    rcases List.mem_map.mp hcomponent with ⟨model, hmem, hcomponentEq⟩
+    subst hcomponentEq
+    exact ⟨model, hmem, hsemantics⟩
 
 theorem loop_language_iff_loop
     {Transition : Type u}
@@ -229,6 +334,25 @@ theorem loop_language_iff_loop
         exact Semantics.loopOnce hbody
     | more hbody hredo _ ih =>
         exact Semantics.loopMore hbody hredo ih
+
+theorem loop_language_congr
+    {Transition : Type u}
+    {Activity : Type v}
+    {label : Transition -> TransitionLabel Activity}
+    {body redo body' redo' : Powl Transition}
+    (hbody :
+      ∀ word,
+        language label body word ↔ language label body' word)
+    (hredo :
+      ∀ word,
+        language label redo word ↔ language label redo' word)
+    (word : List Activity) :
+    language label (Powl.loop body redo) word ↔
+      language label (Powl.loop body' redo') word :=
+  Iff.trans loop_language_iff_loop
+    (Iff.trans
+      (Language.loop_congr hbody hredo word)
+      loop_language_iff_loop.symm)
 
 theorem loop_language_iff_concat_star
     {Transition : Type u}

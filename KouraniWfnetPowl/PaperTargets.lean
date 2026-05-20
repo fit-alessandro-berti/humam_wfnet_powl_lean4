@@ -51,6 +51,49 @@ theorem xor_pattern_language_preservation
   rw [Powl.xor_language_iff]
   exact Iff.symm (hnet word)
 
+theorem xor_pattern_language_preservation_unionList
+    {Activity : Type u}
+    {Trans : Type v}
+    {label : Trans -> TransitionLabel Activity}
+    {models : List (Powl Trans)}
+    {netLanguage : Language Activity}
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Language.unionList (models.map (Powl.language label)) word) :
+    ∀ word,
+      Powl.language label (Powl.xor models) word ↔ netLanguage word := by
+  intro word
+  rw [Powl.xor_language_iff_unionList]
+  exact Iff.symm (hnet word)
+
+theorem xor_pattern_language_preservation_of_component_equiv
+    {Activity : Type u}
+    {Trans : Type v}
+    {label : Trans -> TransitionLabel Activity}
+    {models : List (Powl Trans)}
+    {componentLanguage : Powl Trans -> Language Activity}
+    {netLanguage : Language Activity}
+    (hcomponent :
+      ∀ model word,
+        Powl.language label model word ↔ componentLanguage model word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Language.unionList (models.map componentLanguage) word) :
+    ∀ word,
+      Powl.language label (Powl.xor models) word ↔ netLanguage word := by
+  intro word
+  rw [Powl.xor_language_iff_unionList]
+  exact Iff.trans
+    (Language.unionList_map_congr
+      models
+      (Powl.language label)
+      componentLanguage
+      hcomponent
+      word)
+    (Iff.symm (hnet word))
+
 theorem loop_pattern_language_preservation
     {Activity : Type u}
     {Trans : Type v}
@@ -70,6 +113,37 @@ theorem loop_pattern_language_preservation
   intro word
   rw [Powl.loop_language_iff_concat_star]
   exact Iff.symm (hnet word)
+
+theorem loop_pattern_language_preservation_of_component_equiv
+    {Activity : Type u}
+    {Trans : Type v}
+    {label : Trans -> TransitionLabel Activity}
+    {body redo : Powl Trans}
+    {bodyLanguage redoLanguage netLanguage : Language Activity}
+    (hbody :
+      ∀ word,
+        Powl.language label body word ↔ bodyLanguage word)
+    (hredo :
+      ∀ word,
+        Powl.language label redo word ↔ redoLanguage word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Language.concat bodyLanguage
+            (Language.Star
+              (Language.concat redoLanguage bodyLanguage)) word) :
+    ∀ word,
+      Powl.language label (Powl.loop body redo) word ↔ netLanguage word := by
+  intro word
+  rw [Powl.loop_language_iff_concat_star]
+  exact Iff.trans
+    (Language.concat_congr
+      hbody
+      (Language.star_congr
+        (fun item =>
+          Language.concat_congr hredo hbody item))
+      word)
+    (Iff.symm (hnet word))
 
 theorem partial_order_pattern_language_preservation
     {Activity : Type u}
@@ -743,6 +817,67 @@ theorem normalization_boundary_language_iff_original
     WorkflowNet.normalizedBoundaryLanguage net label word ↔
       WorkflowNet.language net label word :=
   WorkflowNet.normalizedBoundaryLanguage_iff_original net label word
+
+theorem normalization_accepting_sequence_to_original_of_proper
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : WorkflowNet.properCompletion net)
+    (label : Trans -> TransitionLabel Activity)
+    {trace : List (PetriNet.NormalizedTrans Trans)}
+    (sequence :
+      WorkflowNet.FiringSequence
+        (WorkflowNet.normalizedNet net)
+        (WorkflowNet.initial (WorkflowNet.normalizedNet net))
+        trace
+        (WorkflowNet.final (WorkflowNet.normalizedNet net))) :
+    ∃ originalTrace,
+      WorkflowNet.FiringSequence
+        net
+        (WorkflowNet.initial net)
+        originalTrace
+        (WorkflowNet.final net) ∧
+        WorkflowNet.traceWord (WorkflowNet.normalizedLabel label) trace =
+          WorkflowNet.traceWord label originalTrace :=
+  WorkflowNet.normalized_accepting_firingSequence_to_original_of_proper
+    net hproper label sequence
+
+theorem normalization_original_language_of_normalized_language_of_proper
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hproper : WorkflowNet.properCompletion net)
+    {word : List Activity}
+    (hlanguage :
+      WorkflowNet.language
+        (WorkflowNet.normalizedNet net)
+        (WorkflowNet.normalizedLabel label)
+        word) :
+    WorkflowNet.language net label word :=
+  WorkflowNet.original_language_of_normalized_language_of_proper
+    hproper hlanguage
+
+theorem normalization_language_iff_original_of_proper
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity)
+    (hproper : WorkflowNet.properCompletion net)
+    (word : List Activity) :
+    WorkflowNet.language
+      (WorkflowNet.normalizedNet net)
+      (WorkflowNet.normalizedLabel label)
+      word ↔
+        WorkflowNet.language net label word :=
+  WorkflowNet.normalized_language_iff_original_of_proper
+    net label hproper word
 
 theorem lemma3_entry_point_source_iff
     {Place : Type u}
