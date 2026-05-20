@@ -48,8 +48,12 @@ The current proof spine is:
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
   for Definition 5. XOR semantics is also exposed as a finite union of component
-  languages, and loop semantics has a component-language congruence theorem for
-  substituting equivalent body/redo models.
+  languages, with an explicitly index-aligned congruence theorem for replacing
+  equivalent branch languages. Loop semantics has a component-language
+  congruence theorem for substituting equivalent body/redo models. Partial-order
+  semantics now has a generic indexed component-language form, plus both
+  map-based and explicitly index-aligned congruence theorems for replacing
+  equivalent submodels componentwise.
 - `KouraniWfnetPowl.NetLanguage`: WF-net trace language `L(N)` from firing
   sequences and checked single-transition/base-case language preservation
   lemmas. The language layer now records subtype-trace erasure and generic
@@ -117,8 +121,9 @@ The current proof spine is:
 - `KouraniWfnetPowl.PaperTargets`: named Section 5 proof targets and checked
   semantic preservation theorems corresponding to the POWL-language side of
   Lemmas 4, 5, and 6, the checked base case for Theorem 1, and named checked
-  union-list/component-equivalence variants for the XOR and loop language
-  preservation arguments, plus named checked
+  union-list/component-equivalence variants for the XOR, loop, and partial-order
+  language preservation arguments, including explicitly indexed Lemma 4 and
+  Lemma 6 component-list forms, plus named checked
   dependencies for Lemma 1 path restriction, reachable-marking lifting,
   selected-sequence restriction, safeness preservation, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection

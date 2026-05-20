@@ -22,6 +22,64 @@ inductive Powl (Transition : Type u) where
 
 namespace Powl
 
+def map
+    {Transition : Type u}
+    {Transition' : Type v}
+    (f : Transition -> Transition') :
+    Powl Transition -> Powl Transition' :=
+  Powl.rec
+    (motive_1 := fun _ => Powl Transition')
+    (motive_2 := fun _ => List (Powl Transition'))
+    (fun trans => Powl.atom (f trans))
+    (fun _ mappedModels => Powl.xor mappedModels)
+    (fun _ _ mappedBody mappedRedo => Powl.loop mappedBody mappedRedo)
+    (fun order _ mappedModels => Powl.partialOrder order mappedModels)
+    []
+    (fun _ _ mappedHead mappedTail => mappedHead :: mappedTail)
+
+theorem map_atom
+    {Transition : Type u}
+    {Transition' : Type v}
+    (f : Transition -> Transition')
+    (trans : Transition) :
+    map f (Powl.atom trans) = Powl.atom (f trans) :=
+  rfl
+
+theorem map_xor
+    {Transition : Type u}
+    {Transition' : Type v}
+    (f : Transition -> Transition')
+    (models : List (Powl Transition)) :
+    map f (Powl.xor models) = Powl.xor (models.map (map f)) := by
+  induction models with
+  | nil =>
+      rfl
+  | cons head tail ih =>
+      simp [map, ih]
+
+theorem map_loop
+    {Transition : Type u}
+    {Transition' : Type v}
+    (f : Transition -> Transition')
+    (body redo : Powl Transition) :
+    map f (Powl.loop body redo) =
+      Powl.loop (map f body) (map f redo) :=
+  rfl
+
+theorem map_partialOrder
+    {Transition : Type u}
+    {Transition' : Type v}
+    (f : Transition -> Transition')
+    (order : Rel Nat)
+    (models : List (Powl Transition)) :
+    map f (Powl.partialOrder order models) =
+      Powl.partialOrder order (models.map (map f)) := by
+  induction models with
+  | nil =>
+      rfl
+  | cons head tail ih =>
+      simp [map, ih]
+
 def listGet? : List alpha -> Nat -> Option alpha
   | [], _ => none
   | head :: _, 0 => some head
@@ -52,6 +110,41 @@ theorem listGet?_exists_mem
     (hget : listGet? items index = some item) :
     ∃ member, member ∈ items ∧ member = item :=
   ⟨item, listGet?_mem hget, rfl⟩
+
+theorem listGet?_some_lt_length
+    {items : List alpha}
+    {index : Nat}
+    {item : alpha}
+    (hget : listGet? items index = some item) :
+    index < items.length := by
+  induction items generalizing index with
+  | nil =>
+      cases index <;> cases hget
+  | cons head tail ih =>
+      cases index with
+      | zero =>
+          simp
+      | succ index =>
+          simp [listGet?] at hget
+          exact Nat.succ_lt_succ (ih hget)
+
+theorem listGet?_exists_of_lt_length
+    {items : List alpha}
+    {index : Nat}
+    (hlt : index < items.length) :
+    ∃ item, listGet? items index = some item := by
+  induction items generalizing index with
+  | nil =>
+      cases hlt
+  | cons head tail ih =>
+      cases index with
+      | zero =>
+          exact ⟨head, rfl⟩
+      | succ index =>
+          have htail : index < tail.length :=
+            Nat.lt_of_succ_lt_succ hlt
+          rcases ih htail with ⟨item, hget⟩
+          exact ⟨item, by simpa [listGet?] using hget⟩
 
 theorem listGet?_map_eq_some
     {items : List alpha}
@@ -91,6 +184,61 @@ theorem listGet?_map_some
           simp [listGet?] at hget
           rcases ih hget with ⟨item, hitem, hmapped⟩
           exact ⟨item, by simpa [listGet?] using hitem, hmapped⟩
+
+theorem unionList_congr_indexed
+    {Activity : Type u}
+    {left right : List (Language Activity)}
+    (hlength : left.length = right.length)
+    (hcomponent :
+      ∀ index leftLanguage rightLanguage,
+        listGet? left index = some leftLanguage ->
+        listGet? right index = some rightLanguage ->
+          ∀ word, leftLanguage word ↔ rightLanguage word)
+    (word : List Activity) :
+    Language.unionList left word ↔ Language.unionList right word := by
+  induction left generalizing right with
+  | nil =>
+      cases right with
+      | nil =>
+          rfl
+      | cons rightHead rightTail =>
+          simp at hlength
+  | cons leftHead leftTail ih =>
+      cases right with
+      | nil =>
+          simp at hlength
+      | cons rightHead rightTail =>
+          have htailLength : leftTail.length = rightTail.length := by
+            simpa using hlength
+          constructor
+          · intro h
+            cases h with
+            | inl hleft =>
+                exact Or.inl
+                  ((hcomponent 0 leftHead rightHead rfl rfl word).mp
+                    hleft)
+            | inr hleftTail =>
+                exact Or.inr
+                  ((ih htailLength
+                    (fun index leftLanguage rightLanguage hleft hright =>
+                      hcomponent (index + 1) leftLanguage rightLanguage
+                        (by simpa [listGet?] using hleft)
+                        (by simpa [listGet?] using hright))).mp
+                    hleftTail)
+          · intro h
+            cases h with
+            | inl hright =>
+                exact Or.inl
+                  ((hcomponent 0 leftHead rightHead rfl rfl word).mpr
+                    hright)
+            | inr hrightTail =>
+                exact Or.inr
+                  ((ih htailLength
+                    (fun index leftLanguage rightLanguage hleft hright =>
+                      hcomponent (index + 1) leftLanguage rightLanguage
+                        (by simpa [listGet?] using hleft)
+                        (by simpa [listGet?] using hright))).mpr
+                    hrightTail)
 
 abbrev TaggedTrace (Activity : Type u) := List (Nat × Activity)
 
@@ -263,6 +411,93 @@ theorem partialOrderLanguage_iff_componentLanguage
       exact hcomponents index (language label model)
         (listGet?_map_eq_some hget)
 
+theorem partialOrderComponentLanguage_map_congr
+    {Model : Type u}
+    {Activity : Type v}
+    (order : Rel Nat)
+    (models : List Model)
+    (left right : Model -> Language Activity)
+    (h :
+      ∀ model word,
+        left model word ↔ right model word)
+    (word : List Activity) :
+    partialOrderComponentLanguage order (models.map left) word ↔
+      partialOrderComponentLanguage order (models.map right) word := by
+  constructor
+  · intro hlanguage
+    rcases hlanguage with
+      ⟨tagged, herase, hbounded, horder, hcomponents⟩
+    refine ⟨tagged, herase, ?_, horder, ?_⟩
+    · simpa using hbounded
+    · intro index componentLanguage hget
+      rcases listGet?_map_some hget with
+        ⟨model, hmodel, hcomponentEq⟩
+      subst hcomponentEq
+      exact (h model _).mp
+        (hcomponents index (left model)
+          (listGet?_map_eq_some hmodel))
+  · intro hlanguage
+    rcases hlanguage with
+      ⟨tagged, herase, hbounded, horder, hcomponents⟩
+    refine ⟨tagged, herase, ?_, horder, ?_⟩
+    · simpa using hbounded
+    · intro index componentLanguage hget
+      rcases listGet?_map_some hget with
+        ⟨model, hmodel, hcomponentEq⟩
+      subst hcomponentEq
+      exact (h model _).mpr
+        (hcomponents index (right model)
+          (listGet?_map_eq_some hmodel))
+
+theorem partialOrderComponentLanguage_congr
+    {Activity : Type u}
+    (order : Rel Nat)
+    {left right : List (Language Activity)}
+    (hlength : left.length = right.length)
+    (hcomponent :
+      ∀ index leftLanguage rightLanguage,
+        listGet? left index = some leftLanguage ->
+        listGet? right index = some rightLanguage ->
+          ∀ word, leftLanguage word ↔ rightLanguage word)
+    (word : List Activity) :
+    partialOrderComponentLanguage order left word ↔
+      partialOrderComponentLanguage order right word := by
+  constructor
+  · intro hlanguage
+    rcases hlanguage with
+      ⟨tagged, herase, hbounded, horder, hcomponents⟩
+    refine ⟨tagged, herase, ?_, horder, ?_⟩
+    · intro taggedItem hmem
+      have hbound := hbounded taggedItem hmem
+      simpa [← hlength] using hbound
+    · intro index rightLanguage hright
+      have hltRight := listGet?_some_lt_length hright
+      have hltLeft : index < left.length := by
+        simpa [hlength] using hltRight
+      rcases listGet?_exists_of_lt_length hltLeft with
+        ⟨leftLanguage, hleft⟩
+      exact
+        (hcomponent index leftLanguage rightLanguage hleft hright
+          (component index tagged)).mp
+          (hcomponents index leftLanguage hleft)
+  · intro hlanguage
+    rcases hlanguage with
+      ⟨tagged, herase, hbounded, horder, hcomponents⟩
+    refine ⟨tagged, herase, ?_, horder, ?_⟩
+    · intro taggedItem hmem
+      have hbound := hbounded taggedItem hmem
+      simpa [hlength] using hbound
+    · intro index leftLanguage hleft
+      have hltLeft := listGet?_some_lt_length hleft
+      have hltRight : index < right.length := by
+        simpa [← hlength] using hltLeft
+      rcases listGet?_exists_of_lt_length hltRight with
+        ⟨rightLanguage, hright⟩
+      exact
+        (hcomponent index leftLanguage rightLanguage hleft hright
+          (component index tagged)).mpr
+          (hcomponents index rightLanguage hright)
+
 theorem xor_language_iff
     {Transition : Type u}
     {Activity : Type v}
@@ -383,6 +618,21 @@ theorem partial_order_language_iff
   · intro h
     rcases h with ⟨tagged, herase, hbounded, horder, hcomponents⟩
     exact Semantics.partialOrder herase hbounded horder hcomponents
+
+theorem partial_order_language_iff_componentLanguage
+    {Transition : Type u}
+    {Activity : Type v}
+    {label : Transition -> TransitionLabel Activity}
+    {order : Rel Nat}
+    {models : List (Powl Transition)}
+    {word : List Activity} :
+    language label (Powl.partialOrder order models) word ↔
+      partialOrderComponentLanguage
+        order
+        (models.map (language label))
+        word :=
+  Iff.trans partial_order_language_iff
+    partialOrderLanguage_iff_componentLanguage
 
 end Powl
 

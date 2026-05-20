@@ -94,6 +94,45 @@ theorem xor_pattern_language_preservation_of_component_equiv
       word)
     (Iff.symm (hnet word))
 
+theorem xor_pattern_language_preservation_of_indexed_components
+    {Activity : Type u}
+    {Trans : Type v}
+    {label : Trans -> TransitionLabel Activity}
+    {models : List (Powl Trans)}
+    {componentLanguages : List (Language Activity)}
+    {netLanguage : Language Activity}
+    (hlength : componentLanguages.length = models.length)
+    (hcomponent :
+      ∀ index model componentLanguage,
+        Powl.listGet? models index = some model ->
+        Powl.listGet? componentLanguages index = some componentLanguage ->
+          ∀ word,
+            Powl.language label model word ↔ componentLanguage word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔ Language.unionList componentLanguages word) :
+    ∀ word,
+      Powl.language label (Powl.xor models) word ↔ netLanguage word := by
+  intro word
+  rw [Powl.xor_language_iff_unionList]
+  have hmappedLength :
+      (models.map (Powl.language label)).length =
+        componentLanguages.length := by
+    simp [hlength]
+  exact Iff.trans
+    (Powl.unionList_congr_indexed
+      hmappedLength
+      (by
+        intro index modelLanguage componentLanguage hmodelLanguage
+          hcomponentLanguage
+        rcases Powl.listGet?_map_some hmodelLanguage with
+          ⟨model, hmodel, hmodelLanguageEq⟩
+        subst hmodelLanguageEq
+        exact hcomponent index model componentLanguage
+          hmodel hcomponentLanguage)
+      word)
+    (Iff.symm (hnet word))
+
 theorem loop_pattern_language_preservation
     {Activity : Type u}
     {Trans : Type v}
@@ -162,6 +201,85 @@ theorem partial_order_pattern_language_preservation
   intro word
   rw [Powl.partial_order_language_iff]
   exact Iff.symm (hnet word)
+
+theorem partial_order_pattern_language_preservation_of_component_equiv
+    {Activity : Type u}
+    {Trans : Type v}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    {models : List (Powl Trans)}
+    {componentLanguage : Powl Trans -> Language Activity}
+    {netLanguage : Language Activity}
+    (hcomponent :
+      ∀ model word,
+        Powl.language label model word ↔ componentLanguage model word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (models.map componentLanguage)
+            word) :
+    ∀ word,
+      Powl.language label (Powl.partialOrder order models) word ↔
+        netLanguage word := by
+  intro word
+  rw [Powl.partial_order_language_iff_componentLanguage]
+  exact Iff.trans
+    (Powl.partialOrderComponentLanguage_map_congr
+      order
+      models
+      (Powl.language label)
+      componentLanguage
+      hcomponent
+      word)
+    (Iff.symm (hnet word))
+
+theorem partial_order_pattern_language_preservation_of_indexed_components
+    {Activity : Type u}
+    {Trans : Type v}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    {models : List (Powl Trans)}
+    {componentLanguages : List (Language Activity)}
+    {netLanguage : Language Activity}
+    (hlength : componentLanguages.length = models.length)
+    (hcomponent :
+      ∀ index model componentLanguage,
+        Powl.listGet? models index = some model ->
+        Powl.listGet? componentLanguages index = some componentLanguage ->
+          ∀ word,
+            Powl.language label model word ↔ componentLanguage word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            componentLanguages
+            word) :
+    ∀ word,
+      Powl.language label (Powl.partialOrder order models) word ↔
+        netLanguage word := by
+  intro word
+  rw [Powl.partial_order_language_iff_componentLanguage]
+  have hmappedLength :
+      (models.map (Powl.language label)).length =
+        componentLanguages.length := by
+    simp [hlength]
+  exact Iff.trans
+    (Powl.partialOrderComponentLanguage_congr
+      order
+      hmappedLength
+      (by
+        intro index modelLanguage componentLanguage hmodelLanguage
+          hcomponentLanguage
+        rcases Powl.listGet?_map_some hmodelLanguage with
+          ⟨model, hmodel, hmodelLanguageEq⟩
+        subst hmodelLanguageEq
+        exact hcomponent index model componentLanguage
+          hmodel hcomponentLanguage)
+      word)
+    (Iff.symm (hnet word))
 
 theorem theorem1_base_case_single_transition
     {Place : Type u}
