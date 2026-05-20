@@ -44,7 +44,10 @@ The current proof spine is:
   completion itself, preserves safeness under original safeness plus proper
   completion, and preserves the full `sound` and `safeAndSound` predicates. It
   also preserves the no-dead-transitions property when the original net has no
-  dead transitions and can complete from reachable markings.
+  dead transitions and can complete from reachable markings. Definition 6 work
+  has started with checked explicit-decision-point predicates and the
+  safe-and-sound plus explicit-decision base requirements for
+  semi-block-structured WF-nets.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
   for Definition 5. POWL models can now be mapped across transition embeddings
@@ -57,6 +60,9 @@ The current proof spine is:
   generic indexed component-language form, plus both map-based and explicitly
   index-aligned congruence theorems for replacing equivalent submodels
   componentwise.
+- `KouraniWfnetPowl.Language`: finite-word languages as predicates, with
+  checked extensionality for turning pointwise language equivalences into
+  actual language equalities.
 - `KouraniWfnetPowl.NetLanguage`: WF-net trace language `L(N)` from firing
   sequences and checked single-transition/base-case language preservation
   lemmas. The language layer now records subtype-trace erasure and generic
@@ -151,7 +157,13 @@ The current proof spine is:
   partial-order conversions, plus a `ConversionCertificate` proof object whose
   preservation theorem turns a certified successful conversion into the language
   equivalence claimed by Theorem 1. Recursive certificate builders assemble
-  parent XOR and loop certificates from certified projected subcalls, and Lemma 2 loop trace
+  parent XOR, loop, and partial-order certificates from certified projected
+  subcalls, including normalized partial-order components; `CertifiedConversion`
+  packages the output model and certificate as the checked successful-conversion
+  interface for Theorem 1, including the paper-style `L(N) = L(ψ)` equality
+  form. Theorem 2 now has checked targets for the safe-and-sound and
+  explicit-decision-point base requirements of semi-block-structured WF-nets,
+  and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, including the
   incidence-based full restricted loop-projection connectedness target, and

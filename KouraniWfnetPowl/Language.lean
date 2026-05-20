@@ -6,6 +6,13 @@ abbrev Language (alpha : Type u) := List alpha -> Prop
 
 namespace Language
 
+theorem ext
+    {left right : Language alpha}
+    (h : ∀ word, left word ↔ right word) :
+    left = right := by
+  funext word
+  exact propext (h word)
+
 def empty : Language alpha := fun _ => False
 
 def epsilon : Language alpha := fun word => word = []

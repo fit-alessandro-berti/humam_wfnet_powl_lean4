@@ -1210,6 +1210,45 @@ def exitPoints (net : WorkflowNet Place Trans) (part : Set Trans) : Set Place :=
     (∃ trans, part trans ∧ net.transToPlace trans place) ∧
     (place = net.sink ∨ ∃ trans, ¬ part trans ∧ net.placeToTrans place trans)
 
+def uniquePresetOfTransition
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) : Prop :=
+  ∃ place,
+    net.placeToTrans place trans ∧
+      ∀ other, net.placeToTrans other trans -> other = place
+
+def uniquePostsetOfPlace
+    (net : WorkflowNet Place Trans)
+    (place : Place) : Prop :=
+  ∃ trans,
+    net.placeToTrans place trans ∧
+      ∀ other, net.placeToTrans place other -> other = trans
+
+def uniquePresetOfPlace
+    (net : WorkflowNet Place Trans)
+    (place : Place) : Prop :=
+  ∃ trans,
+    net.transToPlace trans place ∧
+      ∀ other, net.transToPlace other place -> other = trans
+
+def uniquePostsetOfTransition
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) : Prop :=
+  ∃ place,
+    net.transToPlace trans place ∧
+      ∀ other, net.transToPlace trans other -> other = place
+
+def explicitDecisionPoints
+    (net : WorkflowNet Place Trans) : Prop :=
+  (∀ place trans,
+    net.placeToTrans place trans ->
+      uniquePresetOfTransition net trans ∨
+        uniquePostsetOfPlace net place) ∧
+  (∀ trans place,
+    net.transToPlace trans place ->
+      uniquePresetOfPlace net place ∨
+        uniquePostsetOfTransition net trans)
+
 theorem source_no_input
     (net : WorkflowNet Place Trans)
     (trans : Trans) :
@@ -1546,6 +1585,11 @@ def sound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
 
 def safeAndSound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
   safe net ∧ sound net
+
+def semiBlockStructuredBaseRequirements
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) : Prop :=
+  safeAndSound net ∧ explicitDecisionPoints net
 
 theorem normalized_enter_enabled_iff
     (net : WorkflowNet Place Trans)
