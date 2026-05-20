@@ -2191,6 +2191,49 @@ theorem normalized_final_no_enabled
           henabled
       simp [normalizedNet, normalized, final, Marking.single] at hpositive
 
+theorem normalized_final_ne_normalize
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (marking : Marking Place) :
+    final (normalizedNet net) ≠ Marking.normalize marking := by
+  intro hmarking
+  have hsink :=
+    congrFun hmarking
+      (PetriNet.NormalizedPlace.sink :
+        PetriNet.NormalizedPlace Place)
+  simp [normalizedNet, normalized, final, Marking.single,
+    Marking.normalize] at hsink
+
+theorem normalized_initial_ne_final
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) :
+    initial (normalizedNet net) ≠ final (normalizedNet net) := by
+  intro hmarking
+  have hsource :=
+    congrFun hmarking
+      (PetriNet.NormalizedPlace.source :
+        PetriNet.NormalizedPlace Place)
+  simp [normalizedNet, normalized, initial, final, Marking.single] at hsource
+
+theorem normalized_final_firingSequence_nil
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {trace : List (PetriNet.NormalizedTrans Trans)}
+    {after : Marking (PetriNet.NormalizedPlace Place)}
+    (sequence :
+      FiringSequence
+        (normalizedNet net)
+        (final (normalizedNet net))
+        trace
+        after) :
+    trace = [] ∧ after = final (normalizedNet net) := by
+  cases sequence with
+  | nil =>
+      exact ⟨rfl, rfl⟩
+  | cons hfires _ =>
+      exact False.elim
+        (normalized_final_no_enabled net _ hfires.1)
+
 theorem normalizedReachableShape_step
     [DecidableEq Place]
     (net : WorkflowNet Place Trans)
@@ -2316,6 +2359,61 @@ theorem normalized_optionToComplete_of_sound
   normalized_optionToComplete_of_original
     net hsound.2.1 hsound.2.2
 
+theorem normalized_properCompletion_of_original
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : properCompletion net) :
+    properCompletion (normalizedNet net) := by
+  intro marking hreachable hsinkPositive
+  have hshape :=
+    normalizedReachableShape_of_reachable net hproper hreachable
+  rcases hshape with hinitial | hrest
+  · subst hinitial
+    simp [normalizedNet, normalized, initial, Marking.single] at hsinkPositive
+  · rcases hrest with horiginal | hfinal
+    · rcases horiginal with ⟨original, _horiginalReachable, hmarking⟩
+      subst hmarking
+      simp [normalizedNet, normalized, Marking.normalize] at hsinkPositive
+    · exact hfinal
+
+theorem normalized_safe_of_original
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsafe : safe net)
+    (hproper : properCompletion net) :
+    safe (normalizedNet net) := by
+  intro marking hreachable place
+  have hshape :=
+    normalizedReachableShape_of_reachable net hproper hreachable
+  rcases hshape with hinitial | hrest
+  · subst hinitial
+    cases place with
+    | source =>
+        simp [normalizedNet, normalized, initial, Marking.single]
+    | original place =>
+        simp [normalizedNet, normalized, initial, Marking.single]
+    | sink =>
+        simp [normalizedNet, normalized, initial, Marking.single]
+  · rcases hrest with horiginal | hfinal
+    · rcases horiginal with ⟨original, horiginalReachable, hmarking⟩
+      subst hmarking
+      cases place with
+      | source =>
+          simp [Marking.normalize]
+      | original place =>
+          simpa [Marking.normalize] using
+            hsafe original horiginalReachable place
+      | sink =>
+          simp [Marking.normalize]
+    · subst hfinal
+      cases place with
+      | source =>
+          simp [normalizedNet, normalized, final, Marking.single]
+      | original place =>
+          simp [normalizedNet, normalized, final, Marking.single]
+      | sink =>
+          simp [normalizedNet, normalized, final, Marking.single]
+
 theorem normalized_exit_enabled_at_final
     [DecidableEq Place]
     (net : WorkflowNet Place Trans) :
@@ -2377,6 +2475,23 @@ theorem normalized_noDeadTransitions_of_sound
     noDeadTransitions (normalizedNet net) :=
   normalized_noDeadTransitions_of_original net
     hsound.1 hsound.2.1
+
+theorem normalized_sound_of_original
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsound : sound net) :
+    sound (normalizedNet net) :=
+  ⟨normalized_noDeadTransitions_of_sound net hsound,
+    normalized_optionToComplete_of_sound net hsound,
+    normalized_properCompletion_of_original net hsound.2.2⟩
+
+theorem normalized_safeAndSound_of_original
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsafeSound : safeAndSound net) :
+    safeAndSound (normalizedNet net) :=
+  ⟨normalized_safe_of_original net hsafeSound.1 hsafeSound.2.2.2,
+    normalized_sound_of_original net hsafeSound.2⟩
 
 theorem restricted_initial_eq
     [DecidableEq Place]

@@ -649,6 +649,25 @@ theorem normalization_option_to_complete_of_sound
     WorkflowNet.optionToComplete (WorkflowNet.normalizedNet net) :=
   WorkflowNet.normalized_optionToComplete_of_sound net hsound
 
+theorem normalization_proper_completion_of_original
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : WorkflowNet.properCompletion net) :
+    WorkflowNet.properCompletion (WorkflowNet.normalizedNet net) :=
+  WorkflowNet.normalized_properCompletion_of_original net hproper
+
+theorem normalization_safe_of_original
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsafe : WorkflowNet.safe net)
+    (hproper : WorkflowNet.properCompletion net) :
+    WorkflowNet.safe (WorkflowNet.normalizedNet net) :=
+  WorkflowNet.normalized_safe_of_original net hsafe hproper
+
 theorem normalization_exit_enabled_at_final
     {Place : Type u}
     {Trans : Type v}
@@ -679,6 +698,24 @@ theorem normalization_no_dead_transitions_of_sound
     (hsound : WorkflowNet.sound net) :
     WorkflowNet.noDeadTransitions (WorkflowNet.normalizedNet net) :=
   WorkflowNet.normalized_noDeadTransitions_of_sound net hsound
+
+theorem normalization_sound_of_original
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsound : WorkflowNet.sound net) :
+    WorkflowNet.sound (WorkflowNet.normalizedNet net) :=
+  WorkflowNet.normalized_sound_of_original net hsound
+
+theorem normalization_safe_and_sound_of_original
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound (WorkflowNet.normalizedNet net) :=
+  WorkflowNet.normalized_safeAndSound_of_original net hsafeSound
 
 theorem normalization_language_of_original
     {Place : Type u}

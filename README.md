@@ -36,9 +36,15 @@ The current proof spine is:
   preserve the fresh source/sink token counts. Original reachable markings lift
   to reachable normalized markings after the fresh enter transition, embedded
   normalized markings can complete to the normalized final marking whenever the
-  original marking can complete, and normalization preserves the
-  no-dead-transitions property when the original net has no dead transitions and
-  can complete from reachable markings.
+  original marking can complete, and every normalized reachable marking is
+  classified as either the fresh initial marking, an embedded original
+  reachable marking, or the fresh final marking under original proper
+  completion. Consequently, normalization preserves option-to-complete under
+  original option-to-complete plus proper completion, preserves proper
+  completion itself, preserves safeness under original safeness plus proper
+  completion, and preserves the full `sound` and `safeAndSound` predicates. It
+  also preserves the no-dead-transitions property when the original net has no
+  dead transitions and can complete from reachable markings.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
   for Definition 5.
