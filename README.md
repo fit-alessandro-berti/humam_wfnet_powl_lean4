@@ -67,7 +67,7 @@ The current proof spine is:
   constructors, one-step path constructors for retained internal edges, generic
   restricted-to-projection flow/path lifting, plus checked source-to-sink
   boundary path constructors for one-transition entry/exit segments and
-  source-to-member transition paths along closed place-to-place traces.
+  source-to-member and member-to-sink paths along closed place-to-place traces.
   Partial-order projections now have a subtype-restricted representation with
   selected transitions and retained boundary/original places, checked boundary
   and internal edge constructors in all boundary directions, and one-step path

@@ -1555,6 +1555,115 @@ theorem loopProjectionRestricted_source_to_member_transition_of_placePath
                   htransToPlace)
                 htailPath)
 
+theorem loopProjectionRestricted_internal_to_sink_of_placePath
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trace : List Trans}
+    (path : PetriNet.PlacePathTo net.toPetriNet endPlace place trace)
+    (hclosed : ∀ trans, trans ∈ trace -> part trans)
+    (hnoInStart : ∀ trans, part trans -> ¬ net.transToPlace trans startPlace)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace) :
+    PetriNet.Path
+      (loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.place
+        ⟨place, loopProjectionPlaces_internal net htouching hstart hend⟩)
+      (PetriNet.Node.place
+        ⟨net.sink,
+          loopProjectionPlaces_sink net part startPlace endPlace⟩) := by
+  induction path with
+  | done =>
+      exact False.elim (hend rfl)
+  | step hnotTarget hplaceToTrans htransToPlace restPath ih =>
+      rename_i current next head rest
+      have hheadPart : part head := hclosed head (by simp)
+      by_cases hnextEnd : next = endPlace
+      · exact
+          PetriNet.Path.trans
+            (loopProjectionRestricted_internal_place_to_transition
+              net hheadPart htouching hstart hend hplaceToTrans)
+            (loopProjectionRestricted_transition_to_sink
+              net hheadPart (by rwa [hnextEnd] at htransToPlace))
+      · have hnextTouching :
+            PetriNet.placesTouching net.toPetriNet part next :=
+          PetriNet.placesTouching_of_transToPlace
+            net.toPetriNet hheadPart htransToPlace
+        have hnextStart : next ≠ startPlace := by
+          intro hsame
+          apply hnoInStart head hheadPart
+          rwa [hsame] at htransToPlace
+        have hclosedTail :
+            ∀ trans, trans ∈ rest -> part trans := by
+          intro trans htrans
+          exact hclosed trans (by simp [htrans])
+        have htailPath :=
+          ih hclosedTail hnextTouching hnextStart hnextEnd
+        exact
+          PetriNet.Path.trans
+            (loopProjectionRestricted_internal_place_to_transition
+              net hheadPart htouching hstart hend hplaceToTrans)
+            (PetriNet.Path.trans
+              (loopProjectionRestricted_transition_to_internal_place
+                net hheadPart hnextTouching hnextStart hnextEnd
+                htransToPlace)
+              htailPath)
+
+theorem loopProjectionRestricted_member_transition_to_sink_of_placePath
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trace : List Trans}
+    {target : Trans}
+    (path : PetriNet.PlacePathTo net.toPetriNet endPlace place trace)
+    (hclosed : ∀ trans, trans ∈ trace -> part trans)
+    (hnoInStart : ∀ trans, part trans -> ¬ net.transToPlace trans startPlace)
+    (hmem : target ∈ trace) :
+    PetriNet.Path
+      (loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.trans ⟨target, hclosed target hmem⟩)
+      (PetriNet.Node.place
+        ⟨net.sink,
+          loopProjectionPlaces_sink net part startPlace endPlace⟩) := by
+  induction path generalizing target with
+  | done =>
+      simp at hmem
+  | step hnotTarget hplaceToTrans htransToPlace restPath ih =>
+      rename_i current next head rest
+      have hheadPart : part head := hclosed head (by simp)
+      simp at hmem
+      rcases hmem with hhead | htail
+      · subst hhead
+        by_cases hnextEnd : next = endPlace
+        · exact loopProjectionRestricted_transition_to_sink
+            net hheadPart (by rwa [hnextEnd] at htransToPlace)
+        · have hnextTouching :
+              PetriNet.placesTouching net.toPetriNet part next :=
+            PetriNet.placesTouching_of_transToPlace
+              net.toPetriNet hheadPart htransToPlace
+          have hnextStart : next ≠ startPlace := by
+            intro hsame
+            apply hnoInStart target hheadPart
+            rwa [hsame] at htransToPlace
+          have hclosedTail :
+              ∀ trans, trans ∈ rest -> part trans := by
+            intro trans htrans
+            exact hclosed trans (by simp [htrans])
+          exact
+            PetriNet.Path.trans
+              (loopProjectionRestricted_transition_to_internal_place
+                net hheadPart hnextTouching hnextStart hnextEnd
+                htransToPlace)
+              (loopProjectionRestricted_internal_to_sink_of_placePath
+                net restPath hclosedTail hnoInStart
+                hnextTouching hnextStart hnextEnd)
+      · have hclosedTail :
+            ∀ trans, trans ∈ rest -> part trans := by
+          intro trans htrans
+          exact hclosed trans (by simp [htrans])
+        exact ih hclosedTail htail
+
 theorem loopProjectionRestricted_source_no_in
     (net : WorkflowNet Place Trans)
     {part : Set Trans}

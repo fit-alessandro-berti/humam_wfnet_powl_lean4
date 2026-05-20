@@ -2307,6 +2307,55 @@ theorem lemma2_loop_projection_restricted_source_to_member_transition
   Patterns.loopProjectionRestricted_source_to_member_transition_of_placePath
     net path hclosed hnoInStart hmem
 
+theorem lemma2_loop_projection_restricted_internal_to_sink
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trace : List Trans}
+    (path : PetriNet.PlacePathTo net.toPetriNet endPlace place trace)
+    (hclosed : ∀ trans, trans ∈ trace -> part trans)
+    (hnoInStart : ∀ trans, part trans ->
+      ¬ net.transToPlace trans startPlace)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace) :
+    PetriNet.Path
+      (Patterns.loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.place
+        ⟨place,
+          Patterns.loopProjectionPlaces_internal net htouching hstart hend⟩)
+      (PetriNet.Node.place
+        ⟨net.sink,
+          Patterns.loopProjectionPlaces_sink
+            net part startPlace endPlace⟩) :=
+  Patterns.loopProjectionRestricted_internal_to_sink_of_placePath
+    net path hclosed hnoInStart htouching hstart hend
+
+theorem lemma2_loop_projection_restricted_member_transition_to_sink
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trace : List Trans}
+    {target : Trans}
+    (path : PetriNet.PlacePathTo net.toPetriNet endPlace place trace)
+    (hclosed : ∀ trans, trans ∈ trace -> part trans)
+    (hnoInStart : ∀ trans, part trans ->
+      ¬ net.transToPlace trans startPlace)
+    (hmem : target ∈ trace) :
+    PetriNet.Path
+      (Patterns.loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.trans ⟨target, hclosed target hmem⟩)
+      (PetriNet.Node.place
+        ⟨net.sink,
+          Patterns.loopProjectionPlaces_sink
+            net part startPlace endPlace⟩) :=
+  Patterns.loopProjectionRestricted_member_transition_to_sink_of_placePath
+    net path hclosed hnoInStart hmem
+
 theorem lemma2_loop_projection_restricted_boundary_path
     {Place : Type u}
     {Trans : Type v}
