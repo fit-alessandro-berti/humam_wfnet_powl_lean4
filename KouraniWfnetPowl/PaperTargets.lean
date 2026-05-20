@@ -648,6 +648,28 @@ theorem lemma2_loop_projection_contains_internal_place
     Patterns.loopProjectionPlaces net part startPlace endPlace place :=
   Patterns.loopProjectionPlaces_internal net htouching hstart hend
 
+theorem lemma2_loop_projection_restricted_boundary_path
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hstart : net.placeToTrans startPlace trans)
+    (hend : net.transToPlace trans endPlace) :
+    PetriNet.Path
+      (Patterns.loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.place
+        ⟨net.source,
+          Patterns.loopProjectionPlaces_source
+            net part startPlace endPlace⟩)
+      (PetriNet.Node.place
+        ⟨net.sink,
+          Patterns.loopProjectionPlaces_sink
+            net part startPlace endPlace⟩) :=
+  Patterns.loopProjectionRestricted_boundary_path net hpart hstart hend
+
 theorem lemma2_loop_projection_boundary_paths
     {Place : Type u}
     {Trans : Type v}

@@ -1347,6 +1347,52 @@ theorem loopPattern_projection_boundary_paths
   · intro trans hredo hstart hend
     exact loopProjection_boundary_path net hredo hstart hend
 
+theorem loopPattern_projection_restricted_boundary_paths
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ trans, doPart trans ->
+        net.placeToTrans pdo trans ->
+        net.transToPlace trans predo ->
+          PetriNet.Path
+            (loopProjectionRestricted net doPart pdo predo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                loopProjectionPlaces_source net doPart pdo predo⟩)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                loopProjectionPlaces_sink net doPart pdo predo⟩)) ∧
+      (∀ trans, redoPart trans ->
+        net.placeToTrans predo trans ->
+        net.transToPlace trans pdo ->
+          PetriNet.Path
+            (loopProjectionRestricted net redoPart predo pdo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                loopProjectionPlaces_source net redoPart predo pdo⟩)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                loopProjectionPlaces_sink net redoPart predo pdo⟩)) := by
+  rcases hpattern with
+    ⟨doPart, redoPart, _silentPart,
+      hdoMem, hredoMem, _hsilentMem,
+      pdo, predo, _sourceTrans, _sinkTrans,
+      _hne, _hsilentSet, _hsourceSilent, _hsinkSilent,
+      _hsourcePost, _hsinkPre, _hsourcePre, _hsourceOut,
+      _hsinkIn, _hsinkOut,
+      _hdoReach, _hredoReach,
+      _hdoNoIn, _hredoNoIn, _hdoNoOut, _hredoNoOut⟩
+  refine ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem, ?_, ?_⟩
+  · intro trans hdo hstart hend
+    exact loopProjectionRestricted_boundary_path net hdo hstart hend
+  · intro trans hredo hstart hend
+    exact loopProjectionRestricted_boundary_path net hredo hstart hend
+
 theorem loopPattern_boundary_places_distinct
     {Activity : Type w}
     {label : Trans -> TransitionLabel Activity}
