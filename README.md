@@ -134,14 +134,17 @@ The current proof spine is:
   partial-order projection paths lift to ambient partial-order projection paths.
   Raw projection edges are checked to stay inside the retained node set, so
   ordinary raw projection paths can be lifted to `PathIn` paths from any
-  retained source.
+  retained source, and raw ordinary-path connectedness now packages restricted
+  projections as normalized `WorkflowNet`s.
   Selected transitions and retained original places now have checked two-sided
   connectivity in the restricted partial-order projection from explicit
   entry/exit and incidence witnesses; under those same hypotheses, restricted
   partial-order projections can be normalized and packaged as `WorkflowNet`s,
-  matching the projection-normalization step in Definition 14. A more general
-  raw-projection normalization constructor is also available when connectedness
-  is supplied over the ambient raw projection.
+  matching the projection-normalization step in Definition 14. The same API now
+  includes restricted projection markings and normalized markings for retained
+  original places, boundary places, and fresh source/sink places. A more
+  general raw-projection normalization constructor is also available when
+  connectedness is supplied over the ambient raw projection.
   Partial-order pattern consequences
   now also expose execution-order boundary construction, cycle exclusion,
   same-component entry/exit exclusion, and entry/exit place equivalence with
@@ -224,8 +227,9 @@ The current proof spine is:
   Lemma 3
   partial-order projection boundary/internal edge, one-step path, and
   raw-`PathIn` constructor/path-lifting facts plus bidirectional
-  restricted-path lifting, `PathIn`-connected
-  restricted projection normalization, generic normalization,
+  restricted-path lifting, ordinary-path and `PathIn`-connected
+  restricted projection normalization, restricted and normalized projection
+  marking facts, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
   normalized-language equivalence targets, execution-order, source/sink-aware

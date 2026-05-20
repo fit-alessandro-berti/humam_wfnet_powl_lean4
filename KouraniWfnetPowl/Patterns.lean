@@ -3635,6 +3635,161 @@ theorem partialOrderProjection_pathIn_of_path
     (fun hflow _ =>
       partialOrderProjection_flow_target_mem net part hflow)
 
+noncomputable def partialOrderProjectionRestrictedMarking
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place) :
+    Marking
+      {place : BoundaryPlace Place //
+        partialOrderProjectionPlaces net part place} := by
+  classical
+  exact fun place =>
+    match place.val with
+    | BoundaryPlace.original original => marking original
+    | BoundaryPlace.start =>
+        if ∀ entry, WorkflowNet.entryPoints net part entry ->
+            marking entry > 0 then
+          1
+        else
+          0
+    | BoundaryPlace.end_ =>
+        if ∀ exit, WorkflowNet.exitPoints net part exit ->
+            marking exit > 0 then
+          1
+        else
+          0
+
+@[simp] theorem partialOrderProjectionRestrictedMarking_original
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (marking : Marking Place)
+    {place : Place}
+    (hplace :
+      partialOrderProjectionPlaces net part (BoundaryPlace.original place)) :
+    partialOrderProjectionRestrictedMarking net part marking
+      ⟨BoundaryPlace.original place, hplace⟩ =
+        marking place := by
+  simp [partialOrderProjectionRestrictedMarking]
+
+theorem partialOrderProjectionRestrictedMarking_start_of_entries_marked
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place)
+    (hmarked :
+      ∀ entry, WorkflowNet.entryPoints net part entry ->
+        marking entry > 0) :
+  partialOrderProjectionRestrictedMarking net part marking
+      ⟨BoundaryPlace.start,
+        partialOrderProjectionPlaces_start net part⟩ = 1 := by
+  classical
+  unfold partialOrderProjectionRestrictedMarking
+  dsimp
+  exact if_pos hmarked
+
+theorem partialOrderProjectionRestrictedMarking_start_of_not_entries_marked
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place)
+    (hmarked :
+      ¬ ∀ entry, WorkflowNet.entryPoints net part entry ->
+        marking entry > 0) :
+  partialOrderProjectionRestrictedMarking net part marking
+      ⟨BoundaryPlace.start,
+        partialOrderProjectionPlaces_start net part⟩ = 0 := by
+  classical
+  unfold partialOrderProjectionRestrictedMarking
+  dsimp
+  exact if_neg hmarked
+
+theorem partialOrderProjectionRestrictedMarking_end_of_exits_marked
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place)
+    (hmarked :
+      ∀ exit, WorkflowNet.exitPoints net part exit ->
+        marking exit > 0) :
+  partialOrderProjectionRestrictedMarking net part marking
+      ⟨BoundaryPlace.end_,
+        partialOrderProjectionPlaces_end net part⟩ = 1 := by
+  classical
+  unfold partialOrderProjectionRestrictedMarking
+  dsimp
+  exact if_pos hmarked
+
+theorem partialOrderProjectionRestrictedMarking_end_of_not_exits_marked
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place)
+    (hmarked :
+      ¬ ∀ exit, WorkflowNet.exitPoints net part exit ->
+        marking exit > 0) :
+  partialOrderProjectionRestrictedMarking net part marking
+      ⟨BoundaryPlace.end_,
+        partialOrderProjectionPlaces_end net part⟩ = 0 := by
+  classical
+  unfold partialOrderProjectionRestrictedMarking
+  dsimp
+  exact if_neg hmarked
+
+noncomputable def partialOrderProjectionNormalizedMarking
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place) :
+    Marking
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place}) :=
+  Marking.normalize
+    (partialOrderProjectionRestrictedMarking net part marking)
+
+@[simp] theorem partialOrderProjectionNormalizedMarking_source
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place) :
+    partialOrderProjectionNormalizedMarking net part marking
+      (PetriNet.NormalizedPlace.source :
+        PetriNet.NormalizedPlace
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}) = 0 := by
+  rw [partialOrderProjectionNormalizedMarking, Marking.normalize_source_apply]
+
+@[simp] theorem partialOrderProjectionNormalizedMarking_sink
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place) :
+    partialOrderProjectionNormalizedMarking net part marking
+      (PetriNet.NormalizedPlace.sink :
+        PetriNet.NormalizedPlace
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}) = 0 := by
+  rw [partialOrderProjectionNormalizedMarking, Marking.normalize_sink_apply]
+
+@[simp] theorem partialOrderProjectionNormalizedMarking_original
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (marking : Marking Place)
+    (place :
+      {place : BoundaryPlace Place //
+        partialOrderProjectionPlaces net part place}) :
+    partialOrderProjectionNormalizedMarking net part marking
+      (PetriNet.NormalizedPlace.original place) =
+        partialOrderProjectionRestrictedMarking net part marking place := by
+  rw [partialOrderProjectionNormalizedMarking, Marking.normalize_original_apply]
+
+theorem partialOrderProjectionNormalizedMarking_original_place
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (marking : Marking Place)
+    {place : Place}
+    (hplace :
+      partialOrderProjectionPlaces net part (BoundaryPlace.original place)) :
+    partialOrderProjectionNormalizedMarking net part marking
+      (PetriNet.NormalizedPlace.original
+        ⟨BoundaryPlace.original place, hplace⟩) =
+        marking place := by
+  rw [partialOrderProjectionNormalizedMarking, Marking.normalize_original_apply]
+  simp [partialOrderProjectionRestrictedMarking]
+
 theorem partialOrderProjectionRestricted_connected_of_path
     (net : WorkflowNet Place Trans)
     (part : Set Trans)
@@ -4651,6 +4806,31 @@ def partialOrderProjectionRestrictedNormalizedWorkflowNetOfPathIn
   partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
     net part
     (partialOrderProjectionRestricted_connected_of_pathIn
+      net part hconnected)
+
+def partialOrderProjectionRestrictedNormalizedWorkflowNetOfPath
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (hconnected :
+      ∀ node :
+          PetriNet.Node (BoundaryPlace Place) Trans,
+        PetriNet.nodeIn (partialOrderProjectionPlaces net part) part node ->
+          PetriNet.Path
+              (partialOrderProjection net part)
+              (PetriNet.Node.place BoundaryPlace.start)
+              node ∧
+            PetriNet.Path
+              (partialOrderProjection net part)
+              node
+              (PetriNet.Node.place BoundaryPlace.end_)) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})
+      (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
+  partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+    net part
+    (partialOrderProjectionRestricted_connected_of_path
       net part hconnected)
 
 def partialOrderProjectionRestrictedNormalizedWorkflowNetOfIncidence
