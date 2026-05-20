@@ -48,10 +48,11 @@ The current proof spine is:
   Partial-order projections now have a subtype-restricted representation with
   selected transitions and retained boundary/original places, checked boundary
   and internal edge constructors, and one-step path constructors for boundary
-  and retained-original edges. Partial-order pattern consequences now also
-  expose execution-order boundary construction, cycle exclusion, same-component
-  entry/exit exclusion, and entry/exit place equivalence with respect to a
-  component's transitions.
+  and retained-original edges. Restricted partial-order projection paths lift
+  to ambient partial-order projection paths. Partial-order pattern consequences
+  now also expose execution-order boundary construction, cycle exclusion,
+  same-component entry/exit exclusion, and entry/exit place equivalence with
+  respect to a component's transitions.
 - `KouraniWfnetPowl.PaperTargets`: named Section 5 proof targets and checked
   semantic preservation theorems corresponding to the POWL-language side of
   Lemmas 4, 5, and 6, the checked base case for Theorem 1, and named checked
@@ -61,7 +62,8 @@ The current proof spine is:
   language equivalence with typed original subtraces, and Lemma 2 loop trace
   closure plus loop projection boundary and restricted-projection facts, and
   Lemma 3 partial-order projection boundary/internal edge facts plus
-  execution-order and boundary-equivalence consequences.
+  restricted-path lifting, execution-order, and boundary-equivalence
+  consequences.
 
 Build with:
 

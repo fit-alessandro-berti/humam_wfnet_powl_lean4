@@ -27,6 +27,32 @@ def listGet? : List alpha -> Nat -> Option alpha
   | head :: _, 0 => some head
   | _ :: tail, index + 1 => listGet? tail index
 
+theorem listGet?_mem
+    {items : List alpha}
+    {index : Nat}
+    {item : alpha}
+    (hget : listGet? items index = some item) :
+    item ∈ items := by
+  induction items generalizing index with
+  | nil =>
+      cases index <;> cases hget
+  | cons head tail ih =>
+      cases index with
+      | zero =>
+          simp [listGet?] at hget
+          simp [hget]
+      | succ index =>
+          simp [listGet?] at hget
+          exact List.Mem.tail head (ih hget)
+
+theorem listGet?_exists_mem
+    {items : List alpha}
+    {index : Nat}
+    {item : alpha}
+    (hget : listGet? items index = some item) :
+    ∃ member, member ∈ items ∧ member = item :=
+  ⟨item, listGet?_mem hget, rfl⟩
+
 abbrev TaggedTrace (Activity : Type u) := List (Nat × Activity)
 
 def eraseTags : TaggedTrace Activity -> List Activity

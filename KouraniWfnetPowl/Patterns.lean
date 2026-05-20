@@ -64,6 +64,22 @@ theorem right_mem_of_samePart_left_mem
   left_mem_of_samePart_right_mem
     partition hpart hleft (samePart_symm partition hsame)
 
+theorem mem_of_listGet?
+    (partition : Partition alpha)
+    {index : Nat}
+    {part : Set alpha}
+    (hpart : Powl.listGet? partition.parts index = some part) :
+    part ∈ partition.parts :=
+  Powl.listGet?_mem hpart
+
+theorem nonempty_of_listGet?
+    (partition : Partition alpha)
+    {index : Nat}
+    {part : Set alpha}
+    (hpart : Powl.listGet? partition.parts index = some part) :
+    ∃ item, part item :=
+  partition.nonempty part (mem_of_listGet? partition hpart)
+
 end Partition
 
 namespace Patterns
@@ -1738,6 +1754,61 @@ theorem partialOrderPattern_no_same_part_entry_exit
   partialOrderPattern_no_self_executionOrder net partition hpattern index
     (executionOrder_of_boundary
       net partition hpart hpart hexit hentry)
+
+theorem partialOrderPattern_samePart_of_reachesFromPostset
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hpattern : partialOrderPattern net partition)
+    {place : Place}
+    {left right : Trans}
+    (hleft : reachesFromPostset net place left)
+    (hright : reachesFromPostset net place right) :
+    partition.samePart left right :=
+  hpattern.2.1 place left right hleft hright
+
+theorem partialOrderPattern_part_eq_of_common_postset_reach
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hpattern : partialOrderPattern net partition)
+    {leftPart rightPart : Set Trans}
+    (hleftPartMem : leftPart ∈ partition.parts)
+    (hrightPartMem : rightPart ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hleftPart : leftPart left)
+    (hrightPart : rightPart right)
+    (hleftReach : reachesFromPostset net place left)
+    (hrightReach : reachesFromPostset net place right) :
+    leftPart = rightPart := by
+  rcases partialOrderPattern_samePart_of_reachesFromPostset
+      net partition hpattern hleftReach hrightReach with
+    ⟨samePart, hsameMem, hleftSame, hrightSame⟩
+  have hleftEq : leftPart = samePart :=
+    partition.disjoint hleftPartMem hsameMem hleftPart hleftSame
+  have hrightEq : rightPart = samePart :=
+    partition.disjoint hrightPartMem hsameMem hrightPart hrightSame
+  exact hleftEq.trans hrightEq.symm
+
+theorem partialOrderPattern_indexed_part_eq_of_common_postset_reach
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hpattern : partialOrderPattern net partition)
+    {leftIndex rightIndex : Nat}
+    {leftPart rightPart : Set Trans}
+    (hleftGet : Powl.listGet? partition.parts leftIndex = some leftPart)
+    (hrightGet : Powl.listGet? partition.parts rightIndex = some rightPart)
+    {place : Place}
+    {left right : Trans}
+    (hleftPart : leftPart left)
+    (hrightPart : rightPart right)
+    (hleftReach : reachesFromPostset net place left)
+    (hrightReach : reachesFromPostset net place right) :
+    leftPart = rightPart :=
+  partialOrderPattern_part_eq_of_common_postset_reach
+    net partition hpattern
+    (Partition.mem_of_listGet? partition hleftGet)
+    (Partition.mem_of_listGet? partition hrightGet)
+    hleftPart hrightPart hleftReach hrightReach
 
 theorem partialOrderPattern_entry_placeEquivalent
     (net : WorkflowNet Place Trans)

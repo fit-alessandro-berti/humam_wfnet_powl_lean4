@@ -131,6 +131,24 @@ theorem partial_order_pattern_execution_order_asymmetric
       (TransGen (Patterns.executionOrder net partition)) :=
   Patterns.partialOrderPattern_asymmetric net partition hpattern
 
+theorem indexed_component_mem
+    {alpha : Type u}
+    (partition : Partition alpha)
+    {index : Nat}
+    {part : Set alpha}
+    (hpart : Powl.listGet? partition.parts index = some part) :
+    part ∈ partition.parts :=
+  Partition.mem_of_listGet? partition hpart
+
+theorem indexed_component_nonempty
+    {alpha : Type u}
+    (partition : Partition alpha)
+    {index : Nat}
+    {part : Set alpha}
+    (hpart : Powl.listGet? partition.parts index = some part) :
+    ∃ item, part item :=
+  Partition.nonempty_of_listGet? partition hpart
+
 theorem lemma3_execution_order_of_boundary
     {Place : Type u}
     {Trans : Type v}
@@ -185,6 +203,61 @@ theorem lemma3_partial_order_pattern_no_same_part_entry_exit
     False :=
   Patterns.partialOrderPattern_no_same_part_entry_exit
     net partition hpattern hpart hexit hentry
+
+theorem lemma3_partial_order_same_part_of_common_postset_reach
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {place : Place}
+    {left right : Trans}
+    (hleft : Patterns.reachesFromPostset net place left)
+    (hright : Patterns.reachesFromPostset net place right) :
+    partition.samePart left right :=
+  Patterns.partialOrderPattern_samePart_of_reachesFromPostset
+    net partition hpattern hleft hright
+
+theorem lemma3_partial_order_part_eq_of_common_postset_reach
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {leftPart rightPart : Set Trans}
+    (hleftPartMem : leftPart ∈ partition.parts)
+    (hrightPartMem : rightPart ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hleftPart : leftPart left)
+    (hrightPart : rightPart right)
+    (hleftReach : Patterns.reachesFromPostset net place left)
+    (hrightReach : Patterns.reachesFromPostset net place right) :
+    leftPart = rightPart :=
+  Patterns.partialOrderPattern_part_eq_of_common_postset_reach
+    net partition hpattern hleftPartMem hrightPartMem
+    hleftPart hrightPart hleftReach hrightReach
+
+theorem lemma3_partial_order_indexed_part_eq_of_common_postset_reach
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {leftIndex rightIndex : Nat}
+    {leftPart rightPart : Set Trans}
+    (hleftGet : Powl.listGet? partition.parts leftIndex = some leftPart)
+    (hrightGet : Powl.listGet? partition.parts rightIndex = some rightPart)
+    {place : Place}
+    {left right : Trans}
+    (hleftPart : leftPart left)
+    (hrightPart : rightPart right)
+    (hleftReach : Patterns.reachesFromPostset net place left)
+    (hrightReach : Patterns.reachesFromPostset net place right) :
+    leftPart = rightPart :=
+  Patterns.partialOrderPattern_indexed_part_eq_of_common_postset_reach
+    net partition hpattern hleftGet hrightGet
+    hleftPart hrightPart hleftReach hrightReach
 
 theorem lemma3_partial_order_entry_places_equivalent
     {Place : Type u}
@@ -353,6 +426,49 @@ theorem lemma3_partial_order_projection_contains_original
       net part (Patterns.BoundaryPlace.original place) :=
   Patterns.partialOrderProjectionPlaces_original
     net htouching hnotEntry hnotExit
+
+theorem lemma3_partial_order_projection_restricted_flow_original
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    {first second :
+      PetriNet.Node
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place}
+        {trans : Trans // part trans}}
+    (hflow :
+      PetriNet.flow
+        (Patterns.partialOrderProjectionRestricted net part)
+        first second) :
+    PetriNet.flow
+      (Patterns.partialOrderProjection net part)
+      (PetriNet.restrictedNode first)
+      (PetriNet.restrictedNode second) :=
+  Patterns.partialOrderProjectionRestricted_flow_original
+    net part hflow
+
+theorem lemma3_partial_order_projection_restricted_path_original
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    {source target :
+      PetriNet.Node
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place}
+        {trans : Trans // part trans}}
+    (path :
+      PetriNet.Path
+        (Patterns.partialOrderProjectionRestricted net part)
+        source
+        target) :
+    PetriNet.Path
+      (Patterns.partialOrderProjection net part)
+      (PetriNet.restrictedNode source)
+      (PetriNet.restrictedNode target) :=
+  Patterns.partialOrderProjectionRestricted_path_original
+    net part path
 
 theorem lemma3_partial_order_projection_end_edge
     {Place : Type u}
