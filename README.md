@@ -45,8 +45,10 @@ The current proof spine is:
   Loop projections now also have a subtype-restricted representation with
   selected places and transitions, plus checked source-to-sink boundary path
   constructors for one-transition entry/exit segments.
-  Partial-order projections now have checked boundary and internal edge
-  constructors, together with a one-transition start-to-end path constructor.
+  Partial-order projections now have a subtype-restricted representation with
+  selected transitions and retained boundary/original places, checked boundary
+  and internal edge constructors, and one-step path constructors for boundary
+  and retained-original edges.
 - `KouraniWfnetPowl.PaperTargets`: named Section 5 proof targets and checked
   semantic preservation theorems corresponding to the POWL-language side of
   Lemmas 4, 5, and 6, the checked base case for Theorem 1, and named checked
@@ -62,5 +64,3 @@ Build with:
 ```bash
 lake build
 ```
-
-source $HOME/.elan/env && lake build  <- This works
