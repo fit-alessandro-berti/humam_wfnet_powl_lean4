@@ -123,7 +123,9 @@ The current proof spine is:
   criterion for execution-order edges is checked equivalent to irreflexivity of
   the transitive closure. Partition contraction is now represented as a
   Petri-net over part indices, with execution order checked equivalent to
-  transition flow in that contracted net; contracted-flow acyclicity builds the
+  transition flow in that contracted net. The contraction is a marked graph
+  exactly when every original place is an entry point for at most one part and
+  an exit point for at most one part; contracted-flow acyclicity builds the
   partial-order pattern required in Case 3 of the completeness proof. The loop
   pattern now has checked extraction theorems showing do/redo transitions lie
   on the corresponding place-to-place paths, that loop-projection boundary
@@ -274,7 +276,8 @@ The current proof spine is:
   POWL-model consequence, plus explicit language-equality and visible-activity
   witness theorems for the concrete atom, XOR, loop, and partial-order POWL
   models, bundled into a `ConcretePowlWitness` case/certificate eliminator
-  with reusable preservation and safe+existence consequences, and a
+  with reusable preservation, safe+existence, and existential
+  visible-activity-witness consequences, and a
   `SemiBlockCompletenessCase`/`SemiBlockCompletenessCertificate` layer packages
   that case split into one algorithm-certificate object; the raw case evidence
   and bundled algorithm certificates both expose language preservation/equality,
@@ -314,8 +317,12 @@ The current proof spine is:
   structural package that carries free-choiceness, bundled marked-graph and
   direct no-decision non-boundary unique-place-flow wrappers with exact `↔`
   rewrite forms and transition-equality corollaries, Case 3 contraction,
-  no-return, and acyclicity wrappers that build the partial-order pattern and
-  strict partial order, plus semi-block
+  contracted marked-graph equivalence, no-return, acyclicity wrappers, and a
+  bundled contraction certificate that build the partial-order pattern and
+  strict partial order and now feeds the partial-order branch into the
+  certified conversion, language-equivalence, concrete POWL-witness, and
+  visible-activity-witness pipeline, including existential generated-model
+  visible-witness forms, plus semi-block
   specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, no-dead-transition,
