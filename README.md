@@ -145,9 +145,14 @@ The current proof spine is:
   original places, boundary places, and fresh source/sink places, plus an
   original-transition enabledness bridge for normalized partial-order
   projections under marked entry/exit boundary conditions, with checked firing
-  steps and firing witnesses for such projected original transitions. A more
-  general raw-projection normalization constructor is also available when
-  connectedness is supplied over the ambient raw projection.
+  steps, firing witnesses, one-step firing sequences, and reachability witnesses
+  for such projected original transitions. Reachable projected markings can now
+  be packaged as no-dead-transition witnesses for wrapped original transitions
+  in the normalized projection, and fresh enter/exit witnesses now combine with
+  the wrapped-original witnesses into a full `noDeadTransitions` constructor
+  under explicit reachability and boundary-marking hypotheses. A more general
+  raw-projection normalization constructor is also available when connectedness
+  is supplied over the ambient raw projection.
   Partial-order pattern consequences
   now also expose execution-order boundary construction, cycle exclusion,
   same-component entry/exit exclusion, and entry/exit place equivalence with
@@ -232,8 +237,10 @@ The current proof spine is:
   raw-`PathIn` constructor/path-lifting facts plus bidirectional
   restricted-path lifting, ordinary-path and `PathIn`-connected
   restricted projection normalization, restricted and normalized projection
-  marking facts, original-transition enabledness and firing witnesses in
-  normalized projections, generic normalization,
+  marking facts, original-transition enabledness, firing witnesses, singleton
+  firing sequences, reachability, original-transition and fresh-boundary
+  no-dead witnesses, and a full no-dead constructor for normalized projections,
+  generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
   normalized-language equivalence targets, execution-order, source/sink-aware
