@@ -28,7 +28,10 @@ The current proof spine is:
   firing sequences made only of wrapped original transitions are equivalent to
   original firing sequences between embedded markings. Boundary-shaped
   normalized accepting sequences, with enter/original/exit trace shape, are now
-  equivalent to original accepting firing sequences.
+  equivalent to original accepting firing sequences. The fresh enter/exit
+  transitions have checked enabledness characterizations, and wrapped original
+  transitions, including sequences made only of wrapped original transitions,
+  preserve the fresh source/sink token counts.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
   for Definition 5.
@@ -40,7 +43,8 @@ The current proof spine is:
   accepting trace. Normalized labels map enter/exit transitions to silent
   labels and preserve trace words for original traces with silent normalization
   boundaries, yielding a checked original-language-to-normalized-language
-  inclusion.
+  inclusion and an equivalence with the normalized language restricted to
+  boundary-shaped enter/original/exit traces.
 - `KouraniWfnetPowl.Patterns`: partition, XOR, loop, and partial-order pattern
   predicates plus the corresponding projection constructions from Section 4;
   also includes checked facts that XOR projection paths lift to the original net
@@ -85,9 +89,10 @@ The current proof spine is:
   Lemma 3 partial-order projection boundary/internal edge and one-step path
   facts plus restricted-path lifting, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
-  invariants, and normalized-language targets, execution-order,
-  source/sink-aware entry/exit point API, and boundary-equivalence
-  consequences, plus common-postset same-component consequences.
+  invariants, fresh-boundary enabledness/preservation facts, and
+  normalized-language equivalence targets, execution-order, source/sink-aware
+  entry/exit point API, and boundary-equivalence consequences, plus
+  common-postset same-component consequences.
 
 Build with:
 

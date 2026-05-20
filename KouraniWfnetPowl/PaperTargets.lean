@@ -402,6 +402,18 @@ theorem normalization_boundary_accepting_firing_sequence_iff
           (WorkflowNet.final net) :=
   WorkflowNet.normalized_firingSequence_accepting_iff net
 
+theorem normalization_enter_enabled_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (marking : Marking (PetriNet.NormalizedPlace Place)) :
+    WorkflowNet.enabled
+      (WorkflowNet.normalizedNet net)
+      marking
+      PetriNet.NormalizedTrans.enter ↔
+        marking PetriNet.NormalizedPlace.source > 0 :=
+  WorkflowNet.normalized_enter_enabled_iff net marking
+
 theorem normalization_exit_fires_iff
     {Place : Type u}
     {Trans : Type v}
@@ -415,6 +427,18 @@ theorem normalization_exit_fires_iff
       (WorkflowNet.final (WorkflowNet.normalizedNet net)) ↔
         marking = WorkflowNet.final net :=
   WorkflowNet.normalized_exit_fires_iff net marking
+
+theorem normalization_exit_enabled_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (marking : Marking (PetriNet.NormalizedPlace Place)) :
+    WorkflowNet.enabled
+      (WorkflowNet.normalizedNet net)
+      marking
+      PetriNet.NormalizedTrans.exit ↔
+        marking (PetriNet.NormalizedPlace.original net.sink) > 0 :=
+  WorkflowNet.normalized_exit_enabled_iff net marking
 
 theorem normalization_original_transition_enabled_iff
     {Place : Type u}
@@ -441,6 +465,68 @@ theorem normalization_original_transition_fire_eq
       (PetriNet.NormalizedTrans.original trans) =
         Marking.normalize (WorkflowNet.fire net marking trans) :=
   WorkflowNet.normalized_original_fire_eq net marking trans
+
+theorem normalization_original_transition_preserves_fresh_source
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (marking : Marking (PetriNet.NormalizedPlace Place))
+    (trans : Trans) :
+    WorkflowNet.fire
+      (WorkflowNet.normalizedNet net)
+      marking
+      (PetriNet.NormalizedTrans.original trans)
+      PetriNet.NormalizedPlace.source =
+        marking PetriNet.NormalizedPlace.source :=
+  WorkflowNet.normalized_original_fire_fresh_source net marking trans
+
+theorem normalization_original_transition_preserves_fresh_sink
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (marking : Marking (PetriNet.NormalizedPlace Place))
+    (trans : Trans) :
+    WorkflowNet.fire
+      (WorkflowNet.normalizedNet net)
+      marking
+      (PetriNet.NormalizedTrans.original trans)
+      PetriNet.NormalizedPlace.sink =
+        marking PetriNet.NormalizedPlace.sink :=
+  WorkflowNet.normalized_original_fire_fresh_sink net marking trans
+
+theorem normalization_original_sequence_preserves_fresh_source
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {before after : Marking (PetriNet.NormalizedPlace Place)}
+    {trace : List Trans}
+    (sequence :
+      WorkflowNet.FiringSequence
+        (WorkflowNet.normalizedNet net)
+        before
+        (trace.map PetriNet.NormalizedTrans.original)
+        after) :
+    after PetriNet.NormalizedPlace.source =
+      before PetriNet.NormalizedPlace.source :=
+  WorkflowNet.normalized_original_firingSequence_preserves_fresh_source
+    net sequence
+
+theorem normalization_original_sequence_preserves_fresh_sink
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {before after : Marking (PetriNet.NormalizedPlace Place)}
+    {trace : List Trans}
+    (sequence :
+      WorkflowNet.FiringSequence
+        (WorkflowNet.normalizedNet net)
+        before
+        (trace.map PetriNet.NormalizedTrans.original)
+        after) :
+    after PetriNet.NormalizedPlace.sink =
+      before PetriNet.NormalizedPlace.sink :=
+  WorkflowNet.normalized_original_firingSequence_preserves_fresh_sink
+    net sequence
 
 theorem normalization_original_transition_fires_iff
     {Place : Type u}
@@ -484,6 +570,18 @@ theorem normalization_language_of_original
       (WorkflowNet.normalizedLabel label)
       word :=
   WorkflowNet.normalized_language_of_original hlanguage
+
+theorem normalization_boundary_language_iff_original
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity)
+    (word : List Activity) :
+    WorkflowNet.normalizedBoundaryLanguage net label word ↔
+      WorkflowNet.language net label word :=
+  WorkflowNet.normalizedBoundaryLanguage_iff_original net label word
 
 theorem lemma3_entry_point_source_iff
     {Place : Type u}
