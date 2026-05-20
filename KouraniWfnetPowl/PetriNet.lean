@@ -811,6 +811,224 @@ theorem reachableTransitionsBetweenPlaces_paths
     ⟨PlacePathTo.path_to_member_transition path hmem,
       PlacePathTo.member_transition_to_path path hmem⟩
 
+inductive NormalizedPlace (Place : Type u) where
+  | source : NormalizedPlace Place
+  | original : Place -> NormalizedPlace Place
+  | sink : NormalizedPlace Place
+
+inductive NormalizedTrans (Trans : Type u) where
+  | enter : NormalizedTrans Trans
+  | original : Trans -> NormalizedTrans Trans
+  | exit : NormalizedTrans Trans
+
+def normalize
+    (net : PetriNet Place Trans)
+    (source sink : Place) :
+    PetriNet (NormalizedPlace Place) (NormalizedTrans Trans) where
+  placeToTrans := fun place trans =>
+    match place, trans with
+    | NormalizedPlace.source, NormalizedTrans.enter => True
+    | NormalizedPlace.original place, NormalizedTrans.original trans =>
+        net.placeToTrans place trans
+    | NormalizedPlace.original place, NormalizedTrans.exit =>
+        place = sink
+    | _, _ => False
+  transToPlace := fun trans place =>
+    match trans, place with
+    | NormalizedTrans.enter, NormalizedPlace.original place =>
+        place = source
+    | NormalizedTrans.original trans, NormalizedPlace.original place =>
+        net.transToPlace trans place
+    | NormalizedTrans.exit, NormalizedPlace.sink => True
+    | _, _ => False
+
+def normalizedNode :
+    Node Place Trans ->
+      Node (NormalizedPlace Place) (NormalizedTrans Trans)
+  | Node.place place => Node.place (NormalizedPlace.original place)
+  | Node.trans trans => Node.trans (NormalizedTrans.original trans)
+
+theorem normalize_flow_original
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    {first second : Node Place Trans}
+    (hflow : flow net first second) :
+    flow (normalize net source sink)
+      (normalizedNode first)
+      (normalizedNode second) := by
+  cases first <;> cases second <;>
+    simp [flow, normalize, normalizedNode] at hflow ⊢
+  all_goals exact hflow
+
+theorem normalize_path_original
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    {first second : Node Place Trans}
+    (path : Path net first second) :
+    Path (normalize net source sink)
+      (normalizedNode first)
+      (normalizedNode second) := by
+  induction path with
+  | refl =>
+      exact Path.refl
+  | step hflow _ ih =>
+      exact
+        Path.step
+          (normalize_flow_original net source sink hflow)
+          ih
+
+theorem normalize_source_to_enter
+    (net : PetriNet Place Trans)
+    (source sink : Place) :
+    Path (normalize net source sink)
+      (Node.place (NormalizedPlace.source : NormalizedPlace Place))
+      (Node.trans (NormalizedTrans.enter : NormalizedTrans Trans)) :=
+  Path.step (by simp [flow, normalize]) Path.refl
+
+theorem normalize_enter_to_original_source
+    (net : PetriNet Place Trans)
+    (source sink : Place) :
+    Path (normalize net source sink)
+      (Node.trans (NormalizedTrans.enter : NormalizedTrans Trans))
+      (Node.place (NormalizedPlace.original source)) :=
+  Path.step (by simp [flow, normalize]) Path.refl
+
+theorem normalize_source_to_original_source
+    (net : PetriNet Place Trans)
+    (source sink : Place) :
+    Path (normalize net source sink)
+      (Node.place (NormalizedPlace.source : NormalizedPlace Place))
+      (Node.place (NormalizedPlace.original source)) :=
+  Path.trans
+    (normalize_source_to_enter net source sink)
+    (normalize_enter_to_original_source net source sink)
+
+theorem normalize_original_sink_to_exit
+    (net : PetriNet Place Trans)
+    (source sink : Place) :
+    Path (normalize net source sink)
+      (Node.place (NormalizedPlace.original sink))
+      (Node.trans (NormalizedTrans.exit : NormalizedTrans Trans)) :=
+  Path.step (by simp [flow, normalize]) Path.refl
+
+theorem normalize_exit_to_sink
+    (net : PetriNet Place Trans)
+    (source sink : Place) :
+    Path (normalize net source sink)
+      (Node.trans (NormalizedTrans.exit : NormalizedTrans Trans))
+      (Node.place (NormalizedPlace.sink : NormalizedPlace Place)) :=
+  Path.step (by simp [flow, normalize]) Path.refl
+
+theorem normalize_original_sink_to_sink
+    (net : PetriNet Place Trans)
+    (source sink : Place) :
+    Path (normalize net source sink)
+      (Node.place (NormalizedPlace.original sink))
+      (Node.place (NormalizedPlace.sink : NormalizedPlace Place)) :=
+  Path.trans
+    (normalize_original_sink_to_exit net source sink)
+    (normalize_exit_to_sink net source sink)
+
+theorem normalize_source_to_sink
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (path : Path net (Node.place source) (Node.place sink)) :
+    Path (normalize net source sink)
+      (Node.place (NormalizedPlace.source : NormalizedPlace Place))
+      (Node.place (NormalizedPlace.sink : NormalizedPlace Place)) :=
+  Path.trans
+    (normalize_source_to_original_source net source sink)
+    (Path.trans
+      (normalize_path_original net source sink path)
+      (normalize_original_sink_to_sink net source sink))
+
+theorem normalize_connected
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (hconnected :
+      ∀ node : Node Place Trans,
+        Path net (Node.place source) node ∧
+        Path net node (Node.place sink)) :
+    ∀ node : Node (NormalizedPlace Place) (NormalizedTrans Trans),
+      Path (normalize net source sink)
+        (Node.place (NormalizedPlace.source : NormalizedPlace Place))
+        node ∧
+      Path (normalize net source sink)
+        node
+        (Node.place (NormalizedPlace.sink : NormalizedPlace Place)) := by
+  intro node
+  cases node with
+  | place place =>
+      cases place with
+      | source =>
+          exact
+            ⟨Path.refl,
+              normalize_source_to_sink
+                net source sink (hconnected (Node.place source)).2⟩
+      | original place =>
+          exact
+            ⟨Path.trans
+                (normalize_source_to_original_source net source sink)
+                (normalize_path_original
+                  net source sink (hconnected (Node.place place)).1),
+              Path.trans
+                (normalize_path_original
+                  net source sink (hconnected (Node.place place)).2)
+                (normalize_original_sink_to_sink net source sink)⟩
+      | sink =>
+          exact
+            ⟨normalize_source_to_sink
+                net source sink (hconnected (Node.place source)).2,
+              Path.refl⟩
+  | trans trans =>
+      cases trans with
+      | enter =>
+          exact
+            ⟨normalize_source_to_enter net source sink,
+              Path.trans
+                (normalize_enter_to_original_source net source sink)
+                (Path.trans
+                  (normalize_path_original
+                    net source sink (hconnected (Node.place source)).2)
+                  (normalize_original_sink_to_sink net source sink))⟩
+      | original trans =>
+          exact
+            ⟨Path.trans
+                (normalize_source_to_original_source net source sink)
+                (normalize_path_original
+                  net source sink (hconnected (Node.trans trans)).1),
+              Path.trans
+                (normalize_path_original
+                  net source sink (hconnected (Node.trans trans)).2)
+                (normalize_original_sink_to_sink net source sink)⟩
+      | exit =>
+          exact
+            ⟨Path.trans
+                (normalize_source_to_original_source net source sink)
+                (Path.trans
+                  (normalize_path_original
+                    net source sink (hconnected (Node.place sink)).1)
+                  (normalize_original_sink_to_exit net source sink)),
+              normalize_exit_to_sink net source sink⟩
+
+theorem normalize_source_no_input
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (trans : NormalizedTrans Trans) :
+    ¬ (normalize net source sink).transToPlace
+      trans
+      (NormalizedPlace.source : NormalizedPlace Place) := by
+  cases trans <;> simp [normalize]
+
+theorem normalize_sink_no_output
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (trans : NormalizedTrans Trans) :
+    ¬ (normalize net source sink).placeToTrans
+      (NormalizedPlace.sink : NormalizedPlace Place)
+      trans := by
+  cases trans <;> simp [normalize]
+
 end PetriNet
 
 abbrev Marking (Place : Type u) := Place -> Nat
@@ -973,6 +1191,29 @@ theorem transition_has_output
   rcases PetriNet.path_transition_to_place_first net.toPetriNet hpath with
     ⟨place, hflow, _path⟩
   exact ⟨place, hflow⟩
+
+def normalized
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (hconnected :
+      ∀ node : PetriNet.Node Place Trans,
+        PetriNet.Path net (PetriNet.Node.place source) node ∧
+        PetriNet.Path net node (PetriNet.Node.place sink)) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace Place)
+      (PetriNet.NormalizedTrans Trans) where
+  toPetriNet := PetriNet.normalize net source sink
+  source := PetriNet.NormalizedPlace.source
+  sink := PetriNet.NormalizedPlace.sink
+  uniqueSource := by
+    apply PetriNet.uniqueSource_of_connected_no_in
+    · exact PetriNet.normalize_source_no_input net source sink
+    · exact PetriNet.normalize_connected net source sink hconnected
+  uniqueSink := by
+    apply PetriNet.uniqueSink_of_connected_no_out
+    · exact PetriNet.normalize_sink_no_output net source sink
+    · exact PetriNet.normalize_connected net source sink hconnected
+  connected := PetriNet.normalize_connected net source sink hconnected
 
 theorem entryPoints_has_part_output
     (net : WorkflowNet Place Trans)

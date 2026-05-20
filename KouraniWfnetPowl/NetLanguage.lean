@@ -30,6 +30,19 @@ theorem traceWord_cons
       Powl.transitionWord label trans ++ traceWord label rest :=
   rfl
 
+theorem traceWord_append
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity)
+    (left right : List Trans) :
+    traceWord label (left ++ right) =
+      traceWord label left ++ traceWord label right := by
+  induction left with
+  | nil =>
+      rfl
+  | cons trans rest ih =>
+      simp [traceWord, ih, List.append_assoc]
+
 theorem traceWord_singleton
     {Activity : Type u}
     {Trans : Type v}
@@ -51,6 +64,90 @@ theorem traceWord_map_subtype
       rfl
   | cons trans rest ih =>
       simp [traceWord, Powl.transitionWord, ih]
+
+def normalizedLabel
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity) :
+    PetriNet.NormalizedTrans Trans -> TransitionLabel Activity
+  | PetriNet.NormalizedTrans.enter => TransitionLabel.silent
+  | PetriNet.NormalizedTrans.original trans => label trans
+  | PetriNet.NormalizedTrans.exit => TransitionLabel.silent
+
+theorem normalizedLabel_enter
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity) :
+    normalizedLabel label
+      (PetriNet.NormalizedTrans.enter : PetriNet.NormalizedTrans Trans) =
+      TransitionLabel.silent :=
+  rfl
+
+theorem normalizedLabel_exit
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity) :
+    normalizedLabel label
+      (PetriNet.NormalizedTrans.exit : PetriNet.NormalizedTrans Trans) =
+      TransitionLabel.silent :=
+  rfl
+
+theorem normalizedLabel_original
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity)
+    (trans : Trans) :
+    normalizedLabel label (PetriNet.NormalizedTrans.original trans) =
+      label trans :=
+  rfl
+
+theorem traceWord_normalized_original
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity)
+    (trace : List Trans) :
+    traceWord (normalizedLabel label)
+      (trace.map PetriNet.NormalizedTrans.original) =
+        traceWord label trace := by
+  induction trace with
+  | nil =>
+      rfl
+  | cons trans rest ih =>
+      simp [traceWord, Powl.transitionWord, normalizedLabel, ih]
+
+theorem traceWord_normalized_enter_cons
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity)
+    (trace : List (PetriNet.NormalizedTrans Trans)) :
+    traceWord (normalizedLabel label)
+      (PetriNet.NormalizedTrans.enter :: trace) =
+        traceWord (normalizedLabel label) trace := by
+  simp [traceWord, Powl.transitionWord, normalizedLabel, TransitionLabel.word]
+
+theorem traceWord_normalized_exit_singleton
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity) :
+    traceWord (normalizedLabel label)
+      ([PetriNet.NormalizedTrans.exit] : List (PetriNet.NormalizedTrans Trans)) =
+        [] := by
+  simp [traceWord, Powl.transitionWord, normalizedLabel, TransitionLabel.word]
+
+theorem traceWord_normalized_with_boundary
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity)
+    (trace : List Trans) :
+    traceWord (normalizedLabel label)
+      (PetriNet.NormalizedTrans.enter ::
+        trace.map PetriNet.NormalizedTrans.original ++
+          [PetriNet.NormalizedTrans.exit]) =
+        traceWord label trace := by
+  simp [traceWord, Powl.transitionWord, normalizedLabel, TransitionLabel.word]
+  rw [traceWord_append]
+  rw [traceWord_normalized_original]
+  simp [traceWord, Powl.transitionWord, normalizedLabel, TransitionLabel.word]
 
 def language
     {Place : Type u}

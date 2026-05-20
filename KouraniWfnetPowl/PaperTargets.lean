@@ -267,6 +267,100 @@ theorem wfnet_transition_has_output
     ∃ place, net.transToPlace trans place :=
   WorkflowNet.transition_has_output net trans
 
+theorem normalization_lifts_original_path
+    {Place : Type u}
+    {Trans : Type v}
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    {first second : PetriNet.Node Place Trans}
+    (path : PetriNet.Path net first second) :
+    PetriNet.Path
+      (PetriNet.normalize net source sink)
+      (PetriNet.normalizedNode first)
+      (PetriNet.normalizedNode second) :=
+  PetriNet.normalize_path_original net source sink path
+
+theorem normalization_source_no_input
+    {Place : Type u}
+    {Trans : Type v}
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (trans : PetriNet.NormalizedTrans Trans) :
+    ¬ (PetriNet.normalize net source sink).transToPlace
+      trans
+      PetriNet.NormalizedPlace.source :=
+  PetriNet.normalize_source_no_input net source sink trans
+
+theorem normalization_sink_no_output
+    {Place : Type u}
+    {Trans : Type v}
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (trans : PetriNet.NormalizedTrans Trans) :
+    ¬ (PetriNet.normalize net source sink).placeToTrans
+      PetriNet.NormalizedPlace.sink
+      trans :=
+  PetriNet.normalize_sink_no_output net source sink trans
+
+theorem normalization_connected
+    {Place : Type u}
+    {Trans : Type v}
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (hconnected :
+      ∀ node : PetriNet.Node Place Trans,
+        PetriNet.Path net (PetriNet.Node.place source) node ∧
+        PetriNet.Path net node (PetriNet.Node.place sink)) :
+    ∀ node :
+      PetriNet.Node
+        (PetriNet.NormalizedPlace Place)
+        (PetriNet.NormalizedTrans Trans),
+      PetriNet.Path
+        (PetriNet.normalize net source sink)
+        (PetriNet.Node.place PetriNet.NormalizedPlace.source)
+        node ∧
+      PetriNet.Path
+        (PetriNet.normalize net source sink)
+        node
+        (PetriNet.Node.place PetriNet.NormalizedPlace.sink) :=
+  PetriNet.normalize_connected net source sink hconnected
+
+def normalization_workflow_net
+    {Place : Type u}
+    {Trans : Type v}
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (hconnected :
+      ∀ node : PetriNet.Node Place Trans,
+        PetriNet.Path net (PetriNet.Node.place source) node ∧
+        PetriNet.Path net node (PetriNet.Node.place sink)) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace Place)
+      (PetriNet.NormalizedTrans Trans) :=
+  WorkflowNet.normalized net source sink hconnected
+
+theorem normalization_original_trace_word
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity)
+    (trace : List Trans) :
+    WorkflowNet.traceWord (WorkflowNet.normalizedLabel label)
+      (trace.map PetriNet.NormalizedTrans.original) =
+        WorkflowNet.traceWord label trace :=
+  WorkflowNet.traceWord_normalized_original label trace
+
+theorem normalization_boundary_trace_word
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity)
+    (trace : List Trans) :
+    WorkflowNet.traceWord (WorkflowNet.normalizedLabel label)
+      (PetriNet.NormalizedTrans.enter ::
+        trace.map PetriNet.NormalizedTrans.original ++
+          [PetriNet.NormalizedTrans.exit]) =
+        WorkflowNet.traceWord label trace :=
+  WorkflowNet.traceWord_normalized_with_boundary label trace
+
 theorem lemma3_entry_point_source_iff
     {Place : Type u}
     {Trans : Type v}

@@ -18,7 +18,10 @@ The current proof spine is:
   sequences whose trace is already typed by the selected transitions. The path
   layer now includes dual first/last place-transition facts, yielding checked
   WF-net consequences that every transition has at least one input and one
-  output place.
+  output place. A generic normalization construction adds fresh source/sink
+  places and enter/exit transitions around a connected designated-source/sink
+  Petri net, with checked path lifting, connectedness, unique source/sink, and
+  `WorkflowNet` construction.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
   for Definition 5.
@@ -27,7 +30,9 @@ The current proof spine is:
   lemmas. The language layer now records subtype-trace erasure and generic
   language transfer lemmas between closed restricted subnets and their original
   WF-nets, plus the fact that a typed subtype trace is already an original
-  accepting trace.
+  accepting trace. Normalized labels map enter/exit transitions to silent
+  labels and preserve trace words for original traces with silent normalization
+  boundaries.
 - `KouraniWfnetPowl.Patterns`: partition, XOR, loop, and partial-order pattern
   predicates plus the corresponding projection constructions from Section 4;
   also includes checked facts that XOR projection paths lift to the original net
@@ -70,9 +75,10 @@ The current proof spine is:
   language equivalence with typed original subtraces, and Lemma 2 loop trace
   closure plus loop projection boundary and restricted-projection facts, and
   Lemma 3 partial-order projection boundary/internal edge and one-step path
-  facts plus restricted-path lifting, execution-order, source/sink-aware
-  entry/exit point API, and boundary-equivalence consequences, plus
-  common-postset same-component consequences.
+  facts plus restricted-path lifting, generic normalization and normalized-trace
+  targets, execution-order, source/sink-aware entry/exit point API, and
+  boundary-equivalence consequences, plus common-postset same-component
+  consequences.
 
 Build with:
 
