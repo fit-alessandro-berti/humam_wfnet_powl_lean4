@@ -1179,6 +1179,27 @@ namespace WorkflowNet
 
 variable {Place : Type u} {Trans : Type v}
 
+def ofConnectedNoBoundaryEdges
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (hsourceNoIn : ∀ trans, ¬ net.transToPlace trans source)
+    (hsinkNoOut : ∀ trans, ¬ net.placeToTrans sink trans)
+    (hconnected :
+      ∀ node : PetriNet.Node Place Trans,
+        PetriNet.Path net (PetriNet.Node.place source) node ∧
+        PetriNet.Path net node (PetriNet.Node.place sink)) :
+    WorkflowNet Place Trans where
+  toPetriNet := net
+  source := source
+  sink := sink
+  uniqueSource :=
+    PetriNet.uniqueSource_of_connected_no_in
+      net source sink hsourceNoIn hconnected
+  uniqueSink :=
+    PetriNet.uniqueSink_of_connected_no_out
+      net source sink hsinkNoOut hconnected
+  connected := hconnected
+
 def entryPoints (net : WorkflowNet Place Trans) (part : Set Trans) : Set Place :=
   fun place =>
     (∃ trans, part trans ∧ net.placeToTrans place trans) ∧

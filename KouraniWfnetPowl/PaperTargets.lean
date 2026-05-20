@@ -267,6 +267,21 @@ theorem wfnet_transition_has_output
     ∃ place, net.transToPlace trans place :=
   WorkflowNet.transition_has_output net trans
 
+def workflow_net_of_connected_no_boundary_edges
+    {Place : Type u}
+    {Trans : Type v}
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (hsourceNoIn : ∀ trans, ¬ net.transToPlace trans source)
+    (hsinkNoOut : ∀ trans, ¬ net.placeToTrans sink trans)
+    (hconnected :
+      ∀ node : PetriNet.Node Place Trans,
+        PetriNet.Path net (PetriNet.Node.place source) node ∧
+        PetriNet.Path net node (PetriNet.Node.place sink)) :
+    WorkflowNet Place Trans :=
+  WorkflowNet.ofConnectedNoBoundaryEdges
+    net source sink hsourceNoIn hsinkNoOut hconnected
+
 theorem normalization_lifts_original_path
     {Place : Type u}
     {Trans : Type v}
@@ -2530,6 +2545,40 @@ theorem lemma2_loop_projection_restricted_internal_place_connected_of_incident_t
                     net redoPart predo pdo⟩)) :=
   Patterns.loopPattern_projection_restricted_internal_place_connected_of_incident_transitions
     hpattern
+
+def lemma2_loop_projection_workflow_net_of_connected
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Place //
+            Patterns.loopProjectionPlaces net part startPlace endPlace place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source
+                  net part startPlace endPlace⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            node
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink
+                  net part startPlace endPlace⟩)) :
+    WorkflowNet
+      {place : Place //
+        Patterns.loopProjectionPlaces net part startPlace endPlace place}
+      {trans : Trans // part trans} :=
+  Patterns.loopProjectionWorkflowNetOfConnected
+    net part startPlace endPlace hsourceSink hconnected
 
 theorem lemma2_loop_projection_restricted_boundary_path
     {Place : Type u}

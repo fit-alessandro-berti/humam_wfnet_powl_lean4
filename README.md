@@ -18,9 +18,11 @@ The current proof spine is:
   sequences whose trace is already typed by the selected transitions. The path
   layer now includes dual first/last place-transition facts, yielding checked
   WF-net consequences that every transition has at least one input and one
-  output place. A generic normalization construction adds fresh source/sink
-  places and enter/exit transitions around a connected designated-source/sink
-  Petri net, with checked path lifting, connectedness, unique source/sink, and
+  output place. A reusable constructor builds a `WorkflowNet` from a Petri net
+  with connected source/sink paths plus no incoming source edge and no outgoing
+  sink edge. A generic normalization construction adds fresh source/sink places
+  and enter/exit transitions around a connected designated-source/sink Petri
+  net, with checked path lifting, connectedness, unique source/sink, and
   `WorkflowNet` construction. Accepting firing sequences lift into normalized
   WF-nets by wrapping the original trace with silent enter/exit transitions.
   Original-transition enabledness, firing, and fire-result equations are
@@ -71,7 +73,9 @@ The current proof spine is:
   yielding checked source/sink connectivity for selected do/redo transitions
   and directional source/sink connectivity for internal places incident to
   selected transitions. Internal places with both selected incoming and outgoing
-  transitions now have checked two-sided source/sink connectivity.
+  transitions now have checked two-sided source/sink connectivity, and loop
+  projections can be packaged as `WorkflowNet`s once their restricted
+  source/sink connectedness obligation is supplied.
   Partial-order projections now have a subtype-restricted representation with
   selected transitions and retained boundary/original places, checked boundary
   and internal edge constructors in all boundary directions, and one-step path
@@ -92,8 +96,9 @@ The current proof spine is:
   selected-sequence restriction, safeness preservation, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, and Lemma 2 loop trace
-  closure plus loop projection boundary and restricted-projection lifting facts,
-  and Lemma 3 partial-order projection boundary/internal edge and one-step path
+  closure plus loop projection boundary, restricted-projection lifting, and
+  connected-projection-to-`WorkflowNet` packaging facts, and Lemma 3
+  partial-order projection boundary/internal edge and one-step path
   facts plus restricted-path lifting, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
