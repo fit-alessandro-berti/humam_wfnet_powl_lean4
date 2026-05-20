@@ -4,5 +4,6 @@ import KouraniWfnetPowl.Basic
 import KouraniWfnetPowl.Language
 import KouraniWfnetPowl.PetriNet
 import KouraniWfnetPowl.Powl
+import KouraniWfnetPowl.NetLanguage
 import KouraniWfnetPowl.Patterns
 import KouraniWfnetPowl.PaperTargets

@@ -1,5 +1,7 @@
 import KouraniWfnetPowl.PetriNet
 import KouraniWfnetPowl.Powl
+import KouraniWfnetPowl.NetLanguage
+import KouraniWfnetPowl.Patterns
 
 namespace KouraniWfnetPowl
 
@@ -86,6 +88,48 @@ theorem partial_order_pattern_language_preservation
   intro word
   rw [Powl.partial_order_language_iff]
   exact Iff.symm (hnet word)
+
+theorem theorem1_base_case_single_transition
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {trans : Trans}
+    (hall :
+      ∀ trace,
+        WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) ->
+          trace = [trans])
+    (hfire :
+      WorkflowNet.FiringSequence
+        net
+        (WorkflowNet.initial net)
+        [trans]
+        (WorkflowNet.final net)) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language label (Powl.atom trans) word := by
+  intro word
+  constructor
+  · intro hnet
+    exact WorkflowNet.atom_language_of_single_trace_net_language hnet hall
+  · intro hpowl
+    exact WorkflowNet.single_trace_net_language_of_atom_language hfire hpowl
+
+theorem partial_order_pattern_execution_order_asymmetric
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    Asymmetric
+      (TransGen (Patterns.executionOrder net partition)) :=
+  Patterns.partialOrderPattern_asymmetric net partition hpattern
 
 end Paper2503_20363
 

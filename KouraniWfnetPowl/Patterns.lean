@@ -67,6 +67,134 @@ def xorProjection
     (PetriNet.placesTouching net.toPetriNet part)
     part
 
+def xorProjectionRestricted
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans) :
+    PetriNet
+      {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+      {trans : Trans // part trans} :=
+  PetriNet.restrict
+    net.toPetriNet
+    (PetriNet.placesTouching net.toPetriNet part)
+    part
+
+theorem xorProjection_placeToTrans_iff
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (place : Place)
+    (trans : Trans) :
+    (xorProjection net part).placeToTrans place trans ↔
+      PetriNet.placesTouching net.toPetriNet part place ∧
+      part trans ∧
+      net.placeToTrans place trans :=
+  Iff.rfl
+
+theorem xorProjection_transToPlace_iff
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (trans : Trans)
+    (place : Place) :
+    (xorProjection net part).transToPlace trans place ↔
+      part trans ∧
+      PetriNet.placesTouching net.toPetriNet part place ∧
+      net.transToPlace trans place :=
+  Iff.rfl
+
+theorem xorProjection_flow_original
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    {first second : PetriNet.Node Place Trans}
+    (hflow : PetriNet.flow (xorProjection net part) first second) :
+    PetriNet.flow net.toPetriNet first second :=
+  PetriNet.projectedFlow_flow_original
+    net.toPetriNet
+    (PetriNet.placesTouching net.toPetriNet part)
+    part
+    hflow
+
+theorem xorProjection_path_original
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    {source target : PetriNet.Node Place Trans}
+    (path : PetriNet.Path (xorProjection net part) source target) :
+    PetriNet.Path net.toPetriNet source target :=
+  PetriNet.projectedFlow_path_original
+    net.toPetriNet
+    (PetriNet.placesTouching net.toPetriNet part)
+    part
+    path
+
+theorem xorProjectionRestricted_placeToTrans_iff
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (place : {place : Place // PetriNet.placesTouching net.toPetriNet part place})
+    (trans : {trans : Trans // part trans}) :
+    (xorProjectionRestricted net part).placeToTrans place trans ↔
+      net.placeToTrans place.val trans.val :=
+  Iff.rfl
+
+theorem xorProjectionRestricted_transToPlace_iff
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (trans : {trans : Trans // part trans})
+    (place : {place : Place // PetriNet.placesTouching net.toPetriNet part place}) :
+    (xorProjectionRestricted net part).transToPlace trans place ↔
+      net.transToPlace trans.val place.val :=
+  Iff.rfl
+
+theorem xorProjectionRestricted_flow_original
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    {first second :
+      PetriNet.Node
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans}}
+    (hflow : PetriNet.flow (xorProjectionRestricted net part) first second) :
+    PetriNet.flow
+      net.toPetriNet
+      (PetriNet.restrictedNode first)
+      (PetriNet.restrictedNode second) :=
+  PetriNet.restrict_flow_original
+    net.toPetriNet
+    (PetriNet.placesTouching net.toPetriNet part)
+    part
+    hflow
+
+theorem xorProjectionRestricted_path_original
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    {source target :
+      PetriNet.Node
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans}}
+    (path : PetriNet.Path (xorProjectionRestricted net part) source target) :
+    PetriNet.Path
+      net.toPetriNet
+      (PetriNet.restrictedNode source)
+      (PetriNet.restrictedNode target) :=
+  PetriNet.restrict_path_original
+    net.toPetriNet
+    (PetriNet.placesTouching net.toPetriNet part)
+    part
+    path
+
+theorem xorProjectionRestricted_path_of_pathIn
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    {source target : PetriNet.Node Place Trans}
+    (path :
+      PetriNet.PathIn
+        net.toPetriNet
+        (PetriNet.placesTouching net.toPetriNet part)
+        part
+        source
+        target) :
+    PetriNet.Path
+      (xorProjectionRestricted net part)
+      (PetriNet.restrictNode source (PetriNet.PathIn.source_mem path))
+      (PetriNet.restrictNode target (PetriNet.PathIn.target_mem path)) :=
+  PetriNet.PathIn.to_restrict_path path
+
 def loopPattern
     {Activity : Type w}
     (label : Trans -> TransitionLabel Activity)
@@ -118,6 +246,82 @@ def loopProjection
           net.transToPlace trans place) ∨
         (place = net.sink ∧ net.transToPlace trans endPlace))
 
+theorem loopPattern_part_paths
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ trans, doPart trans ->
+        PetriNet.Path net.toPetriNet
+          (PetriNet.Node.place pdo)
+          (PetriNet.Node.trans trans) ∧
+        PetriNet.Path net.toPetriNet
+          (PetriNet.Node.trans trans)
+          (PetriNet.Node.place predo)) ∧
+      (∀ trans, redoPart trans ->
+        PetriNet.Path net.toPetriNet
+          (PetriNet.Node.place predo)
+          (PetriNet.Node.trans trans) ∧
+        PetriNet.Path net.toPetriNet
+          (PetriNet.Node.trans trans)
+          (PetriNet.Node.place pdo)) := by
+  rcases hpattern with
+    ⟨doPart, redoPart, _silentPart,
+      hdoMem, hredoMem, _hsilentMem,
+      pdo, predo, _sourceTrans, _sinkTrans,
+      _hne, _hsilentSet, _hsourceSilent, _hsinkSilent,
+      _hsourcePost, _hsinkPre, _hsourcePre, _hsourceOut,
+      _hsinkIn, _hsinkOut,
+      hdoReach, hredoReach,
+      _hdoNoIn, _hredoNoIn, _hdoNoOut, _hredoNoOut⟩
+  refine ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem, ?_, ?_⟩
+  · intro trans hdo
+    exact PetriNet.reachableTransitionsBetweenPlaces_paths
+      net.toPetriNet
+      ((hdoReach trans).mp hdo)
+  · intro trans hredo
+    exact PetriNet.reachableTransitionsBetweenPlaces_paths
+      net.toPetriNet
+      ((hredoReach trans).mp hredo)
+
+theorem loopPattern_part_trace_closed
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ trace,
+        PetriNet.PlacePathTo net.toPetriNet predo pdo trace ->
+          ∀ trans, trans ∈ trace -> doPart trans) ∧
+      (∀ trace,
+        PetriNet.PlacePathTo net.toPetriNet pdo predo trace ->
+          ∀ trans, trans ∈ trace -> redoPart trans) := by
+  rcases hpattern with
+    ⟨doPart, redoPart, _silentPart,
+      hdoMem, hredoMem, _hsilentMem,
+      pdo, predo, _sourceTrans, _sinkTrans,
+      _hne, _hsilentSet, _hsourceSilent, _hsinkSilent,
+      _hsourcePost, _hsinkPre, _hsourcePre, _hsourceOut,
+      _hsinkIn, _hsinkOut,
+      hdoReach, hredoReach,
+      _hdoNoIn, _hredoNoIn, _hdoNoOut, _hredoNoOut⟩
+  refine ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem, ?_, ?_⟩
+  · intro trace path trans hmem
+    exact (hdoReach trans).mpr
+      (PetriNet.reachableTransitionsBetweenPlaces_of_mem_placePath
+        net.toPetriNet path hmem)
+  · intro trace path trans hmem
+    exact (hredoReach trans).mpr
+      (PetriNet.reachableTransitionsBetweenPlaces_of_mem_placePath
+        net.toPetriNet path hmem)
+
 def reachesFromPostset
     (net : WorkflowNet Place Trans)
     (place : Place)
@@ -157,6 +361,23 @@ def partialOrderPattern
     WorkflowNet.exitPoints net part rightPlace ->
       PetriNet.placeEquivalentWrt
         net.toPetriNet part leftPlace rightPlace)
+
+def partialOrderPattern_strictPartialOrder
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hpattern : partialOrderPattern net partition) :
+    StrictPartialOrder Nat :=
+  { rel := TransGen (executionOrder net partition)
+    irrefl := hpattern.2.2.1
+    trans := TransGen.trans }
+
+theorem partialOrderPattern_asymmetric
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hpattern : partialOrderPattern net partition) :
+    Asymmetric (TransGen (executionOrder net partition)) := by
+  change Asymmetric (partialOrderPattern_strictPartialOrder net partition hpattern).rel
+  exact (partialOrderPattern_strictPartialOrder net partition hpattern).asymmetric
 
 inductive BoundaryPlace (Place : Type u) where
   | original : Place -> BoundaryPlace Place

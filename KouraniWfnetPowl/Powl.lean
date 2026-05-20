@@ -6,6 +6,14 @@ inductive TransitionLabel (Activity : Type u) where
   | silent : TransitionLabel Activity
   | visible : Activity -> TransitionLabel Activity
 
+namespace TransitionLabel
+
+def word : TransitionLabel Activity -> List Activity
+  | silent => []
+  | visible activity => [activity]
+
+end TransitionLabel
+
 inductive Powl (Transition : Type u) where
   | atom : Transition -> Powl Transition
   | xor : List (Powl Transition) -> Powl Transition
@@ -91,6 +99,44 @@ def language
     (label : Transition -> TransitionLabel Activity)
     (model : Powl Transition) : Language Activity :=
   fun word => Semantics label model word
+
+def transitionWord
+    {Transition : Type u}
+    {Activity : Type v}
+    (label : Transition -> TransitionLabel Activity)
+    (trans : Transition) : List Activity :=
+  TransitionLabel.word (label trans)
+
+theorem atom_language_iff
+    {Transition : Type u}
+    {Activity : Type v}
+    {label : Transition -> TransitionLabel Activity}
+    {trans : Transition}
+    {word : List Activity} :
+    language label (Powl.atom trans) word ↔
+      word = transitionWord label trans := by
+  constructor
+  · intro h
+    cases h with
+    | atomSilent hlabel =>
+        unfold transitionWord
+        rw [hlabel]
+        rfl
+    | atomVisible hlabel =>
+        unfold transitionWord
+        rw [hlabel]
+        rfl
+  · intro hword
+    unfold transitionWord at hword
+    cases hlabel : label trans with
+    | silent =>
+        rw [hlabel] at hword
+        rw [hword]
+        exact Semantics.atomSilent hlabel
+    | visible activity =>
+        rw [hlabel] at hword
+        rw [hword]
+        exact Semantics.atomVisible hlabel
 
 def partialOrderLanguage
     {Transition : Type u}
