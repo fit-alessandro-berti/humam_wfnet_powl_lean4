@@ -795,6 +795,21 @@ theorem extend_single
           exact hplace hmarked
         simp [extend, single, hplace, hne]
 
+theorem restrict_single
+    {places : Set Place}
+    (marked : {place : Place // places place}) :
+    restrict (single marked.val) = single marked := by
+  funext place
+  by_cases hsame : place.val = marked.val
+  · have hsub : place = marked := by
+      exact Subtype.ext hsame
+    subst hsub
+    simp [restrict, single]
+  · have hsub : place ≠ marked := by
+      intro h
+      exact hsame (congrArg Subtype.val h)
+    simp [restrict, single, hsame, hsub]
+
 end Marking
 
 structure WorkflowNet (Place : Type u) (Trans : Type v) extends
@@ -896,6 +911,52 @@ def sound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
 
 def safeAndSound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
   safe net ∧ sound net
+
+theorem restricted_initial_eq
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source) :
+    Marking.restrict (initial original) = initial restricted := by
+  rw [initial, initial, ← hsource]
+  exact Marking.restrict_single restricted.source
+
+theorem restricted_final_eq
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsink : restricted.sink.val = original.sink) :
+    Marking.restrict (final original) = final restricted := by
+  rw [final, final, ← hsink]
+  exact Marking.restrict_single restricted.sink
+
+theorem restricted_initial_extend_eq
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source) :
+    Marking.extend (initial restricted) = initial original := by
+  rw [initial, initial, Marking.extend_single, hsource]
+
+theorem restricted_final_extend_eq
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsink : restricted.sink.val = original.sink) :
+    Marking.extend (final restricted) = final original := by
+  rw [final, final, Marking.extend_single, hsink]
 
 theorem restricted_enabled_lift
     {places : Set Place}
@@ -1119,6 +1180,49 @@ theorem restricted_firingSequence_lift
           hpreset hpostset hfires)
         ih
 
+theorem restricted_firingSequence_lift_initial_final
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source)
+    (hsink : restricted.sink.val = original.sink)
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    {trace : List {trans : Trans // transitions trans}}
+    (sequence :
+      FiringSequence restricted (initial restricted) trace (final restricted)) :
+    FiringSequence
+      original
+      (initial original)
+      (trace.map Subtype.val)
+      (final original) := by
+  have lifted :=
+    restricted_firingSequence_lift
+      original restricted hplaceToTrans htransToPlace
+      hpreset hpostset sequence
+  simpa [
+    restricted_initial_extend_eq original restricted hsource,
+    restricted_final_extend_eq original restricted hsink] using lifted
+
 theorem restricted_enabled_restrict
     {places : Set Place}
     {transitions : Set Trans}
@@ -1222,6 +1326,38 @@ theorem restricted_firingSequence_restrict
             (restricted_fires_restrict
               original restricted hplaceToTrans htransToPlace hfires)
             (ih tail)
+
+theorem restricted_firingSequence_restrict_initial_final
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source)
+    (hsink : restricted.sink.val = original.sink)
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    {trace : List {trans : Trans // transitions trans}}
+    (sequence :
+      FiringSequence
+        original
+        (initial original)
+        (trace.map Subtype.val)
+        (final original)) :
+    FiringSequence restricted (initial restricted) trace (final restricted) := by
+  have restrictedSequence :=
+    restricted_firingSequence_restrict
+      original restricted hplaceToTrans htransToPlace sequence
+  simpa [
+    restricted_initial_eq original restricted hsource,
+    restricted_final_eq original restricted hsink] using restrictedSequence
 
 theorem restricted_reachable_lift
     [DecidableEq Place]

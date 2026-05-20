@@ -38,6 +38,20 @@ theorem traceWord_singleton
     traceWord label [trans] = Powl.transitionWord label trans := by
   simp [traceWord]
 
+theorem traceWord_map_subtype
+    {Activity : Type u}
+    {Trans : Type v}
+    {transitions : Set Trans}
+    (label : Trans -> TransitionLabel Activity)
+    (trace : List {trans : Trans // transitions trans}) :
+    traceWord (fun trans => label trans.val) trace =
+      traceWord label (trace.map Subtype.val) := by
+  induction trace with
+  | nil =>
+      rfl
+  | cons trans rest ih =>
+      simp [traceWord, Powl.transitionWord, ih]
+
 def language
     {Place : Type u}
     {Trans : Type v}
@@ -50,6 +64,24 @@ def language
     ∃ trace,
       FiringSequence net (initial net) trace (final net) ∧
       traceWord label trace = word
+
+def subtypeTraceLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity)
+    (transitions : Set Trans) :
+    Language Activity :=
+  fun word =>
+    ∃ trace : List {trans : Trans // transitions trans},
+      FiringSequence
+        net
+        (initial net)
+        (trace.map Subtype.val)
+        (final net) ∧
+      traceWord label (trace.map Subtype.val) = word
 
 theorem language_intro
     {Place : Type u}
@@ -64,6 +96,151 @@ theorem language_intro
     (hword : traceWord label trace = word) :
     language net label word :=
   ⟨trace, sequence, hword⟩
+
+theorem language_of_subtypeTraceLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {transitions : Set Trans}
+    {word : List Activity}
+    (hlanguage : subtypeTraceLanguage net label transitions word) :
+    language net label word := by
+  rcases hlanguage with ⟨trace, sequence, hword⟩
+  exact language_intro sequence hword
+
+theorem restricted_language_of_typed_original_sequence
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source)
+    (hsink : restricted.sink.val = original.sink)
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    {label : Trans -> TransitionLabel Activity}
+    {trace : List {trans : Trans // transitions trans}}
+    {word : List Activity}
+    (sequence :
+      FiringSequence
+        original
+        (initial original)
+        (trace.map Subtype.val)
+        (final original))
+    (hword : traceWord label (trace.map Subtype.val) = word) :
+    language restricted (fun trans => label trans.val) word := by
+  refine language_intro
+    (WorkflowNet.restricted_firingSequence_restrict_initial_final
+      original restricted hsource hsink hplaceToTrans htransToPlace sequence)
+    ?_
+  rw [traceWord_map_subtype]
+  exact hword
+
+theorem original_language_of_restricted_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source)
+    (hsink : restricted.sink.val = original.sink)
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    {label : Trans -> TransitionLabel Activity}
+    {word : List Activity}
+    (hlanguage :
+      language restricted (fun trans => label trans.val) word) :
+    language original label word := by
+  rcases hlanguage with ⟨trace, sequence, hword⟩
+  refine language_intro
+    (WorkflowNet.restricted_firingSequence_lift_initial_final
+      original restricted hsource hsink hplaceToTrans htransToPlace
+      hpreset hpostset sequence)
+    ?_
+  rw [← traceWord_map_subtype label trace]
+  exact hword
+
+theorem restricted_language_iff_subtypeTraceLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source)
+    (hsink : restricted.sink.val = original.sink)
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    (label : Trans -> TransitionLabel Activity)
+    (word : List Activity) :
+    language restricted (fun trans => label trans.val) word ↔
+      subtypeTraceLanguage original label transitions word := by
+  constructor
+  · intro hlanguage
+    rcases hlanguage with ⟨trace, sequence, hword⟩
+    refine ⟨trace, ?_, ?_⟩
+    · exact WorkflowNet.restricted_firingSequence_lift_initial_final
+        original restricted hsource hsink hplaceToTrans htransToPlace
+        hpreset hpostset sequence
+    · rw [← traceWord_map_subtype label trace]
+      exact hword
+  · intro htyped
+    rcases htyped with ⟨trace, sequence, hword⟩
+    exact restricted_language_of_typed_original_sequence
+      original restricted hsource hsink hplaceToTrans htransToPlace
+      sequence hword
 
 theorem atom_language_of_single_trace_net_language
     {Place : Type u}

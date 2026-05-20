@@ -332,6 +332,232 @@ theorem lemma1_xor_projection_selected_sequence_restricts
   Patterns.xorProjectionWorkflowNet_firingSequence_restrict
     hpattern hpart sequence
 
+theorem lemma1_xor_projection_selected_accepting_sequence_restricts
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {trace : List {trans : Trans // part trans}}
+    (sequence :
+      WorkflowNet.FiringSequence
+        net
+        (WorkflowNet.initial net)
+        (trace.map Subtype.val)
+        (WorkflowNet.final net)) :
+    WorkflowNet.FiringSequence
+      (Patterns.xorProjectionWorkflowNet hpattern hpart)
+      (WorkflowNet.initial
+        (Patterns.xorProjectionWorkflowNet hpattern hpart))
+      trace
+      (WorkflowNet.final
+        (Patterns.xorProjectionWorkflowNet hpattern hpart)) :=
+  Patterns.xorProjectionWorkflowNet_firingSequence_restrict_initial_final
+    hpattern hpart sequence
+
+theorem lemma4_xor_projection_language_of_selected_original_sequence
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {trace : List {trans : Trans // part trans}}
+    {word : List Activity}
+    (sequence :
+      WorkflowNet.FiringSequence
+        net
+        (WorkflowNet.initial net)
+        (trace.map Subtype.val)
+        (WorkflowNet.final net))
+    (hword : WorkflowNet.traceWord label (trace.map Subtype.val) = word) :
+    WorkflowNet.language
+      (Patterns.xorProjectionWorkflowNet hpattern hpart)
+      (fun trans : {trans : Trans // part trans} => label trans.val)
+      word :=
+  WorkflowNet.restricted_language_of_typed_original_sequence
+    net
+    (Patterns.xorProjectionWorkflowNet hpattern hpart)
+    (by rfl)
+    (by rfl)
+    (by intro place trans; rfl)
+    (by intro trans place; rfl)
+    sequence
+    hword
+
+theorem lemma4_original_language_of_xor_projection_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {word : List Activity}
+    (hlanguage :
+      WorkflowNet.language
+        (Patterns.xorProjectionWorkflowNet hpattern hpart)
+        (fun trans : {trans : Trans // part trans} => label trans.val)
+        word) :
+    WorkflowNet.language net label word :=
+  WorkflowNet.original_language_of_restricted_language
+    net
+    (Patterns.xorProjectionWorkflowNet hpattern hpart)
+    (by rfl)
+    (by rfl)
+    (by intro place trans; rfl)
+    (by intro trans place; rfl)
+    (by
+      intro place trans htrans hflow
+      exact PetriNet.placesTouching_of_placeToTrans
+        net.toPetriNet htrans hflow)
+    (by
+      intro trans place htrans hflow
+      exact PetriNet.placesTouching_of_transToPlace
+        net.toPetriNet htrans hflow)
+    hlanguage
+
+theorem lemma4_xor_projection_language_iff_subtype_trace_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (word : List Activity) :
+    WorkflowNet.language
+        (Patterns.xorProjectionWorkflowNet hpattern hpart)
+        (fun trans : {trans : Trans // part trans} => label trans.val)
+        word ↔
+      WorkflowNet.subtypeTraceLanguage net label part word :=
+  WorkflowNet.restricted_language_iff_subtypeTraceLanguage
+    net
+    (Patterns.xorProjectionWorkflowNet hpattern hpart)
+    (by rfl)
+    (by rfl)
+    (by intro place trans; rfl)
+    (by intro trans place; rfl)
+    (by
+      intro place trans htrans hflow
+      exact PetriNet.placesTouching_of_placeToTrans
+        net.toPetriNet htrans hflow)
+    (by
+      intro trans place htrans hflow
+      exact PetriNet.placesTouching_of_transToPlace
+        net.toPetriNet htrans hflow)
+    label
+    word
+
+theorem lemma4_xor_projection_language_union_iff_subtype_trace_union
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    (word : List Activity) :
+    (∃ part, ∃ hpart : part ∈ partition.parts,
+      WorkflowNet.language
+        (Patterns.xorProjectionWorkflowNet hpattern hpart)
+        (fun trans : {trans : Trans // part trans} => label trans.val)
+        word) ↔
+      ∃ part,
+        part ∈ partition.parts ∧
+          WorkflowNet.subtypeTraceLanguage net label part word := by
+  constructor
+  · intro h
+    rcases h with ⟨part, hpart, hlanguage⟩
+    exact ⟨part, hpart,
+      (lemma4_xor_projection_language_iff_subtype_trace_language
+        hpattern hpart word).mp hlanguage⟩
+  · intro h
+    rcases h with ⟨part, hpart, hlanguage⟩
+    exact ⟨part, hpart,
+      (lemma4_xor_projection_language_iff_subtype_trace_language
+        hpattern hpart word).mpr hlanguage⟩
+
+theorem lemma4_xor_projection_union_language_preservation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          ∃ part,
+            part ∈ partition.parts ∧
+              WorkflowNet.subtypeTraceLanguage net label part word) :
+    ∀ word,
+      (∃ part, ∃ hpart : part ∈ partition.parts,
+        WorkflowNet.language
+          (Patterns.xorProjectionWorkflowNet hpattern hpart)
+          (fun trans : {trans : Trans // part trans} => label trans.val)
+          word) ↔
+        WorkflowNet.language net label word := by
+  intro word
+  exact Iff.trans
+    (lemma4_xor_projection_language_union_iff_subtype_trace_union
+      hpattern word)
+    (Iff.symm (hdecompose word))
+
+theorem lemma4_xor_projection_union_language_preservation_of_cover
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    (hcover :
+      ∀ word,
+        WorkflowNet.language net label word ->
+          ∃ part,
+            part ∈ partition.parts ∧
+              WorkflowNet.subtypeTraceLanguage net label part word) :
+    ∀ word,
+      (∃ part, ∃ hpart : part ∈ partition.parts,
+        WorkflowNet.language
+          (Patterns.xorProjectionWorkflowNet hpattern hpart)
+          (fun trans : {trans : Trans // part trans} => label trans.val)
+          word) ↔
+        WorkflowNet.language net label word := by
+  intro word
+  constructor
+  · intro hprojection
+    have hsubtypeUnion :
+        ∃ part,
+          part ∈ partition.parts ∧
+            WorkflowNet.subtypeTraceLanguage net label part word :=
+      (lemma4_xor_projection_language_union_iff_subtype_trace_union
+        hpattern word).mp hprojection
+    rcases hsubtypeUnion with ⟨part, _hpart, hlanguage⟩
+    exact WorkflowNet.language_of_subtypeTraceLanguage hlanguage
+  · intro horiginal
+    exact
+      (lemma4_xor_projection_language_union_iff_subtype_trace_union
+        hpattern word).mpr (hcover word horiginal)
+
 theorem lemma2_loop_pattern_trace_closure
     {Place : Type u}
     {Trans : Type v}

@@ -21,7 +21,10 @@ The current proof spine is:
   for Definition 5.
 - `KouraniWfnetPowl.NetLanguage`: WF-net trace language `L(N)` from firing
   sequences and checked single-transition/base-case language preservation
-  lemmas.
+  lemmas. The language layer now records subtype-trace erasure and generic
+  language transfer lemmas between closed restricted subnets and their original
+  WF-nets, plus the fact that a typed subtype trace is already an original
+  accepting trace.
 - `KouraniWfnetPowl.Patterns`: partition, XOR, loop, and partial-order pattern
   predicates plus the corresponding projection constructions from Section 4;
   also includes checked facts that XOR projection paths lift to the original net
@@ -40,7 +43,9 @@ The current proof spine is:
   semantic preservation theorems corresponding to the POWL-language side of
   Lemmas 4, 5, and 6, the checked base case for Theorem 1, and named checked
   dependencies for Lemma 1 path restriction, reachable-marking lifting,
-  selected-sequence restriction, safeness preservation, and Lemma 2 loop trace
+  selected-sequence restriction, safeness preservation, a checked XOR
+  branch-language-to-original-language inclusion, XOR branch-projection
+  language equivalence with typed original subtraces, and Lemma 2 loop trace
   closure.
 
 Build with:
@@ -48,3 +53,5 @@ Build with:
 ```bash
 lake build
 ```
+
+source $HOME/.elan/env && lake build  <- This works

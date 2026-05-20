@@ -871,6 +871,34 @@ theorem xorProjectionWorkflowNet_firingSequence_restrict
     (by intro trans place; rfl)
     sequence
 
+theorem xorProjectionWorkflowNet_firingSequence_restrict_initial_final
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {trace : List {trans : Trans // part trans}}
+    (sequence :
+      WorkflowNet.FiringSequence
+        net
+        (WorkflowNet.initial net)
+        (trace.map Subtype.val)
+        (WorkflowNet.final net)) :
+    WorkflowNet.FiringSequence
+      (xorProjectionWorkflowNet hpattern hpart)
+      (WorkflowNet.initial (xorProjectionWorkflowNet hpattern hpart))
+      trace
+      (WorkflowNet.final (xorProjectionWorkflowNet hpattern hpart)) :=
+  WorkflowNet.restricted_firingSequence_restrict_initial_final
+    net
+    (xorProjectionWorkflowNet hpattern hpart)
+    (by rfl)
+    (by rfl)
+    (by intro place trans; rfl)
+    (by intro trans place; rfl)
+    sequence
+
 def loopPattern
     {Activity : Type w}
     (label : Trans -> TransitionLabel Activity)
