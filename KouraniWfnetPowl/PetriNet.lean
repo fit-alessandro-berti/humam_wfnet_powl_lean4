@@ -2366,6 +2366,12 @@ def reachable
     (before after : Marking Place) : Prop :=
   ∃ trace, FiringSequence net before trace after
 
+theorem reachable_refl
+    {net : WorkflowNet Place Trans}
+    (marking : Marking Place) :
+    reachable net marking marking :=
+  ⟨[], FiringSequence.nil⟩
+
 theorem reachable_of_fires
     {net : WorkflowNet Place Trans}
     {before after : Marking Place}
@@ -2400,6 +2406,19 @@ def sound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
 def safeAndSound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
   safe net ∧ sound net
 
+theorem initial_reachable
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) :
+    reachable net (initial net) (initial net) :=
+  reachable_refl (initial net)
+
+theorem optionToComplete_initial_to_final
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hcomplete : optionToComplete net) :
+    reachable net (initial net) (final net) :=
+  hcomplete (initial net) (initial_reachable net)
+
 theorem sound_noDeadTransitions
     [DecidableEq Place]
     {net : WorkflowNet Place Trans}
@@ -2420,6 +2439,13 @@ theorem sound_properCompletion
     (hsound : sound net) :
     properCompletion net :=
   hsound.2.2
+
+theorem sound_initial_to_final
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net) :
+    reachable net (initial net) (final net) :=
+  optionToComplete_initial_to_final (sound_optionToComplete hsound)
 
 theorem safeAndSound_safe
     [DecidableEq Place]
@@ -2455,6 +2481,13 @@ theorem safeAndSound_properCompletion
     (hsafeSound : safeAndSound net) :
     properCompletion net :=
   sound_properCompletion (safeAndSound_sound hsafeSound)
+
+theorem safeAndSound_initial_to_final
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net) :
+    reachable net (initial net) (final net) :=
+  sound_initial_to_final (safeAndSound_sound hsafeSound)
 
 def semiBlockStructuredBaseRequirements
     [DecidableEq Place]

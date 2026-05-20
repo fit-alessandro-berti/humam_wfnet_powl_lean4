@@ -31,7 +31,9 @@ The current proof spine is:
   firing sequences made only of wrapped original transitions are equivalent to
   original firing sequences between embedded markings. Boundary-shaped
   normalized accepting sequences, with enter/original/exit trace shape, are now
-  equivalent to original accepting firing sequences. The fresh enter/exit
+  equivalent to original accepting firing sequences. The soundness API records
+  that option-to-complete, soundness, and safe-and-soundness each yield a
+  reachable final marking from the initial marking. The fresh enter/exit
   transitions have checked enabledness characterizations, and wrapped original
   transitions, including sequences made only of wrapped original transitions,
   preserve the fresh source/sink token counts. Original reachable markings lift
@@ -160,9 +162,9 @@ The current proof spine is:
   original safeness into safeness of the normalized projection; the same
   invariant feeds a `safeAndSound` constructor that only keeps completion and
   proper-completion as supplied residual obligations, and it has checked
-  constructor/eliminator lemmas for downstream proof scripts. A more general
-  raw-projection normalization constructor is also available when connectedness
-  is supplied over the ambient raw projection.
+  constructor/eliminator lemmas plus a pointwise one-token bound for downstream
+  proof scripts. A more general raw-projection normalization constructor is also
+  available when connectedness is supplied over the ambient raw projection.
   Partial-order pattern consequences
   now also expose execution-order boundary construction, cycle exclusion,
   same-component entry/exit exclusion, and entry/exit place equivalence with
@@ -209,8 +211,9 @@ The current proof spine is:
   can be built from structural `CertifiedConversion`s, full-transition subtype
   conversions, and subtype-composed XOR/loop/partial-order models, with
   theorem-facing aliases for the Theorem 1 semantic conversion statement,
-  including the paper-style `L(N) = L(ψ)` equality form. Theorem 2 now has checked targets
-  for the safe-and-sound,
+  including the paper-style `L(N) = L(ψ)` equality form and an explicit
+  existential POWL-model form. Theorem 2 now has checked targets for the
+  safe-and-sound,
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
   checked branch-subnet closure/disjointness, local branch-language transfer,
@@ -219,7 +222,9 @@ The current proof spine is:
   interface for transition-subset subproblems with pointwise and equality forms,
   a checked full-transition-subset equivalence back to ordinary local
   languages, and local-to-global language preservation for source/sink
-  certified conversions,
+  certified conversions, including packaging source/sink local conversions as
+  global `SemanticCertifiedConversion`s and explicit existential POWL-model
+  statements,
   local XOR composition for decision-branch models and local loop composition
   for source-to-sink/redo-back submodels plus local partial-order composition
   for component submodels under supplied local decompositions, and constructors

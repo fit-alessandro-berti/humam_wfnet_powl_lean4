@@ -1960,6 +1960,53 @@ theorem normalization_reachable_of_original
       (Marking.normalize marking) :=
   WorkflowNet.normalized_reachable_of_original net hreachable
 
+theorem workflow_initial_reachable
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) :
+    WorkflowNet.reachable
+      net
+      (WorkflowNet.initial net)
+      (WorkflowNet.initial net) :=
+  WorkflowNet.initial_reachable net
+
+theorem workflow_option_to_complete_initial_to_final
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hcomplete : WorkflowNet.optionToComplete net) :
+    WorkflowNet.reachable
+      net
+      (WorkflowNet.initial net)
+      (WorkflowNet.final net) :=
+  WorkflowNet.optionToComplete_initial_to_final hcomplete
+
+theorem workflow_sound_initial_to_final
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : WorkflowNet.sound net) :
+    WorkflowNet.reachable
+      net
+      (WorkflowNet.initial net)
+      (WorkflowNet.final net) :=
+  WorkflowNet.sound_initial_to_final hsound
+
+theorem workflow_safe_and_sound_initial_to_final
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.reachable
+      net
+      (WorkflowNet.initial net)
+      (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_initial_to_final hsafeSound
+
 theorem normalization_complete_from_original_marking
     {Place : Type u}
     {Trans : Type v}
@@ -4670,6 +4717,47 @@ theorem lemma3_partial_order_projection_restricted_normalized_reachable_shape_fi
   Patterns.partialOrderProjectionRestrictedNormalizedReachableShape_final
     net hconnected
 
+theorem lemma3_partial_order_projection_restricted_normalized_reachable_shape_le_one_of_original_safe
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩))
+    (horiginalSafe : WorkflowNet.safe net)
+    {marking :
+      Marking
+        (PetriNet.NormalizedPlace
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place})}
+    (hshape :
+      lemma3_partial_order_projection_restricted_normalized_reachable_shape
+        net part hconnected marking) :
+    ∀ place, marking place ≤ 1 :=
+  Patterns.partialOrderProjectionRestrictedNormalizedReachableShape_le_one_of_original_safe
+    net hconnected horiginalSafe hshape
+
 theorem lemma3_partial_order_projection_restricted_normalized_safe_of_original_reachable_shape
     {Place : Type u}
     {Trans : Type v}
@@ -6952,6 +7040,43 @@ theorem semantic_certified_conversion_language_eq
   Language.ext
     (semantic_certified_conversion_language_preservation conversion)
 
+theorem semantic_certified_conversion_exists_model
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  ⟨conversion.OutTrans,
+    conversion.outLabel,
+    conversion.model,
+    conversion.certificate⟩
+
+theorem semantic_certified_conversion_exists_model_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  ⟨conversion.OutTrans,
+    conversion.outLabel,
+    conversion.model,
+    semantic_certified_conversion_language_eq conversion⟩
+
 def semantic_certified_conversion_of_certified_conversion
     {Place : Type u}
     {Trans : Type v}
@@ -7109,6 +7234,37 @@ theorem theorem1_semantic_conversion_language_eq
     WorkflowNet.language net label =
       Powl.language conversion.outLabel conversion.model :=
   semantic_certified_conversion_language_eq conversion
+
+theorem theorem1_semantic_conversion_exists_model
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  semantic_certified_conversion_exists_model conversion
+
+theorem theorem1_semantic_conversion_exists_model_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  semantic_certified_conversion_exists_model_language_eq conversion
 
 def theorem1_semantic_conversion_of_certified_conversion
     {Place : Type u}
@@ -7285,6 +7441,23 @@ theorem local_certified_conversion_global_language_eq
   Language.ext
     (local_certified_conversion_global_language_preservation
       conversion)
+
+def semantic_certified_conversion_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink) :
+    SemanticCertifiedConversion net label where
+  OutTrans := conversion.OutTrans
+  outLabel := conversion.outLabel
+  model := conversion.model
+  certificate :=
+    local_certified_conversion_global_language_preservation
+      conversion
 
 structure LocalSubtypeCertifiedConversion
     {Place : Type u}
@@ -7844,6 +8017,96 @@ theorem theorem2_global_language_eq_of_local_certified_conversion
       Powl.language conversion.outLabel conversion.model :=
   local_certified_conversion_global_language_eq conversion
 
+def theorem2_semantic_conversion_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink) :
+    SemanticCertifiedConversion net label :=
+  semantic_certified_conversion_of_local_certified_conversion
+    conversion
+
+theorem theorem2_semantic_conversion_language_preservation_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language
+          (theorem2_semantic_conversion_of_local_certified_conversion
+            conversion).outLabel
+          (theorem2_semantic_conversion_of_local_certified_conversion
+            conversion).model
+          word :=
+  semantic_certified_conversion_language_preservation
+    (theorem2_semantic_conversion_of_local_certified_conversion
+      conversion)
+
+theorem theorem2_semantic_conversion_language_eq_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink) :
+    WorkflowNet.language net label =
+      Powl.language
+        (theorem2_semantic_conversion_of_local_certified_conversion
+          conversion).outLabel
+        (theorem2_semantic_conversion_of_local_certified_conversion
+          conversion).model :=
+  semantic_certified_conversion_language_eq
+    (theorem2_semantic_conversion_of_local_certified_conversion
+      conversion)
+
+theorem theorem2_exists_powl_model_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  semantic_certified_conversion_exists_model
+    (theorem2_semantic_conversion_of_local_certified_conversion
+      conversion)
+
+theorem theorem2_exists_powl_model_language_eq_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  semantic_certified_conversion_exists_model_language_eq
+    (theorem2_semantic_conversion_of_local_certified_conversion
+      conversion)
+
 theorem theorem2_local_subtype_certified_conversion_language_preservation
     {Place : Type u}
     {Trans : Type v}
@@ -8067,6 +8330,21 @@ theorem theorem2_semi_block_base_proper_completion
     WorkflowNet.properCompletion net :=
   WorkflowNet.semiBlockStructuredBaseRequirements_properCompletion
     hbase
+
+theorem theorem2_semi_block_base_initial_to_final
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net) :
+    WorkflowNet.reachable
+      net
+      (WorkflowNet.initial net)
+      (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_initial_to_final
+    (WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound
+      hbase)
 
 theorem theorem2_semi_block_base_explicit_decision_points
     {Place : Type u}
@@ -8865,6 +9143,21 @@ theorem theorem2_semi_block_decision_proper_completion
     WorkflowNet.properCompletion net :=
   WorkflowNet.semiBlockStructuredDecisionRequirements_properCompletion
     hrequirements
+
+theorem theorem2_semi_block_decision_initial_to_final
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    WorkflowNet.reachable
+      net
+      (WorkflowNet.initial net)
+      (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_initial_to_final
+    (WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
+      hrequirements)
 
 theorem theorem2_semi_block_decision_explicit_decision_points
     {Place : Type u}
@@ -10619,6 +10912,21 @@ theorem theorem2_semi_block_subnet_proper_completion
     WorkflowNet.properCompletion net :=
   WorkflowNet.semiBlockStructuredSubnetRequirements_properCompletion
     hrequirements
+
+theorem theorem2_semi_block_subnet_initial_to_final
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.reachable
+      net
+      (WorkflowNet.initial net)
+      (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_initial_to_final
+    (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements)
 
 theorem theorem2_semi_block_subnet_explicit_decision_points
     {Place : Type u}
