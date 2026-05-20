@@ -290,6 +290,11 @@ The current proof spine is:
   branch lists, semi-block split-decision continuations that choose the branch
   family and return local XOR/partial-order conversion builders, plus direct
   package-based XOR/partial-order language preservation/equality builders,
+  including local-language-first equality forms,
+  existential requirements-to-package language theorem continuations, including
+  local-language-first variants,
+  bundled XOR/partial-order branch-conversion certificates with direct local
+  conversion and language-preservation/equality consumers,
   conversion builders, and package-returning continuations from the explicit
   branch package, a
   `LocalCertifiedConversion` interface
