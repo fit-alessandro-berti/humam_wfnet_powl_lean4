@@ -237,6 +237,9 @@ The current proof spine is:
   semi-block completeness hypothesis with a successful source/sink conversion
   and exposes safe-and-soundness, pointwise language preservation, language
   equality, existential POWL-model, and visible-activity witness consequences;
+  combined completeness statements now package safe-and-soundness together
+  with an existential language-equal POWL model, and existentially package
+  visible-activity witness words with the generated POWL model;
   theorem-facing constructors now cover the single-transition base case and
   the XOR, loop, and partial-order recursive cases from supplied local subtype
   conversions and global language decompositions, and a
@@ -248,7 +251,11 @@ The current proof spine is:
   XOR/loop/partial-order pattern evidence, with the partial-order branch using
   the transitive closure of the execution-order relation and exposing the
   corresponding strict-partial-order object, while exposing the same
-  consequence surface,
+  consequence surface. Named constructors now package the single-transition,
+  XOR-pattern, loop-pattern, and partial-order-pattern cases directly as
+  pattern completeness certificates, and direct theorem wrappers turn each
+  case's hypotheses into existential POWL-model pointwise language-preservation,
+  language-equality, and visible-activity witness results,
   plus no-dead-transition, accepting-run trace-membership,
   language-word, visible-activity, semi-block local-conversion language
   equivalences, and local-conversion converted-POWL visible-activity witnesses
