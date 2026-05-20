@@ -63,8 +63,11 @@ The current proof spine is:
   places are distinct from the WF-net source/sink, and that the expected
   do/redo boundary exclusion conditions are available as standalone lemmas.
   Loop projections now also have a subtype-restricted representation with
-  selected places and transitions, plus checked source-to-sink boundary path
-  constructors for one-transition entry/exit segments.
+  selected places and transitions, checked restricted boundary/internal edge
+  constructors, one-step path constructors for retained internal edges, generic
+  restricted-to-projection flow/path lifting, plus checked source-to-sink
+  boundary path constructors for one-transition entry/exit segments and
+  source-to-member transition paths along closed place-to-place traces.
   Partial-order projections now have a subtype-restricted representation with
   selected transitions and retained boundary/original places, checked boundary
   and internal edge constructors in all boundary directions, and one-step path
@@ -85,8 +88,8 @@ The current proof spine is:
   selected-sequence restriction, safeness preservation, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, and Lemma 2 loop trace
-  closure plus loop projection boundary and restricted-projection facts, and
-  Lemma 3 partial-order projection boundary/internal edge and one-step path
+  closure plus loop projection boundary and restricted-projection lifting facts,
+  and Lemma 3 partial-order projection boundary/internal edge and one-step path
   facts plus restricted-path lifting, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and

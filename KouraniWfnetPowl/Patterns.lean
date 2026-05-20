@@ -1039,6 +1039,71 @@ theorem loopProjectionRestricted_transToPlace_iff
           trans.val place.val :=
   Iff.rfl
 
+theorem loopProjectionRestricted_flow_original
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    {first second :
+      PetriNet.Node
+        {place : Place //
+          loopProjectionPlaces net part startPlace endPlace place}
+        {trans : Trans // part trans}}
+    (hflow :
+      PetriNet.flow
+        (loopProjectionRestricted net part startPlace endPlace)
+        first second) :
+    PetriNet.flow
+      (loopProjection net part startPlace endPlace)
+      (PetriNet.restrictedNode first)
+      (PetriNet.restrictedNode second) :=
+  PetriNet.restrict_flow_original
+    (loopProjection net part startPlace endPlace)
+    (loopProjectionPlaces net part startPlace endPlace)
+    part
+    hflow
+
+theorem loopProjectionRestricted_path_original
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    {source target :
+      PetriNet.Node
+        {place : Place //
+          loopProjectionPlaces net part startPlace endPlace place}
+        {trans : Trans // part trans}}
+    (path :
+      PetriNet.Path
+        (loopProjectionRestricted net part startPlace endPlace)
+        source
+        target) :
+    PetriNet.Path
+      (loopProjection net part startPlace endPlace)
+      (PetriNet.restrictedNode source)
+      (PetriNet.restrictedNode target) :=
+  PetriNet.restrict_path_original
+    (loopProjection net part startPlace endPlace)
+    (loopProjectionPlaces net part startPlace endPlace)
+    part
+    path
+
+theorem loopProjectionRestricted_path_of_pathIn
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    {source target : PetriNet.Node Place Trans}
+    (path :
+      PetriNet.PathIn
+        (loopProjection net part startPlace endPlace)
+        (loopProjectionPlaces net part startPlace endPlace)
+        part
+        source
+        target) :
+    PetriNet.Path
+      (loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.restrictNode source (PetriNet.PathIn.source_mem path))
+      (PetriNet.restrictNode target (PetriNet.PathIn.target_mem path)) :=
+  PetriNet.PathIn.to_restrict_path path
+
 theorem loopProjection_source_placeToTrans
     (net : WorkflowNet Place Trans)
     {part : Set Trans}
@@ -1084,6 +1149,170 @@ theorem loopProjection_internal_transToPlace
     (hflow : net.transToPlace trans place) :
     (loopProjection net part startPlace endPlace).transToPlace trans place :=
   ⟨hpart, Or.inl ⟨htouching, hstart, hend, hflow⟩⟩
+
+theorem loopProjectionRestricted_source_placeToTrans
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hflow : net.placeToTrans startPlace trans) :
+    (loopProjectionRestricted net part startPlace endPlace).placeToTrans
+      ⟨net.source, loopProjectionPlaces_source net part startPlace endPlace⟩
+      ⟨trans, hpart⟩ := by
+  simpa [loopProjectionRestricted, PetriNet.restrict] using
+    loopProjection_source_placeToTrans
+      (startPlace := startPlace)
+      (endPlace := endPlace)
+      net hpart hflow
+
+theorem loopProjectionRestricted_transToPlace_sink
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hflow : net.transToPlace trans endPlace) :
+    (loopProjectionRestricted net part startPlace endPlace).transToPlace
+      ⟨trans, hpart⟩
+      ⟨net.sink, loopProjectionPlaces_sink net part startPlace endPlace⟩ := by
+  simpa [loopProjectionRestricted, PetriNet.restrict] using
+    loopProjection_transToPlace_sink
+      (startPlace := startPlace)
+      (endPlace := endPlace)
+      net hpart hflow
+
+theorem loopProjectionRestricted_internal_placeToTrans
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace)
+    (hflow : net.placeToTrans place trans) :
+    (loopProjectionRestricted net part startPlace endPlace).placeToTrans
+      ⟨place, loopProjectionPlaces_internal net htouching hstart hend⟩
+      ⟨trans, hpart⟩ := by
+  simpa [loopProjectionRestricted, PetriNet.restrict] using
+    loopProjection_internal_placeToTrans
+      (startPlace := startPlace)
+      (endPlace := endPlace)
+      net hpart htouching hstart hend hflow
+
+theorem loopProjectionRestricted_internal_transToPlace
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace)
+    (hflow : net.transToPlace trans place) :
+    (loopProjectionRestricted net part startPlace endPlace).transToPlace
+      ⟨trans, hpart⟩
+      ⟨place, loopProjectionPlaces_internal net htouching hstart hend⟩ := by
+  simpa [loopProjectionRestricted, PetriNet.restrict] using
+    loopProjection_internal_transToPlace
+      (startPlace := startPlace)
+      (endPlace := endPlace)
+      net hpart htouching hstart hend hflow
+
+theorem loopProjection_internal_place_to_transition
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace)
+    (hflow : net.placeToTrans place trans) :
+    PetriNet.Path
+      (loopProjection net part startPlace endPlace)
+      (PetriNet.Node.place place)
+      (PetriNet.Node.trans trans) :=
+  PetriNet.Path.step
+    (by
+      simpa [PetriNet.flow] using
+        loopProjection_internal_placeToTrans
+          (startPlace := startPlace)
+          (endPlace := endPlace)
+          net hpart htouching hstart hend hflow)
+    PetriNet.Path.refl
+
+theorem loopProjection_transition_to_internal_place
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace)
+    (hflow : net.transToPlace trans place) :
+    PetriNet.Path
+      (loopProjection net part startPlace endPlace)
+      (PetriNet.Node.trans trans)
+      (PetriNet.Node.place place) :=
+  PetriNet.Path.step
+    (by
+      simpa [PetriNet.flow] using
+        loopProjection_internal_transToPlace
+          (startPlace := startPlace)
+          (endPlace := endPlace)
+          net hpart htouching hstart hend hflow)
+    PetriNet.Path.refl
+
+theorem loopProjectionRestricted_internal_place_to_transition
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace)
+    (hflow : net.placeToTrans place trans) :
+    PetriNet.Path
+      (loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.place
+        ⟨place, loopProjectionPlaces_internal net htouching hstart hend⟩)
+      (PetriNet.Node.trans ⟨trans, hpart⟩) :=
+  PetriNet.Path.step
+    (by
+      simpa [PetriNet.flow] using
+        loopProjectionRestricted_internal_placeToTrans
+          (startPlace := startPlace)
+          (endPlace := endPlace)
+          net hpart htouching hstart hend hflow)
+    PetriNet.Path.refl
+
+theorem loopProjectionRestricted_transition_to_internal_place
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace)
+    (hflow : net.transToPlace trans place) :
+    PetriNet.Path
+      (loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.trans ⟨trans, hpart⟩)
+      (PetriNet.Node.place
+        ⟨place, loopProjectionPlaces_internal net htouching hstart hend⟩) :=
+  PetriNet.Path.step
+    (by
+      simpa [PetriNet.flow] using
+        loopProjectionRestricted_internal_transToPlace
+          (startPlace := startPlace)
+          (endPlace := endPlace)
+          net hpart htouching hstart hend hflow)
+    PetriNet.Path.refl
 
 theorem loopProjection_source_to_transition
     (net : WorkflowNet Place Trans)
@@ -1204,6 +1433,127 @@ theorem loopProjectionRestricted_boundary_path
   PetriNet.Path.trans
     (loopProjectionRestricted_source_to_transition net hpart hstart)
     (loopProjectionRestricted_transition_to_sink net hpart hend)
+
+theorem loopProjectionRestricted_internal_to_member_transition_of_placePath
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trace : List Trans}
+    {target : Trans}
+    (path : PetriNet.PlacePathTo net.toPetriNet endPlace place trace)
+    (hclosed : ∀ trans, trans ∈ trace -> part trans)
+    (hnoInStart : ∀ trans, part trans -> ¬ net.transToPlace trans startPlace)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace)
+    (hmem : target ∈ trace) :
+    PetriNet.Path
+      (loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.place
+        ⟨place, loopProjectionPlaces_internal net htouching hstart hend⟩)
+      (PetriNet.Node.trans ⟨target, hclosed target hmem⟩) := by
+  induction path generalizing target with
+  | done =>
+      simp at hmem
+  | step hnotTarget hplaceToTrans htransToPlace restPath ih =>
+      rename_i current next head rest
+      have hheadPart : part head := hclosed head (by simp)
+      simp at hmem
+      rcases hmem with hhead | htail
+      · subst hhead
+        exact
+          loopProjectionRestricted_internal_place_to_transition
+            net hheadPart htouching hstart hend hplaceToTrans
+      · by_cases hnextEnd : next = endPlace
+        · subst hnextEnd
+          cases restPath with
+          | done =>
+              simp at htail
+          | step hne _ _ _ =>
+              exact False.elim (hne rfl)
+        · have hnextTouching :
+              PetriNet.placesTouching net.toPetriNet part next :=
+            PetriNet.placesTouching_of_transToPlace
+              net.toPetriNet hheadPart htransToPlace
+          have hnextStart : next ≠ startPlace := by
+            intro hsame
+            apply hnoInStart head hheadPart
+            rwa [hsame] at htransToPlace
+          have hclosedTail :
+              ∀ trans, trans ∈ rest -> part trans := by
+            intro trans htrans
+            exact hclosed trans (by simp [htrans])
+          have htailPath :=
+            ih hclosedTail hnextTouching hnextStart hnextEnd htail
+          exact
+            PetriNet.Path.trans
+              (loopProjectionRestricted_internal_place_to_transition
+                net hheadPart htouching hstart hend hplaceToTrans)
+              (PetriNet.Path.trans
+                (loopProjectionRestricted_transition_to_internal_place
+                  net hheadPart hnextTouching hnextStart hnextEnd
+                  htransToPlace)
+                htailPath)
+
+theorem loopProjectionRestricted_source_to_member_transition_of_placePath
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace : Place}
+    {trace : List Trans}
+    {target : Trans}
+    (path : PetriNet.PlacePathTo net.toPetriNet endPlace startPlace trace)
+    (hclosed : ∀ trans, trans ∈ trace -> part trans)
+    (hnoInStart : ∀ trans, part trans -> ¬ net.transToPlace trans startPlace)
+    (hmem : target ∈ trace) :
+    PetriNet.Path
+      (loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.place
+        ⟨net.source,
+          loopProjectionPlaces_source net part startPlace endPlace⟩)
+      (PetriNet.Node.trans ⟨target, hclosed target hmem⟩) := by
+  induction path generalizing target with
+  | done =>
+      simp at hmem
+  | step hnotTarget hplaceToTrans htransToPlace restPath ih =>
+      rename_i current next head rest
+      have hheadPart : part head := hclosed head (by simp)
+      simp at hmem
+      rcases hmem with hhead | htail
+      · subst hhead
+        exact loopProjectionRestricted_source_to_transition
+          net hheadPart hplaceToTrans
+      · by_cases hnextEnd : next = endPlace
+        · subst hnextEnd
+          cases restPath with
+          | done =>
+              simp at htail
+          | step hne _ _ _ =>
+              exact False.elim (hne rfl)
+        · have hnextTouching :
+              PetriNet.placesTouching net.toPetriNet part next :=
+            PetriNet.placesTouching_of_transToPlace
+              net.toPetriNet hheadPart htransToPlace
+          have hnextStart : next ≠ current := by
+            intro hsame
+            apply hnoInStart head hheadPart
+            rwa [hsame] at htransToPlace
+          have hclosedTail :
+              ∀ trans, trans ∈ rest -> part trans := by
+            intro trans htrans
+            exact hclosed trans (by simp [htrans])
+          have htailPath :=
+            loopProjectionRestricted_internal_to_member_transition_of_placePath
+              net restPath hclosedTail hnoInStart hnextTouching
+              hnextStart hnextEnd htail
+          exact
+            PetriNet.Path.trans
+              (loopProjectionRestricted_source_to_transition
+                net hheadPart hplaceToTrans)
+              (PetriNet.Path.trans
+                (loopProjectionRestricted_transition_to_internal_place
+                  net hheadPart hnextTouching hnextStart hnextEnd
+                  htransToPlace)
+                htailPath)
 
 theorem loopProjectionRestricted_source_no_in
     (net : WorkflowNet Place Trans)
