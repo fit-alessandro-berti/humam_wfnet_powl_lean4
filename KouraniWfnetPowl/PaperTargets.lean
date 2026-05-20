@@ -11386,6 +11386,21 @@ def theorem2_completeness_case_of_pattern_case
           by
             simpa [List.map_map] using hdecompose word)
 
+def theorem2_completeness_algorithm_certificate_of_pattern_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (certificate :
+      SemiBlockPatternCompletenessCertificate net label) :
+    SemiBlockCompletenessCertificate net label where
+  requirements := certificate.requirements
+  caseEvidence :=
+    theorem2_completeness_case_of_pattern_case
+      certificate.caseEvidence
+
 def theorem2_completeness_semi_block_certified_conversion_of_pattern_case
     {Place : Type u}
     {Trans : Type v}
@@ -11771,6 +11786,113 @@ def theorem2_case3_partial_order_pattern_certificate_of_contraction_certificate
       certificate)
     branches
     hdecompose
+
+def theorem2_case3_algorithm_certificate_of_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ContractionCertificate net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    SemiBlockCompletenessCertificate net label :=
+  theorem2_completeness_algorithm_certificate_of_pattern_certificate
+    (theorem2_case3_partial_order_pattern_certificate_of_contraction_certificate
+      hrequirements certificate branches hdecompose)
+
+theorem theorem2_case3_algorithm_exists_powl_model_language_eq_of_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ContractionCertificate net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  theorem2_completeness_exists_powl_model_language_eq_of_algorithm_certificate
+    (theorem2_case3_algorithm_certificate_of_contraction_certificate
+      hrequirements certificate branches hdecompose)
+
+theorem theorem2_case3_algorithm_exists_powl_model_visible_activity_language_witness_of_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ContractionCertificate net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  theorem2_completeness_exists_powl_model_visible_activity_language_witness_of_algorithm_certificate
+    (theorem2_case3_algorithm_certificate_of_contraction_certificate
+      hrequirements certificate branches hdecompose)
+    hlabel
 
 def theorem2_case3_semi_block_certified_conversion_of_contraction_certificate
     {Place : Type u}

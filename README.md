@@ -287,7 +287,9 @@ The current proof spine is:
   XOR/loop/partial-order pattern evidence, with the partial-order branch using
   the transitive closure of the execution-order relation and exposing the
   corresponding strict-partial-order object; raw pattern cases and bundled
-  pattern certificates both expose the same completeness consequence surface.
+  pattern certificates bridge directly into the raw
+  `SemiBlockCompletenessCertificate` algorithm-certificate API and both expose
+  the same completeness consequence surface.
   Named constructors now package the single-transition,
   XOR-pattern, loop-pattern, and partial-order-pattern cases directly as
   pattern completeness certificates, and direct theorem wrappers turn each
@@ -319,10 +321,10 @@ The current proof spine is:
   rewrite forms and transition-equality corollaries, Case 3 contraction,
   contracted marked-graph equivalence, no-return, acyclicity wrappers, and a
   bundled contraction certificate that build the partial-order pattern and
-  strict partial order and now feeds the partial-order branch into the
-  certified conversion, language-equivalence, concrete POWL-witness, and
-  visible-activity-witness pipeline, including existential generated-model
-  visible-witness forms, plus semi-block
+  strict partial order and now feeds the partial-order branch into the raw
+  algorithm-certificate layer, certified conversion, language-equivalence,
+  concrete POWL-witness, and visible-activity-witness pipeline, including
+  existential generated-model visible-witness forms, plus semi-block
   specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, no-dead-transition,

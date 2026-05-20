@@ -2497,6 +2497,136 @@ noncomputable def final [DecidableEq Place]
     (net : WorkflowNet Place Trans) : Marking Place :=
   Marking.single net.sink
 
+theorem fire_positive_of_not_placeToTrans
+    {net : WorkflowNet Place Trans}
+    {marking : Marking Place}
+    {place : Place}
+    {trans : Trans}
+    (hnotInput : ¬ net.placeToTrans place trans)
+    (hpositive : marking place > 0) :
+    fire net marking trans place > 0 := by
+  classical
+  have hfire :
+      fire net marking trans place =
+        marking place + produced net trans place := by
+    simp [fire, consumed, hnotInput]
+  rw [hfire]
+  exact Nat.lt_add_right _ hpositive
+
+theorem fire_positive_of_transToPlace
+    {net : WorkflowNet Place Trans}
+    {marking : Marking Place}
+    {place : Place}
+    {trans : Trans}
+    (henabled : enabled net marking trans)
+    (hpost : net.transToPlace trans place) :
+    fire net marking trans place > 0 := by
+  classical
+  by_cases hinput : net.placeToTrans place trans
+  · have hpositive : marking place > 0 := henabled place hinput
+    have hge : 1 ≤ marking place := Nat.succ_le_of_lt hpositive
+    have hfire :
+        fire net marking trans place =
+          marking place - 1 + 1 := by
+      simp [fire, consumed, produced, hinput, hpost]
+    rw [hfire, Nat.sub_add_cancel hge]
+    exact hpositive
+  · have hfire :
+        fire net marking trans place =
+          marking place + 1 := by
+      simp [fire, consumed, produced, hinput, hpost]
+    rw [hfire]
+    exact Nat.succ_pos _
+
+theorem fires_positive_of_transToPlace
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {place : Place}
+    {trans : Trans}
+    (hfires : fires net before trans after)
+    (hpost : net.transToPlace trans place) :
+    after place > 0 := by
+  rw [hfires.2]
+  exact fire_positive_of_transToPlace hfires.1 hpost
+
+theorem firingSequence_positive_of_no_consuming_transition
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {trace : List Trans}
+    {place : Place}
+    (sequence : FiringSequence net before trace after)
+    (hpositive : before place > 0)
+    (hnotConsumed :
+      ∀ trans, trans ∈ trace -> ¬ net.placeToTrans place trans) :
+    after place > 0 := by
+  induction sequence with
+  | nil =>
+      exact hpositive
+  | cons hfires tail ih =>
+      rename_i beforeStep middleStep afterStep firedTrans restTrace
+      have hmiddle :
+          middleStep place > 0 := by
+        rw [hfires.2]
+        apply fire_positive_of_not_placeToTrans
+        · intro hinput
+          exact
+            hnotConsumed firedTrans
+              (by simp : firedTrans ∈ firedTrans :: restTrace)
+              hinput
+        · exact hpositive
+      exact
+        ih
+          hmiddle
+          (fun trans hmem =>
+            hnotConsumed trans
+              (by simp [hmem] : trans ∈ firedTrans :: restTrace))
+
+theorem completion_trace_contains_place_output
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {before : Marking Place}
+    {trace : List Trans}
+    {place : Place}
+    (sequence : FiringSequence net before trace (final net))
+    (hplace : place ≠ net.sink)
+    (hpositive : before place > 0) :
+    ∃ trans, net.placeToTrans place trans ∧ trans ∈ trace := by
+  classical
+  by_cases hexists :
+      ∃ trans, net.placeToTrans place trans ∧ trans ∈ trace
+  · exact hexists
+  · exfalso
+    have hnotConsumed :
+        ∀ trans, trans ∈ trace -> ¬ net.placeToTrans place trans := by
+      intro trans hmem hflow
+      exact hexists ⟨trans, hflow, hmem⟩
+    have hfinalPositive : final net place > 0 :=
+      firingSequence_positive_of_no_consuming_transition
+        sequence hpositive hnotConsumed
+    have hfinalZero : ¬ final net place > 0 := by
+      simp [final, Marking.single, hplace]
+    exact hfinalZero hfinalPositive
+
+theorem markedGraph_completion_trace_contains_unique_place_output
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {before : Marking Place}
+    {trace : List Trans}
+    {place : Place}
+    {trans : Trans}
+    (sequence : FiringSequence net before trace (final net))
+    (hplace : place ≠ net.sink)
+    (hpositive : before place > 0)
+    (hflow : net.placeToTrans place trans) :
+    trans ∈ trace := by
+  rcases completion_trace_contains_place_output
+      sequence hplace hpositive with
+    ⟨other, hotherFlow, hmem⟩
+  have hsame : other = trans :=
+    hmarked.2 place other trans hotherFlow hflow
+  simpa [hsame] using hmem
+
 def safe [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
   ∀ marking, reachable net (initial net) marking -> ∀ place, marking place ≤ 1
 
