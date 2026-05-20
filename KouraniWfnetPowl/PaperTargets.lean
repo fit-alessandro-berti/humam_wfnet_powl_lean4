@@ -7876,6 +7876,156 @@ def certified_conversion_partial_order_normalized_of_component_certificates
       branches ComponentPlace componentDecidable componentNet
       certificates hdecompose
 
+theorem theorem1_partial_order_normalized_language_preservation_of_component_certificates
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl
+            (PetriNet.NormalizedTrans
+              {trans : Trans // part.val trans})))
+    (ComponentPlace :
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        Powl
+          (PetriNet.NormalizedTrans
+            {trans : Trans // part.val trans})) -> Type x)
+    (componentDecidable :
+      ∀ branch, DecidableEq (ComponentPlace branch))
+    (componentNet :
+      ∀ branch,
+        WorkflowNet
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans}))
+    (certificates :
+      ∀ branch,
+        @ConversionCertificate
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          Activity
+          (componentDecidable branch)
+          (componentNet branch)
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.language
+                  (componentNet branch)
+                  (WorkflowNet.normalizedLabel
+                    (fun trans :
+                        {trans : Trans // branch.1.val trans} =>
+                      label trans.val))))
+            word) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language
+          (WorkflowNet.normalizedLabel label)
+          (Powl.partialOrder order
+            (branches.map
+              (fun branch =>
+                Powl.map
+                  WorkflowNet.normalizedSubtypeTransMap
+                  branch.2)))
+          word :=
+  certified_conversion_language_preservation
+    (certified_conversion_partial_order_normalized_of_component_certificates
+      branches ComponentPlace componentDecidable componentNet
+      certificates hdecompose)
+
+theorem theorem1_partial_order_normalized_language_eq_of_component_certificates
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl
+            (PetriNet.NormalizedTrans
+              {trans : Trans // part.val trans})))
+    (ComponentPlace :
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        Powl
+          (PetriNet.NormalizedTrans
+            {trans : Trans // part.val trans})) -> Type x)
+    (componentDecidable :
+      ∀ branch, DecidableEq (ComponentPlace branch))
+    (componentNet :
+      ∀ branch,
+        WorkflowNet
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans}))
+    (certificates :
+      ∀ branch,
+        @ConversionCertificate
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          Activity
+          (componentDecidable branch)
+          (componentNet branch)
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.language
+                  (componentNet branch)
+                  (WorkflowNet.normalizedLabel
+                    (fun trans :
+                        {trans : Trans // branch.1.val trans} =>
+                      label trans.val))))
+            word) :
+    WorkflowNet.language net label =
+      Powl.language
+        (WorkflowNet.normalizedLabel label)
+        (Powl.partialOrder order
+          (branches.map
+            (fun branch =>
+              Powl.map
+                WorkflowNet.normalizedSubtypeTransMap
+                branch.2))) :=
+  Language.ext
+    (theorem1_partial_order_normalized_language_preservation_of_component_certificates
+      branches ComponentPlace componentDecidable componentNet
+      certificates hdecompose)
+
 def theorem2_base_case_certified_conversion_single_transition
     {Place : Type u}
     {Trans : Type v}
@@ -8503,6 +8653,81 @@ def semantic_certified_conversion_partial_order_of_subtype_conversions
     Iff.symm
       (partial_order_language_preservation_of_subtype_conversions
         branches hdecompose word)
+
+def semantic_certified_conversion_partial_order_normalized_of_component_certificates
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl
+            (PetriNet.NormalizedTrans
+              {trans : Trans // part.val trans})))
+    (ComponentPlace :
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        Powl
+          (PetriNet.NormalizedTrans
+            {trans : Trans // part.val trans})) -> Type x)
+    (componentDecidable :
+      ∀ branch, DecidableEq (ComponentPlace branch))
+    (componentNet :
+      ∀ branch,
+        WorkflowNet
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans}))
+    (certificates :
+      ∀ branch,
+        @ConversionCertificate
+          (ComponentPlace branch)
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          Activity
+          (componentDecidable branch)
+          (componentNet branch)
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          (PetriNet.NormalizedTrans
+            {trans : Trans // branch.1.val trans})
+          (WorkflowNet.normalizedLabel
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val))
+          branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.language
+                  (componentNet branch)
+                  (WorkflowNet.normalizedLabel
+                    (fun trans :
+                        {trans : Trans // branch.1.val trans} =>
+                      label trans.val))))
+            word) :
+    SemanticCertifiedConversion net label where
+  OutTrans := PetriNet.NormalizedTrans Trans
+  outLabel := WorkflowNet.normalizedLabel label
+  model :=
+    Powl.partialOrder order
+      (branches.map
+        (fun branch =>
+          Powl.map
+            WorkflowNet.normalizedSubtypeTransMap
+            branch.2))
+  certificate :=
+    theorem1_partial_order_normalized_language_preservation_of_component_certificates
+      branches ComponentPlace componentDecidable componentNet
+      certificates hdecompose
 
 theorem theorem1_semantic_conversion_language_preservation
     {Place : Type u}
@@ -14613,6 +14838,61 @@ def theorem2_local_subtype_certified_conversion_of_restricted_decision_branch_ce
   local_subtype_certified_conversion_of_restricted_decision_branch_certificate
     hbranch label model certificate
 
+def theorem2_decision_branch_family_local_subtype_conversions_of_certified_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split join : Place}
+    {branchParts :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // branchParts branch trans}))
+    (branchNet :
+      ∀ branch :
+        Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+          Powl {trans : Trans // branchParts branch trans},
+        WorkflowNet.restrictedDecisionBranchWorkflowNet
+          net split join (branchParts branch.1))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // branchParts branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split join (branchParts branch.1) place}
+            {trans : Trans // branchParts branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = join ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // branchParts branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // branchParts branch.1 trans}
+            (fun trans :
+              {trans : Trans // branchParts branch.1 trans} =>
+                label trans.val)
+            branch.2) :
+    List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        LocalSubtypeCertifiedConversion
+          net label (branchParts branch) split join) :=
+  branches.map
+    (fun branch =>
+      Sigma.mk
+        branch.1
+        (theorem2_local_subtype_certified_conversion_of_restricted_decision_branch_certificate
+          (branchNet branch)
+          label
+          branch.2
+          (certificates branch)))
+
 theorem theorem2_decision_branch_local_xor_language_preservation_of_mapped_branch_models
     {Place : Type u}
     {Trans : Type v}
@@ -15048,6 +15328,70 @@ def theorem2_decision_branch_family_local_certified_conversion_xor_of_certified_
     Iff.symm
       (theorem2_decision_branch_family_local_xor_language_preservation_of_certified_branch_models
         hfamily branches branchNet certificates hdecompose word)
+
+def theorem2_decision_branch_family_local_certified_conversion_xor_of_certified_branch_models_via_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split join : Place}
+    {branchParts :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily :
+      WorkflowNet.decisionBranchFamily net split join branchParts)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // branchParts branch trans}))
+    (branchNet :
+      ∀ branch :
+        Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+          Powl {trans : Trans // branchParts branch trans},
+        WorkflowNet.restrictedDecisionBranchWorkflowNet
+          net split join (branchParts branch.1))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // branchParts branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split join (branchParts branch.1) place}
+            {trans : Trans // branchParts branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = join ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // branchParts branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // branchParts branch.1 trans}
+            (fun trans :
+              {trans : Trans // branchParts branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label split join word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (branchParts branch.1) split join))
+            word) :
+    LocalCertifiedConversion net label split join :=
+  theorem2_decision_branch_family_local_certified_conversion_xor_of_subtype_conversions
+    hfamily
+    (theorem2_decision_branch_family_local_subtype_conversions_of_certified_branch_models
+      branches branchNet certificates)
+    (by
+      intro word
+      simpa
+        [theorem2_decision_branch_family_local_subtype_conversions_of_certified_branch_models,
+          List.map_map]
+        using hdecompose word)
 
 theorem theorem2_decision_branch_local_xor_language_preservation_of_certified_branch_models
     {Place : Type u}
@@ -15897,6 +16241,72 @@ def theorem2_decision_branch_family_local_certified_conversion_partial_order_of_
     Iff.symm
       (theorem2_decision_branch_family_local_partial_order_language_preservation_of_certified_branch_models
         hfamily branches branchNet certificates hdecompose word)
+
+def theorem2_decision_branch_family_local_certified_conversion_partial_order_of_certified_branch_models_via_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split join : Place}
+    {order : Rel Nat}
+    {branchParts :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily :
+      WorkflowNet.decisionBranchFamily net split join branchParts)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // branchParts branch trans}))
+    (branchNet :
+      ∀ branch :
+        Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+          Powl {trans : Trans // branchParts branch trans},
+        WorkflowNet.restrictedDecisionBranchWorkflowNet
+          net split join (branchParts branch.1))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // branchParts branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split join (branchParts branch.1) place}
+            {trans : Trans // branchParts branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = join ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // branchParts branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // branchParts branch.1 trans}
+            (fun trans :
+              {trans : Trans // branchParts branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label split join word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (branchParts branch.1) split join))
+            word) :
+    LocalCertifiedConversion net label split join :=
+  theorem2_decision_branch_family_local_certified_conversion_partial_order_of_subtype_conversions
+    hfamily
+    (theorem2_decision_branch_family_local_subtype_conversions_of_certified_branch_models
+      branches branchNet certificates)
+    (by
+      intro word
+      simpa
+        [theorem2_decision_branch_family_local_subtype_conversions_of_certified_branch_models,
+          List.map_map]
+        using hdecompose word)
 
 theorem theorem2_local_partial_order_language_preservation_of_certified_branch_models
     {Place : Type u}
@@ -16752,6 +17162,154 @@ theorem theorem2_semi_block_subnet_split_decision_branch_family_requirements
       (fun branch => (hfamily.2.1 branch).2),
       (fun {left right} hne trans hleft hright =>
         hfamily.2.2 left right hne trans hleft hright)⟩
+
+noncomputable def theorem2_semi_block_subnet_split_decision_xor_local_conversion_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    Σ (pair : Place -> Place),
+    Σ (branchParts :
+        WorkflowNet.transitionPostsetOfPlace net split -> Set Trans),
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // branchParts branch trans})),
+        (∀ branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // branchParts branch trans},
+          WorkflowNet.restrictedDecisionBranchWorkflowNet
+            net split (pair split) (branchParts branch.1)) ->
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // branchParts branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (pair split) (branchParts branch.1) place}
+              {trans : Trans // branchParts branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // branchParts branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // branchParts branch.1 trans}
+              (fun trans :
+                {trans : Trans // branchParts branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage net label split (pair split) word ↔
+            Language.unionList
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (branchParts branch.1) split
+                    (pair split)))
+              word) ->
+          LocalCertifiedConversion net label split (pair split) := by
+  classical
+  let hpackage :=
+    WorkflowNet.semiBlockStructuredSubnetRequirements_branchFamily
+      hrequirements hsplit
+  let pair : Place -> Place := Classical.choose hpackage
+  let hpairPackage := Classical.choose_spec hpackage
+  let branchParts :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans :=
+    Classical.choose hpairPackage
+  have hbranchSpec := Classical.choose_spec hpairPackage
+  have hfamily :
+      WorkflowNet.decisionBranchFamily
+        net split (pair split) branchParts :=
+    hbranchSpec.2
+  refine ⟨pair, branchParts, ?_⟩
+  intro branches branchNet certificates hdecompose
+  exact
+    theorem2_decision_branch_family_local_certified_conversion_xor_of_certified_branch_models_via_subtype_conversions
+      hfamily branches branchNet certificates hdecompose
+
+noncomputable def theorem2_semi_block_subnet_split_decision_partial_order_local_conversion_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split)
+    (order : Rel Nat) :
+    Σ (pair : Place -> Place),
+    Σ (branchParts :
+        WorkflowNet.transitionPostsetOfPlace net split -> Set Trans),
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // branchParts branch trans})),
+        (∀ branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // branchParts branch trans},
+          WorkflowNet.restrictedDecisionBranchWorkflowNet
+            net split (pair split) (branchParts branch.1)) ->
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // branchParts branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (pair split) (branchParts branch.1) place}
+              {trans : Trans // branchParts branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // branchParts branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // branchParts branch.1 trans}
+              (fun trans :
+                {trans : Trans // branchParts branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage net label split (pair split) word ↔
+            Powl.partialOrderComponentLanguage
+              order
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (branchParts branch.1) split
+                    (pair split)))
+              word) ->
+          LocalCertifiedConversion net label split (pair split) := by
+  classical
+  let hpackage :=
+    WorkflowNet.semiBlockStructuredSubnetRequirements_branchFamily
+      hrequirements hsplit
+  let pair : Place -> Place := Classical.choose hpackage
+  let hpairPackage := Classical.choose_spec hpackage
+  let branchParts :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans :=
+    Classical.choose hpairPackage
+  have hbranchSpec := Classical.choose_spec hpairPackage
+  have hfamily :
+      WorkflowNet.decisionBranchFamily
+        net split (pair split) branchParts :=
+    hbranchSpec.2
+  refine ⟨pair, branchParts, ?_⟩
+  intro branches branchNet certificates hdecompose
+  exact
+    theorem2_decision_branch_family_local_certified_conversion_partial_order_of_certified_branch_models_via_subtype_conversions
+      hfamily branches branchNet certificates hdecompose
 
 theorem lemma2_loop_pattern_trace_closure
     {Place : Type u}

@@ -231,10 +231,16 @@ The current proof spine is:
   now has checked targets for the safe-and-sound,
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
+  an explicit split-decision branch-family package exposing the selected
+  branch pair, branch-family evidence, split-transition containment,
+  branch nonemptiness, restricted workflow-net subnets, and disjointness,
   checked branch-subnet closure/disjointness, local branch-language transfer,
   mapped local subtype POWL transfer, local XOR/loop/partial-order
   branch-family and certified-branch language-equality forms, direct
-  branch-family constructors from restricted recursive branch certificates, a
+  branch-family constructors from restricted recursive branch certificates,
+  a list-level bridge from those certificates to `LocalSubtypeCertifiedConversion`
+  branch lists, semi-block split-decision continuations that choose the branch
+  family and return local XOR/partial-order conversion builders, a
   `LocalCertifiedConversion` interface
   for source-to-sink subproblems, a `LocalSubtypeCertifiedConversion`
   interface for transition-subset subproblems with pointwise and equality forms,
