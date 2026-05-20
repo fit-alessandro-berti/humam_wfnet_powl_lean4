@@ -6090,6 +6090,99 @@ theorem lemma3_partial_order_pattern_projection_safe_and_sound_constructor_of_in
           hcomplete
           hproper⟩
 
+theorem lemma3_partial_order_pattern_projection_safe_and_sound_of_witnesses_of_incidence
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {index : Nat}
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})]
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hentry :
+      ∀ trans, part trans ->
+        ∃ entry,
+          WorkflowNet.entryPoints net part entry ∧
+            net.placeToTrans entry trans)
+    (hexit :
+      ∀ trans, part trans ->
+        ∃ exit,
+          WorkflowNet.exitPoints net part exit ∧
+            net.transToPlace trans exit)
+    (hincoming :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.transToPlace trans place ∧
+              ∃ entry,
+                WorkflowNet.entryPoints net part entry ∧
+                  net.placeToTrans entry trans)
+    (houtgoing :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.placeToTrans place trans ∧
+              ∃ exit,
+                WorkflowNet.exitPoints net part exit ∧
+                  net.transToPlace trans exit) :
+    ∃ projection :
+      WorkflowNet
+        (PetriNet.NormalizedPlace
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place})
+        (PetriNet.NormalizedTrans {trans : Trans // part trans}),
+      (∀ trans : {trans : Trans // part trans},
+        ∃ marking,
+          WorkflowNet.reachable
+              projection
+              (WorkflowNet.initial projection)
+              (lemma3_partial_order_projection_normalized_marking
+                net part marking) ∧
+            WorkflowNet.enabled net marking trans.val ∧
+            (∀ entry, WorkflowNet.entryPoints net part entry ->
+              marking entry > 0) ∧
+            (∀ exit, WorkflowNet.exitPoints net part exit ->
+              marking exit > 0)) ->
+      (∃ marking,
+        WorkflowNet.reachable
+            projection
+            (WorkflowNet.initial projection)
+            (lemma3_partial_order_projection_normalized_marking
+              net part marking) ∧
+          (∀ exit, WorkflowNet.exitPoints net part exit ->
+            marking exit > 0)) ->
+      WorkflowNet.safe projection ->
+      WorkflowNet.optionToComplete projection ->
+      WorkflowNet.properCompletion projection ->
+        WorkflowNet.safeAndSound projection := by
+  have _hpatternParts : partition.hasAtLeastTwoParts := hpattern.1
+  have hnonempty : ∃ trans, part trans :=
+    Partition.nonempty_of_listGet? partition hpart
+  let hconnected :=
+    lemma3_partial_order_projection_restricted_connected_of_entry_exit_incidence
+      net hnonempty hentry hexit hincoming houtgoing
+  let projection :
+      WorkflowNet
+        (PetriNet.NormalizedPlace
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place})
+        (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
+    lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+      net part hconnected
+  exact
+    ⟨projection,
+      fun horiginal hexitsMarked hsafe hcomplete hproper =>
+        lemma3_partial_order_projection_restricted_normalized_safe_and_sound_of_witnesses
+          net hconnected horiginal hexitsMarked hsafe hcomplete hproper⟩
+
 def lemma3_partial_order_projection_normalized_workflow_net_of_connected
     {Place : Type u}
     {Trans : Type v}
@@ -9183,6 +9276,134 @@ def local_certified_conversion_partial_order_of_subtype_conversions
               word)
         (Iff.symm (hdecompose word))
 
+theorem lemma6_partial_order_pattern_language_preservation_of_local_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    Asymmetric (TransGen (Patterns.executionOrder net partition)) ∧
+      ∀ word,
+        Powl.language label
+            (Powl.partialOrder
+              (TransGen (Patterns.executionOrder net partition))
+              (branches.map
+                (fun branch => Powl.map Subtype.val branch.2.model)))
+            word ↔
+          WorkflowNet.language net label word := by
+  constructor
+  · exact Patterns.partialOrderPattern_asymmetric net partition hpattern
+  · intro word
+    rw [Powl.partial_order_language_iff_componentLanguage]
+    exact Iff.trans
+      (by
+        simpa [List.map_map] using
+          Powl.partialOrderComponentLanguage_map_congr
+            (TransGen (Patterns.executionOrder net partition))
+            branches
+            (fun branch =>
+              Powl.language label
+                (Powl.map Subtype.val branch.2.model))
+            (fun branch =>
+              WorkflowNet.localSubtypeTraceLanguage
+                net label branch.1.val net.source net.sink)
+            (fun branch word =>
+              local_subtype_certified_conversion_mapped_language
+                branch.2 word)
+            word)
+      (Iff.symm (hdecompose word))
+
+theorem lemma6_partial_order_pattern_language_eq_of_local_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    Powl.language label
+        (Powl.partialOrder
+          (TransGen (Patterns.executionOrder net partition))
+          (branches.map
+            (fun branch => Powl.map Subtype.val branch.2.model))) =
+      WorkflowNet.language net label :=
+  Language.ext
+    (lemma6_partial_order_pattern_language_preservation_of_local_subtype_conversions
+      hpattern branches hdecompose).2
+
+theorem lemma6_partial_order_pattern_strict_order_language_preservation_of_local_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) ∧
+        ∀ word,
+          Powl.language label
+              (Powl.partialOrder order.rel
+                (branches.map
+                  (fun branch => Powl.map Subtype.val branch.2.model)))
+              word ↔
+            WorkflowNet.language net label word := by
+  refine
+    ⟨Patterns.partialOrderPattern_strictPartialOrder
+        net partition hpattern,
+      rfl,
+      ?_⟩
+  exact
+    (lemma6_partial_order_pattern_language_preservation_of_local_subtype_conversions
+      hpattern branches hdecompose).2
+
 theorem theorem2_local_certified_conversion_language_preservation
     {Place : Type u}
     {Trans : Type v}
@@ -9852,6 +10073,93 @@ def theorem2_completeness_partial_order_semi_block_certified_conversion_of_subty
             (WorkflowNet.language_iff_localLanguage_source_sink
               net label word))
           (hdecompose word)))
+
+def theorem2_completeness_partial_order_pattern_strict_order_semi_block_certified_conversion_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    Σ order : StrictPartialOrder Nat,
+      Subtype
+        (fun _ : SemiBlockCertifiedConversion net label =>
+          order.rel = TransGen (Patterns.executionOrder net partition)) := by
+  let order :=
+    Patterns.partialOrderPattern_strictPartialOrder
+      net partition hpattern
+  let conversion : SemiBlockCertifiedConversion net label :=
+    theorem2_completeness_partial_order_semi_block_certified_conversion_of_subtype_conversions
+      (order := TransGen (Patterns.executionOrder net partition))
+      hrequirements
+      (branches.map
+        (fun branch =>
+          Sigma.mk branch.1.val branch.2))
+      (by
+        intro word
+        simpa [List.map_map] using hdecompose word)
+  exact ⟨order, ⟨conversion, rfl⟩⟩
+
+theorem theorem2_completeness_partial_order_pattern_strict_order_safe_and_exists_powl_model_language_eq_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) ∧
+        WorkflowNet.safeAndSound net ∧
+          ∃ OutTrans : Type v,
+            ∃ outLabel : OutTrans -> TransitionLabel Activity,
+              ∃ model : Powl OutTrans,
+                WorkflowNet.language net label =
+                  Powl.language outLabel model := by
+  rcases
+    theorem2_completeness_partial_order_pattern_strict_order_semi_block_certified_conversion_of_subtype_conversions
+      hrequirements hpattern branches hdecompose with
+    ⟨order, packagedConversion⟩
+  exact
+    ⟨order,
+      packagedConversion.property,
+      theorem2_completeness_safe_and_exists_powl_model_language_eq_of_semi_block_certified_conversion
+        packagedConversion.val⟩
 
 inductive SemiBlockCompletenessCase
     {Place : Type u}

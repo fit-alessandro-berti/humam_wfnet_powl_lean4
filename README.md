@@ -187,7 +187,10 @@ The current proof spine is:
   POWL transition-map language preservation facts for recursively translated
   projection models, union-list/component-equivalence variants for the XOR,
   loop, and partial-order language preservation arguments, including explicitly
-  indexed Lemma 4 and Lemma 6 component-list forms. The target map now also
+  indexed Lemma 4 and Lemma 6 component-list forms, plus a Lemma 6
+  partial-order-pattern theorem that combines execution-order asymmetry with
+  local subtype branch conversions and exposes the induced strict partial
+  order. The target map now also
   includes mapped-component variants of the XOR, loop, and partial-order
   preservation wrappers, so recursive submodel equivalences can be transported
   through transition embeddings before applying the top-level pattern semantics;
@@ -246,7 +249,10 @@ The current proof spine is:
   POWL model;
   theorem-facing constructors now cover the single-transition base case and
   the XOR, loop, and partial-order recursive cases from supplied local subtype
-  conversions and global language decompositions, and a
+  conversions and global language decompositions, with an additional
+  partial-order-pattern package that carries the induced strict partial order
+  through to the semi-block certified conversion and combined safe/equivalent
+  POWL-model consequence, and a
   `SemiBlockCompletenessCase`/`SemiBlockCompletenessCertificate` layer packages
   that case split into one algorithm-certificate object; the raw case evidence
   and bundled algorithm certificates both expose language preservation/equality,
@@ -303,7 +309,10 @@ The current proof spine is:
   no-dead witnesses, and a full no-dead constructor for normalized projections,
   reachable-shape-based safeness and `safeAndSound` packaging, including
   variants that consume the original net's `safeAndSound` hypothesis directly,
-  sound packaging under supplied residual obligations, generic normalization,
+  indexed partial-order-pattern projection WF-net existence plus
+  accepting-trace and no-dead-witness `safeAndSound` constructor theorems
+  under incidence obligations, sound
+  packaging under supplied residual obligations, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
   normalized-language equivalence targets, execution-order, source/sink-aware
