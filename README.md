@@ -194,8 +194,10 @@ The current proof spine is:
   the loop wrappers also support separate mapped transition subtypes for do and
   redo models, plus named checked
   dependencies for Lemma 1 path restriction, reachable-marking lifting,
-  selected-sequence restriction, safeness preservation, no-dead-transition
-  transfer from selected accepting sequences, a checked XOR
+  selected-sequence restriction, safeness preservation, no-dead-transition,
+  soundness, and `safeAndSound` transfer from selected accepting sequences
+  plus supplied completion/proper-completion obligations, including variants
+  that consume the original net's `safeAndSound` hypothesis directly, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, a mapped recursive
   XOR-branch model-to-typed-subtrace equivalence, and a mapped branch-list
@@ -284,8 +286,12 @@ The current proof spine is:
   rewrite forms and transition-equality corollaries, plus semi-block
   specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
-  connected-projection-to-`WorkflowNet` packaging facts, including the
-  incidence-based full restricted loop-projection connectedness target and a
+  connected-projection-to-`WorkflowNet` packaging facts, no-dead-transition,
+  soundness, and `safeAndSound` packaging for connected loop projections from
+  accepting-trace/completion/proper-completion obligations, with matching
+  no-dead/sound/`safeAndSound` wrappers for reachable-incidence loop-projection
+  constructors, including the incidence-based full restricted loop-projection
+  connectedness target and a
   pattern-level do/redo loop-projection WF-net existence theorem, and
   Lemma 3
   partial-order projection boundary/internal edge, one-step path, and

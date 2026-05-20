@@ -2053,6 +2053,47 @@ theorem workflow_no_dead_transitions_of_accepting_trace_mem
     WorkflowNet.noDeadTransitions net :=
   WorkflowNet.noDeadTransitions_of_accepting_trace_mem haccepting
 
+theorem workflow_sound_of_accepting_trace_mem_option_proper
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (haccepting :
+      ∀ trans,
+        ∃ trace,
+          WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            trace
+            (WorkflowNet.final net) ∧
+            trans ∈ trace)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    (hproper : WorkflowNet.properCompletion net) :
+    WorkflowNet.sound net :=
+  WorkflowNet.sound_of_accepting_trace_mem_option_proper
+    haccepting hcomplete hproper
+
+theorem workflow_safe_and_sound_of_accepting_trace_mem_option_proper
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafe : WorkflowNet.safe net)
+    (haccepting :
+      ∀ trans,
+        ∃ trace,
+          WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            trace
+            (WorkflowNet.final net) ∧
+            trans ∈ trace)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    (hproper : WorkflowNet.properCompletion net) :
+    WorkflowNet.safeAndSound net :=
+  WorkflowNet.safeAndSound_of_accepting_trace_mem_option_proper
+    hsafe haccepting hcomplete hproper
+
 theorem workflow_no_dead_transition_option_to_complete_accepting_witness
     {Place : Type u}
     {Trans : Type v}
@@ -5948,6 +5989,162 @@ theorem lemma1_xor_projection_safe_and_no_dead_transitions_of_selected_accepting
   ⟨lemma1_xor_projection_safe hpattern hpart hsafe,
     lemma1_xor_projection_no_dead_transitions_of_selected_accepting_sequences
       hpattern hpart haccepting⟩
+
+theorem lemma1_xor_projection_sound_of_selected_accepting_sequences
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net) ∧
+            trans ∈ trace)
+    (hcomplete :
+      WorkflowNet.optionToComplete
+        (Patterns.xorProjectionWorkflowNet hpattern hpart))
+    (hproper :
+      WorkflowNet.properCompletion
+        (Patterns.xorProjectionWorkflowNet hpattern hpart)) :
+    WorkflowNet.sound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  workflow_sound_of_accepting_trace_mem_option_proper
+    (net := Patterns.xorProjectionWorkflowNet hpattern hpart)
+    (fun trans =>
+      by
+        rcases haccepting trans with ⟨trace, sequence, hmem⟩
+        exact
+          ⟨trace,
+            lemma1_xor_projection_selected_accepting_sequence_restricts
+              hpattern hpart sequence,
+            hmem⟩)
+    hcomplete
+    hproper
+
+theorem lemma1_xor_projection_safe_and_sound_of_selected_accepting_sequences
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafe : WorkflowNet.safe net)
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net) ∧
+            trans ∈ trace)
+    (hcomplete :
+      WorkflowNet.optionToComplete
+        (Patterns.xorProjectionWorkflowNet hpattern hpart))
+    (hproper :
+      WorkflowNet.properCompletion
+        (Patterns.xorProjectionWorkflowNet hpattern hpart)) :
+    WorkflowNet.safeAndSound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  workflow_safe_and_sound_of_accepting_trace_mem_option_proper
+    (net := Patterns.xorProjectionWorkflowNet hpattern hpart)
+    (lemma1_xor_projection_safe hpattern hpart hsafe)
+    (fun trans =>
+      by
+        rcases haccepting trans with ⟨trace, sequence, hmem⟩
+        exact
+          ⟨trace,
+            lemma1_xor_projection_selected_accepting_sequence_restricts
+              hpattern hpart sequence,
+            hmem⟩)
+    hcomplete
+    hproper
+
+theorem lemma1_xor_projection_safe_of_original_safe_and_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safe (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe
+    hpattern hpart
+    (WorkflowNet.safeAndSound_safe hsafeSound)
+
+theorem lemma1_xor_projection_safe_and_no_dead_transitions_of_original_safe_and_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net) ∧
+            trans ∈ trace) :
+    WorkflowNet.safe (Patterns.xorProjectionWorkflowNet hpattern hpart) ∧
+      WorkflowNet.noDeadTransitions
+        (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_no_dead_transitions_of_selected_accepting_sequences
+    hpattern hpart
+    (WorkflowNet.safeAndSound_safe hsafeSound)
+    haccepting
+
+theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net) ∧
+            trans ∈ trace)
+    (hcomplete :
+      WorkflowNet.optionToComplete
+        (Patterns.xorProjectionWorkflowNet hpattern hpart))
+    (hproper :
+      WorkflowNet.properCompletion
+        (Patterns.xorProjectionWorkflowNet hpattern hpart)) :
+    WorkflowNet.safeAndSound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_sound_of_selected_accepting_sequences
+    hpattern hpart
+    (WorkflowNet.safeAndSound_safe hsafeSound)
+    haccepting
+    hcomplete
+    hproper
 
 theorem lemma4_xor_projection_language_of_selected_original_sequence
     {Place : Type u}
@@ -15299,6 +15496,184 @@ def lemma2_loop_projection_workflow_net_of_connected
   Patterns.loopProjectionWorkflowNetOfConnected
     net part startPlace endPlace hsourceSink hconnected
 
+theorem lemma2_loop_projection_no_dead_transitions_of_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Place //
+            Patterns.loopProjectionPlaces net part startPlace endPlace place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source
+                  net part startPlace endPlace⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            node
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink
+                  net part startPlace endPlace⟩))
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              (lemma2_loop_projection_workflow_net_of_connected
+                net part startPlace endPlace hsourceSink hconnected)
+              (WorkflowNet.initial
+                (lemma2_loop_projection_workflow_net_of_connected
+                  net part startPlace endPlace hsourceSink hconnected))
+              trace
+              (WorkflowNet.final
+                (lemma2_loop_projection_workflow_net_of_connected
+                  net part startPlace endPlace hsourceSink hconnected)) ∧
+            trans ∈ trace) :
+    WorkflowNet.noDeadTransitions
+      (lemma2_loop_projection_workflow_net_of_connected
+        net part startPlace endPlace hsourceSink hconnected) :=
+  workflow_no_dead_transitions_of_accepting_trace_mem
+    (net :=
+      lemma2_loop_projection_workflow_net_of_connected
+        net part startPlace endPlace hsourceSink hconnected)
+    haccepting
+
+theorem lemma2_loop_projection_sound_of_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Place //
+            Patterns.loopProjectionPlaces net part startPlace endPlace place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source
+                  net part startPlace endPlace⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            node
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink
+                  net part startPlace endPlace⟩))
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              (lemma2_loop_projection_workflow_net_of_connected
+                net part startPlace endPlace hsourceSink hconnected)
+              (WorkflowNet.initial
+                (lemma2_loop_projection_workflow_net_of_connected
+                  net part startPlace endPlace hsourceSink hconnected))
+              trace
+              (WorkflowNet.final
+                (lemma2_loop_projection_workflow_net_of_connected
+                  net part startPlace endPlace hsourceSink hconnected)) ∧
+            trans ∈ trace)
+    (hcomplete :
+      WorkflowNet.optionToComplete
+        (lemma2_loop_projection_workflow_net_of_connected
+          net part startPlace endPlace hsourceSink hconnected))
+    (hproper :
+      WorkflowNet.properCompletion
+        (lemma2_loop_projection_workflow_net_of_connected
+          net part startPlace endPlace hsourceSink hconnected)) :
+    WorkflowNet.sound
+      (lemma2_loop_projection_workflow_net_of_connected
+        net part startPlace endPlace hsourceSink hconnected) :=
+  workflow_sound_of_accepting_trace_mem_option_proper
+    (net :=
+      lemma2_loop_projection_workflow_net_of_connected
+        net part startPlace endPlace hsourceSink hconnected)
+    haccepting
+    hcomplete
+    hproper
+
+theorem lemma2_loop_projection_safe_and_sound_of_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Place //
+            Patterns.loopProjectionPlaces net part startPlace endPlace place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source
+                  net part startPlace endPlace⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            node
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink
+                  net part startPlace endPlace⟩))
+    (hsafe :
+      WorkflowNet.safe
+        (lemma2_loop_projection_workflow_net_of_connected
+          net part startPlace endPlace hsourceSink hconnected))
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              (lemma2_loop_projection_workflow_net_of_connected
+                net part startPlace endPlace hsourceSink hconnected)
+              (WorkflowNet.initial
+                (lemma2_loop_projection_workflow_net_of_connected
+                  net part startPlace endPlace hsourceSink hconnected))
+              trace
+              (WorkflowNet.final
+                (lemma2_loop_projection_workflow_net_of_connected
+                  net part startPlace endPlace hsourceSink hconnected)) ∧
+            trans ∈ trace)
+    (hcomplete :
+      WorkflowNet.optionToComplete
+        (lemma2_loop_projection_workflow_net_of_connected
+          net part startPlace endPlace hsourceSink hconnected))
+    (hproper :
+      WorkflowNet.properCompletion
+        (lemma2_loop_projection_workflow_net_of_connected
+          net part startPlace endPlace hsourceSink hconnected)) :
+    WorkflowNet.safeAndSound
+      (lemma2_loop_projection_workflow_net_of_connected
+        net part startPlace endPlace hsourceSink hconnected) :=
+  workflow_safe_and_sound_of_accepting_trace_mem_option_proper
+    (net :=
+      lemma2_loop_projection_workflow_net_of_connected
+        net part startPlace endPlace hsourceSink hconnected)
+    hsafe
+    haccepting
+    hcomplete
+    hproper
+
 def lemma2_loop_projection_workflow_net_of_reachable_incident
     {Place : Type u}
     {Trans : Type v}
@@ -15333,6 +15708,204 @@ def lemma2_loop_projection_workflow_net_of_reachable_incident
   Patterns.loopProjectionWorkflowNetOfReachableIncident
     net part startPlace endPlace hsourceSink
     hpartReach hnoInStart hnonempty hincoming houtgoing
+
+theorem lemma2_loop_projection_reachable_incident_no_dead_transitions_of_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hpartReach :
+      ∀ candidate,
+        part candidate ↔
+          PetriNet.reachableTransitionsBetweenPlaces
+            net.toPetriNet startPlace endPlace candidate)
+    (hnoInStart : ∀ candidate, part candidate ->
+      ¬ net.transToPlace candidate startPlace)
+    (hnonempty : ∃ trans, part trans)
+    (hincoming :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.transToPlace trans place)
+    (houtgoing :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.placeToTrans place trans)
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              (lemma2_loop_projection_workflow_net_of_reachable_incident
+                net part startPlace endPlace hsourceSink hpartReach
+                hnoInStart hnonempty hincoming houtgoing)
+              (WorkflowNet.initial
+                (lemma2_loop_projection_workflow_net_of_reachable_incident
+                  net part startPlace endPlace hsourceSink hpartReach
+                  hnoInStart hnonempty hincoming houtgoing))
+              trace
+              (WorkflowNet.final
+                (lemma2_loop_projection_workflow_net_of_reachable_incident
+                  net part startPlace endPlace hsourceSink hpartReach
+                  hnoInStart hnonempty hincoming houtgoing)) ∧
+            trans ∈ trace) :
+    WorkflowNet.noDeadTransitions
+      (lemma2_loop_projection_workflow_net_of_reachable_incident
+        net part startPlace endPlace hsourceSink hpartReach
+        hnoInStart hnonempty hincoming houtgoing) :=
+  workflow_no_dead_transitions_of_accepting_trace_mem
+    (net :=
+      lemma2_loop_projection_workflow_net_of_reachable_incident
+        net part startPlace endPlace hsourceSink hpartReach
+        hnoInStart hnonempty hincoming houtgoing)
+    haccepting
+
+theorem lemma2_loop_projection_reachable_incident_sound_of_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hpartReach :
+      ∀ candidate,
+        part candidate ↔
+          PetriNet.reachableTransitionsBetweenPlaces
+            net.toPetriNet startPlace endPlace candidate)
+    (hnoInStart : ∀ candidate, part candidate ->
+      ¬ net.transToPlace candidate startPlace)
+    (hnonempty : ∃ trans, part trans)
+    (hincoming :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.transToPlace trans place)
+    (houtgoing :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.placeToTrans place trans)
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              (lemma2_loop_projection_workflow_net_of_reachable_incident
+                net part startPlace endPlace hsourceSink hpartReach
+                hnoInStart hnonempty hincoming houtgoing)
+              (WorkflowNet.initial
+                (lemma2_loop_projection_workflow_net_of_reachable_incident
+                  net part startPlace endPlace hsourceSink hpartReach
+                  hnoInStart hnonempty hincoming houtgoing))
+              trace
+              (WorkflowNet.final
+                (lemma2_loop_projection_workflow_net_of_reachable_incident
+                  net part startPlace endPlace hsourceSink hpartReach
+                  hnoInStart hnonempty hincoming houtgoing)) ∧
+            trans ∈ trace)
+    (hcomplete :
+      WorkflowNet.optionToComplete
+        (lemma2_loop_projection_workflow_net_of_reachable_incident
+          net part startPlace endPlace hsourceSink hpartReach
+          hnoInStart hnonempty hincoming houtgoing))
+    (hproper :
+      WorkflowNet.properCompletion
+        (lemma2_loop_projection_workflow_net_of_reachable_incident
+          net part startPlace endPlace hsourceSink hpartReach
+          hnoInStart hnonempty hincoming houtgoing)) :
+    WorkflowNet.sound
+      (lemma2_loop_projection_workflow_net_of_reachable_incident
+        net part startPlace endPlace hsourceSink hpartReach
+        hnoInStart hnonempty hincoming houtgoing) :=
+  workflow_sound_of_accepting_trace_mem_option_proper
+    (net :=
+      lemma2_loop_projection_workflow_net_of_reachable_incident
+        net part startPlace endPlace hsourceSink hpartReach
+        hnoInStart hnonempty hincoming houtgoing)
+    haccepting
+    hcomplete
+    hproper
+
+theorem lemma2_loop_projection_reachable_incident_safe_and_sound_of_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hpartReach :
+      ∀ candidate,
+        part candidate ↔
+          PetriNet.reachableTransitionsBetweenPlaces
+            net.toPetriNet startPlace endPlace candidate)
+    (hnoInStart : ∀ candidate, part candidate ->
+      ¬ net.transToPlace candidate startPlace)
+    (hnonempty : ∃ trans, part trans)
+    (hincoming :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.transToPlace trans place)
+    (houtgoing :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.placeToTrans place trans)
+    (hsafe :
+      WorkflowNet.safe
+        (lemma2_loop_projection_workflow_net_of_reachable_incident
+          net part startPlace endPlace hsourceSink hpartReach
+          hnoInStart hnonempty hincoming houtgoing))
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              (lemma2_loop_projection_workflow_net_of_reachable_incident
+                net part startPlace endPlace hsourceSink hpartReach
+                hnoInStart hnonempty hincoming houtgoing)
+              (WorkflowNet.initial
+                (lemma2_loop_projection_workflow_net_of_reachable_incident
+                  net part startPlace endPlace hsourceSink hpartReach
+                  hnoInStart hnonempty hincoming houtgoing))
+              trace
+              (WorkflowNet.final
+                (lemma2_loop_projection_workflow_net_of_reachable_incident
+                  net part startPlace endPlace hsourceSink hpartReach
+                  hnoInStart hnonempty hincoming houtgoing)) ∧
+            trans ∈ trace)
+    (hcomplete :
+      WorkflowNet.optionToComplete
+        (lemma2_loop_projection_workflow_net_of_reachable_incident
+          net part startPlace endPlace hsourceSink hpartReach
+          hnoInStart hnonempty hincoming houtgoing))
+    (hproper :
+      WorkflowNet.properCompletion
+        (lemma2_loop_projection_workflow_net_of_reachable_incident
+          net part startPlace endPlace hsourceSink hpartReach
+          hnoInStart hnonempty hincoming houtgoing)) :
+    WorkflowNet.safeAndSound
+      (lemma2_loop_projection_workflow_net_of_reachable_incident
+        net part startPlace endPlace hsourceSink hpartReach
+        hnoInStart hnonempty hincoming houtgoing) :=
+  workflow_safe_and_sound_of_accepting_trace_mem_option_proper
+    (net :=
+      lemma2_loop_projection_workflow_net_of_reachable_incident
+        net part startPlace endPlace hsourceSink hpartReach
+        hnoInStart hnonempty hincoming houtgoing)
+    hsafe
+    haccepting
+    hcomplete
+    hproper
 
 theorem lemma2_loop_projection_restricted_boundary_path
     {Place : Type u}
