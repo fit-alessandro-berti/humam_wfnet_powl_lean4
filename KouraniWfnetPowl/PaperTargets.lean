@@ -837,6 +837,208 @@ theorem theorem1_base_case_single_transition
   · intro hpowl
     exact WorkflowNet.single_trace_net_language_of_atom_language hfire hpowl
 
+theorem theorem1_loop_case_of_recursive_component_correctness
+    {Place : Type u}
+    {BodyPlace : Type v}
+    {RedoPlace : Type w}
+    {Trans : Type x}
+    {Activity : Type y}
+    [DecidableEq Place]
+    [DecidableEq BodyPlace]
+    [DecidableEq RedoPlace]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {bodyPart redoPart : Set Trans}
+    (bodyNet : WorkflowNet BodyPlace {trans : Trans // bodyPart trans})
+    (redoNet : WorkflowNet RedoPlace {trans : Trans // redoPart trans})
+    {body : Powl {trans : Trans // bodyPart trans}}
+    {redo : Powl {trans : Trans // redoPart trans}}
+    (hbody :
+      ∀ word,
+        WorkflowNet.language
+            bodyNet
+            (fun trans : {trans : Trans // bodyPart trans} =>
+              label trans.val)
+            word ↔
+          Powl.language
+            (fun trans : {trans : Trans // bodyPart trans} =>
+              label trans.val)
+            body
+            word)
+    (hredo :
+      ∀ word,
+        WorkflowNet.language
+            redoNet
+            (fun trans : {trans : Trans // redoPart trans} =>
+              label trans.val)
+            word ↔
+          Powl.language
+            (fun trans : {trans : Trans // redoPart trans} =>
+              label trans.val)
+            redo
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.concat
+            (WorkflowNet.language
+              bodyNet
+              (fun trans : {trans : Trans // bodyPart trans} =>
+                label trans.val))
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.language
+                  redoNet
+                  (fun trans : {trans : Trans // redoPart trans} =>
+                    label trans.val))
+                (WorkflowNet.language
+                  bodyNet
+                  (fun trans : {trans : Trans // bodyPart trans} =>
+                    label trans.val))))
+            word) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language label
+          (Powl.loop
+            (Powl.map Subtype.val body)
+            (Powl.map Subtype.val redo))
+          word := by
+  intro word
+  exact Iff.symm
+    (loop_pattern_language_preservation_of_mapped_subtype_components
+      (label := label)
+      (body := body)
+      (redo := redo)
+      (bodyLanguage :=
+        WorkflowNet.language
+          bodyNet
+          (fun trans : {trans : Trans // bodyPart trans} =>
+            label trans.val))
+      (redoLanguage :=
+        WorkflowNet.language
+          redoNet
+          (fun trans : {trans : Trans // redoPart trans} =>
+            label trans.val))
+      (netLanguage := WorkflowNet.language net label)
+      (fun word => Iff.symm (hbody word))
+      (fun word => Iff.symm (hredo word))
+      hdecompose
+      word)
+
+theorem theorem1_partial_order_case_of_recursive_component_correctness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl {trans : Trans // part.val trans}))
+    (hbranches :
+      ∀ (branch :
+          Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl {trans : Trans // part.val trans})
+        word,
+        WorkflowNet.subtypeTraceLanguage net label branch.1.val word ↔
+          Powl.language
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val)
+            branch.2
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.subtypeTraceLanguage net label branch.1.val))
+            word) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language label
+          (Powl.partialOrder order
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word := by
+  intro word
+  exact Iff.symm
+    (partial_order_pattern_language_preservation_of_mapped_subtype_components
+      (label := label)
+      (order := order)
+      branches
+      (fun branch word => Iff.symm (hbranches branch word))
+      hdecompose
+      word)
+
+theorem theorem1_partial_order_normalized_case_of_recursive_component_correctness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl
+            (PetriNet.NormalizedTrans
+              {trans : Trans // part.val trans})))
+    (componentLanguage :
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        Powl
+          (PetriNet.NormalizedTrans
+            {trans : Trans // part.val trans})) ->
+        Language Activity)
+    (hbranches :
+      ∀ (branch :
+          Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl
+              (PetriNet.NormalizedTrans
+                {trans : Trans // part.val trans}))
+        word,
+        componentLanguage branch word ↔
+          Powl.language
+            (WorkflowNet.normalizedLabel
+              (fun trans : {trans : Trans // branch.1.val trans} =>
+                label trans.val))
+            branch.2
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map componentLanguage)
+            word) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language
+          (WorkflowNet.normalizedLabel label)
+          (Powl.partialOrder order
+            (branches.map
+              (fun branch =>
+                Powl.map
+                  WorkflowNet.normalizedSubtypeTransMap
+                  branch.2)))
+          word := by
+  intro word
+  exact Iff.symm
+    (partial_order_pattern_language_preservation_of_normalized_mapped_subtype_components
+      (label := label)
+      (order := order)
+      branches
+      componentLanguage
+      (fun branch word => Iff.symm (hbranches branch word))
+      hdecompose
+      word)
+
 theorem partial_order_pattern_execution_order_asymmetric
     {Place : Type u}
     {Trans : Type v}
@@ -3218,6 +3420,431 @@ theorem lemma4_xor_pattern_language_preservation_of_mapped_branch_models
               word)
           word)
     (Iff.symm (hdecompose word))
+
+theorem theorem1_xor_case_of_recursive_branch_correctness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl {trans : Trans // part.val trans}))
+    (hbranches :
+      ∀ (branch :
+          Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl {trans : Trans // part.val trans})
+        word,
+        WorkflowNet.language
+            (Patterns.xorProjectionWorkflowNet
+              hpattern branch.1.property)
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val)
+            word ↔
+          Powl.language
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val)
+            branch.2
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.subtypeTraceLanguage net label branch.1.val))
+            word) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language label
+          (Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word := by
+  intro word
+  exact Iff.symm
+    (lemma4_xor_pattern_language_preservation_of_mapped_branch_models
+      hpattern
+      branches
+      (fun branch word => Iff.symm (hbranches branch word))
+      hdecompose
+      word)
+
+inductive ConversionCertificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity) :
+    (OutTrans : Type v) ->
+      (OutTrans -> TransitionLabel Activity) ->
+      Powl OutTrans ->
+      Prop where
+  | atom
+      (trans : Trans)
+      (hall :
+        ∀ trace,
+          WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            trace
+            (WorkflowNet.final net) ->
+          trace = [trans])
+      (hfire :
+        WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          [trans]
+          (WorkflowNet.final net)) :
+      ConversionCertificate net label Trans label (Powl.atom trans)
+  | xor
+      {partition : Partition Trans}
+      (hpattern : Patterns.xorPattern net partition)
+      (branches :
+        List
+          (Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl {trans : Trans // part.val trans}))
+      (hbranches :
+        ∀ (branch :
+            Σ part : {part : Set Trans // part ∈ partition.parts},
+              Powl {trans : Trans // part.val trans})
+          word,
+          WorkflowNet.language
+              (Patterns.xorProjectionWorkflowNet
+                hpattern branch.1.property)
+              (fun trans : {trans : Trans // branch.1.val trans} =>
+                label trans.val)
+              word ↔
+            Powl.language
+              (fun trans : {trans : Trans // branch.1.val trans} =>
+                label trans.val)
+              branch.2
+              word)
+      (hdecompose :
+        ∀ word,
+          WorkflowNet.language net label word ↔
+            Language.unionList
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.subtypeTraceLanguage
+                    net label branch.1.val))
+              word) :
+      ConversionCertificate
+        net
+        label
+        Trans
+        label
+        (Powl.xor
+          (branches.map
+            (fun branch => Powl.map Subtype.val branch.2)))
+  | loop
+      {BodyPlace : Type u}
+      {RedoPlace : Type u}
+      [DecidableEq BodyPlace]
+      [DecidableEq RedoPlace]
+      {bodyPart redoPart : Set Trans}
+      (bodyNet : WorkflowNet BodyPlace {trans : Trans // bodyPart trans})
+      (redoNet : WorkflowNet RedoPlace {trans : Trans // redoPart trans})
+      {body : Powl {trans : Trans // bodyPart trans}}
+      {redo : Powl {trans : Trans // redoPart trans}}
+      (hbody :
+        ∀ word,
+          WorkflowNet.language
+              bodyNet
+              (fun trans : {trans : Trans // bodyPart trans} =>
+                label trans.val)
+              word ↔
+            Powl.language
+              (fun trans : {trans : Trans // bodyPart trans} =>
+                label trans.val)
+              body
+              word)
+      (hredo :
+        ∀ word,
+          WorkflowNet.language
+              redoNet
+              (fun trans : {trans : Trans // redoPart trans} =>
+                label trans.val)
+              word ↔
+            Powl.language
+              (fun trans : {trans : Trans // redoPart trans} =>
+                label trans.val)
+              redo
+              word)
+      (hdecompose :
+        ∀ word,
+          WorkflowNet.language net label word ↔
+            Language.concat
+              (WorkflowNet.language
+                bodyNet
+                (fun trans : {trans : Trans // bodyPart trans} =>
+                  label trans.val))
+              (Language.Star
+                (Language.concat
+                  (WorkflowNet.language
+                    redoNet
+                    (fun trans : {trans : Trans // redoPart trans} =>
+                      label trans.val))
+                  (WorkflowNet.language
+                    bodyNet
+                    (fun trans : {trans : Trans // bodyPart trans} =>
+                      label trans.val))))
+              word) :
+      ConversionCertificate
+        net
+        label
+        Trans
+        label
+        (Powl.loop
+          (Powl.map Subtype.val body)
+          (Powl.map Subtype.val redo))
+  | partialOrder
+      {partition : Partition Trans}
+      {order : Rel Nat}
+      (branches :
+        List
+          (Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl {trans : Trans // part.val trans}))
+      (hbranches :
+        ∀ (branch :
+            Σ part : {part : Set Trans // part ∈ partition.parts},
+              Powl {trans : Trans // part.val trans})
+          word,
+          WorkflowNet.subtypeTraceLanguage
+              net label branch.1.val word ↔
+            Powl.language
+              (fun trans : {trans : Trans // branch.1.val trans} =>
+                label trans.val)
+              branch.2
+              word)
+      (hdecompose :
+        ∀ word,
+          WorkflowNet.language net label word ↔
+            Powl.partialOrderComponentLanguage
+              order
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.subtypeTraceLanguage
+                    net label branch.1.val))
+              word) :
+      ConversionCertificate
+        net
+        label
+        Trans
+        label
+        (Powl.partialOrder order
+          (branches.map
+            (fun branch => Powl.map Subtype.val branch.2)))
+  | partialOrderNormalized
+      {partition : Partition Trans}
+      {order : Rel Nat}
+      (branches :
+        List
+          (Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl
+              (PetriNet.NormalizedTrans
+                {trans : Trans // part.val trans})))
+      (componentLanguage :
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl
+            (PetriNet.NormalizedTrans
+              {trans : Trans // part.val trans})) ->
+          Language Activity)
+      (hbranches :
+        ∀ (branch :
+            Σ part : {part : Set Trans // part ∈ partition.parts},
+              Powl
+                (PetriNet.NormalizedTrans
+                  {trans : Trans // part.val trans}))
+          word,
+          componentLanguage branch word ↔
+            Powl.language
+              (WorkflowNet.normalizedLabel
+                (fun trans : {trans : Trans // branch.1.val trans} =>
+                  label trans.val))
+              branch.2
+              word)
+      (hdecompose :
+        ∀ word,
+          WorkflowNet.language net label word ↔
+            Powl.partialOrderComponentLanguage
+              order
+              (branches.map componentLanguage)
+              word) :
+      ConversionCertificate
+        net
+        label
+        (PetriNet.NormalizedTrans Trans)
+        (WorkflowNet.normalizedLabel label)
+        (Powl.partialOrder order
+          (branches.map
+            (fun branch =>
+              Powl.map
+                WorkflowNet.normalizedSubtypeTransMap
+                branch.2)))
+
+theorem conversion_certificate_language_preservation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {OutTrans : Type v}
+    {outLabel : OutTrans -> TransitionLabel Activity}
+    {model : Powl OutTrans}
+    (certificate :
+      ConversionCertificate net label OutTrans outLabel model) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language outLabel model word := by
+  intro word
+  cases certificate with
+  | atom trans hall hfire =>
+      exact theorem1_base_case_single_transition hall hfire word
+  | xor hpattern branches hbranches hdecompose =>
+      exact theorem1_xor_case_of_recursive_branch_correctness
+        hpattern branches hbranches hdecompose word
+  | loop bodyNet redoNet hbody hredo hdecompose =>
+      exact theorem1_loop_case_of_recursive_component_correctness
+        bodyNet redoNet hbody hredo hdecompose word
+  | partialOrder branches hbranches hdecompose =>
+      exact theorem1_partial_order_case_of_recursive_component_correctness
+        branches hbranches hdecompose word
+  | partialOrderNormalized branches componentLanguage hbranches hdecompose =>
+      exact
+        theorem1_partial_order_normalized_case_of_recursive_component_correctness
+          branches componentLanguage hbranches hdecompose word
+
+theorem conversion_certificate_xor_of_branch_certificates
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl {trans : Trans // part.val trans}))
+    (certificates :
+      ∀ (branch :
+          Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl {trans : Trans // part.val trans}),
+        ConversionCertificate
+          (Patterns.xorProjectionWorkflowNet
+            hpattern branch.1.property)
+          (fun trans : {trans : Trans // branch.1.val trans} =>
+            label trans.val)
+          {trans : Trans // branch.1.val trans}
+          (fun trans : {trans : Trans // branch.1.val trans} =>
+            label trans.val)
+          branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.subtypeTraceLanguage net label branch.1.val))
+            word) :
+    ConversionCertificate
+      net
+      label
+      Trans
+      label
+      (Powl.xor
+        (branches.map
+          (fun branch => Powl.map Subtype.val branch.2))) :=
+  ConversionCertificate.xor
+    hpattern
+    branches
+    (fun branch word =>
+      conversion_certificate_language_preservation
+        (certificates branch)
+        word)
+    hdecompose
+
+theorem conversion_certificate_loop_of_component_certificates
+    {Place : Type u}
+    {BodyPlace : Type u}
+    {RedoPlace : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    [DecidableEq BodyPlace]
+    [DecidableEq RedoPlace]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {bodyPart redoPart : Set Trans}
+    (bodyNet : WorkflowNet BodyPlace {trans : Trans // bodyPart trans})
+    (redoNet : WorkflowNet RedoPlace {trans : Trans // redoPart trans})
+    {body : Powl {trans : Trans // bodyPart trans}}
+    {redo : Powl {trans : Trans // redoPart trans}}
+    (bodyCertificate :
+      ConversionCertificate
+        bodyNet
+        (fun trans : {trans : Trans // bodyPart trans} =>
+          label trans.val)
+        {trans : Trans // bodyPart trans}
+        (fun trans : {trans : Trans // bodyPart trans} =>
+          label trans.val)
+        body)
+    (redoCertificate :
+      ConversionCertificate
+        redoNet
+        (fun trans : {trans : Trans // redoPart trans} =>
+          label trans.val)
+        {trans : Trans // redoPart trans}
+        (fun trans : {trans : Trans // redoPart trans} =>
+          label trans.val)
+        redo)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.concat
+            (WorkflowNet.language
+              bodyNet
+              (fun trans : {trans : Trans // bodyPart trans} =>
+                label trans.val))
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.language
+                  redoNet
+                  (fun trans : {trans : Trans // redoPart trans} =>
+                    label trans.val))
+                (WorkflowNet.language
+                  bodyNet
+                  (fun trans : {trans : Trans // bodyPart trans} =>
+                    label trans.val))))
+            word) :
+    ConversionCertificate
+      net
+      label
+      Trans
+      label
+      (Powl.loop
+        (Powl.map Subtype.val body)
+        (Powl.map Subtype.val redo)) :=
+  ConversionCertificate.loop
+    bodyNet
+    redoNet
+    (fun word =>
+      conversion_certificate_language_preservation
+        bodyCertificate
+        word)
+    (fun word =>
+      conversion_certificate_language_preservation
+        redoCertificate
+        word)
+    hdecompose
 
 theorem lemma2_loop_pattern_trace_closure
     {Place : Type u}

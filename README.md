@@ -71,7 +71,9 @@ The current proof spine is:
   original accepting traces, yielding full normalized-language equivalence.
   Recursively translated POWL models over restricted transition subtypes can be
   mapped back to original transitions and related directly to typed original
-  subtrace languages.
+  subtrace languages. Normalized subtype transition maps also preserve
+  normalized labels, so models from normalized projections can be embedded into
+  a common normalized transition universe.
 - `KouraniWfnetPowl.Patterns`: partition, XOR, loop, and partial-order pattern
   predicates plus the corresponding projection constructions from Section 4;
   also includes checked facts that XOR projection paths lift to the original net
@@ -144,7 +146,12 @@ The current proof spine is:
   theorem that combines recursive XOR branch models with a top-level XOR model
   under a supplied language decomposition, plus mapped partial-order
   branch-list theorems for subtype components and heterogeneous component
-  transition universes, and Lemma 2 loop trace
+  transition universes, including normalized subtype projection components.
+  Theorem 1 now has checked induction-case combinators for XOR, loop, and
+  partial-order conversions, plus a `ConversionCertificate` proof object whose
+  preservation theorem turns a certified successful conversion into the language
+  equivalence claimed by Theorem 1. Recursive certificate builders assemble
+  parent XOR and loop certificates from certified projected subcalls, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, including the
   incidence-based full restricted loop-projection connectedness target, and
