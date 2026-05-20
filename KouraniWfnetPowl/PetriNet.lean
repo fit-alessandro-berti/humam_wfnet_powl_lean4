@@ -56,7 +56,73 @@ theorem mono
   | step hstep _ ih =>
       exact Path.step (hflow _ _ hstep) ih
 
+theorem trans
+    {net : PetriNet Place Trans}
+    {first second third : Node Place Trans}
+    (left : Path net first second)
+    (right : Path net second third) :
+    Path net first third := by
+  induction left generalizing third with
+  | refl =>
+      exact right
+  | step hstep _ ih =>
+      exact Path.step hstep (ih right)
+
+theorem snoc
+    {net : PetriNet Place Trans}
+    {first second third : Node Place Trans}
+    (path : Path net first second)
+    (hflow : flow net second third) :
+    Path net first third :=
+  trans path (Path.step hflow Path.refl)
+
 end Path
+
+inductive ReversePath (net : PetriNet Place Trans) :
+    Node Place Trans -> Node Place Trans -> Prop where
+  | refl {node : Node Place Trans} : ReversePath net node node
+  | snoc {first second third : Node Place Trans} :
+      ReversePath net first second ->
+      flow net second third ->
+      ReversePath net first third
+
+namespace ReversePath
+
+theorem cons
+    {net : PetriNet Place Trans}
+    {first second third : Node Place Trans}
+    (hflow : flow net first second)
+    (path : ReversePath net second third) :
+    ReversePath net first third := by
+  induction path with
+  | refl =>
+      exact ReversePath.snoc ReversePath.refl hflow
+  | snoc path hlast ih =>
+      exact ReversePath.snoc ih hlast
+
+theorem to_path
+    {net : PetriNet Place Trans}
+    {first second : Node Place Trans}
+    (path : ReversePath net first second) :
+    Path net first second := by
+  induction path with
+  | refl =>
+      exact Path.refl
+  | snoc path hflow ih =>
+      exact Path.snoc ih hflow
+
+theorem of_path
+    {net : PetriNet Place Trans}
+    {first second : Node Place Trans}
+    (path : Path net first second) :
+    ReversePath net first second := by
+  induction path with
+  | refl =>
+      exact ReversePath.refl
+  | step hflow _ ih =>
+      exact ReversePath.cons hflow ih
+
+end ReversePath
 
 def placePreset (net : PetriNet Place Trans) (place : Place) : Set Trans :=
   fun trans => net.transToPlace trans place
@@ -360,6 +426,32 @@ theorem to_restrict_path
           (restrict_flow_of_original net places transitions hflow hfirst hsecond)
           htail
 
+theorem trans
+    {net : PetriNet Place Trans}
+    {places : Set Place}
+    {transitions : Set Trans}
+    {first second third : Node Place Trans}
+    (left : PathIn net places transitions first second)
+    (right : PathIn net places transitions second third) :
+    PathIn net places transitions first third := by
+  induction left generalizing third with
+  | refl _ =>
+      exact right
+  | step hfirst hsecond hflow _ ih =>
+      exact PathIn.step hfirst hsecond hflow (ih right)
+
+theorem snoc
+    {net : PetriNet Place Trans}
+    {places : Set Place}
+    {transitions : Set Trans}
+    {first second third : Node Place Trans}
+    (path : PathIn net places transitions first second)
+    (hsecond : nodeIn places transitions second)
+    (hthird : nodeIn places transitions third)
+    (hflow : flow net second third) :
+    PathIn net places transitions first third :=
+  trans path (PathIn.step hsecond hthird hflow (PathIn.refl hthird))
+
 end PathIn
 
 def placeEquivalentWrt
@@ -375,6 +467,102 @@ def transitionReachable
     (net : PetriNet Place Trans)
     (source target : Trans) : Prop :=
   Path net (Node.trans source) (Node.trans target)
+
+theorem path_from_place_first_transition_aux
+    (net : PetriNet Place Trans)
+    {sourceNode target : Node Place Trans}
+    {source : Place}
+    (path : Path net sourceNode target)
+    (hsource : sourceNode = Node.place source) :
+    target = Node.place source ∨
+      ∃ first,
+        net.placeToTrans source first ∧
+        Path net (Node.trans first) target := by
+  cases path with
+  | refl =>
+      exact Or.inl hsource
+  | step hflow rest =>
+      right
+      subst hsource
+      rename_i second
+      cases second with
+      | place place =>
+          exact False.elim hflow
+      | trans trans =>
+          exact ⟨trans, hflow, rest⟩
+
+theorem path_from_place_first_transition
+    (net : PetriNet Place Trans)
+    {source : Place}
+    {target : Node Place Trans}
+    (path : Path net (Node.place source) target) :
+    target = Node.place source ∨
+      ∃ first,
+        net.placeToTrans source first ∧
+        Path net (Node.trans first) target :=
+  path_from_place_first_transition_aux net path rfl
+
+theorem path_place_to_transition_first
+    (net : PetriNet Place Trans)
+    {source : Place}
+    {target : Trans}
+    (path : Path net (Node.place source) (Node.trans target)) :
+    ∃ first,
+      net.placeToTrans source first ∧
+      transitionReachable net first target := by
+  rcases path_from_place_first_transition net path with hsame | hfirst
+  · cases hsame
+  · exact hfirst
+
+theorem reversePath_to_place_last_transition
+    (net : PetriNet Place Trans)
+    {source : Node Place Trans}
+    {target : Place}
+    (path : ReversePath net source (Node.place target)) :
+    source = Node.place target ∨
+      ∃ last,
+        ReversePath net source (Node.trans last) ∧
+        net.transToPlace last target := by
+  cases path with
+  | refl =>
+      exact Or.inl rfl
+  | snoc path hflow =>
+      right
+      rename_i second
+      cases second with
+      | place place =>
+          exact False.elim hflow
+      | trans trans =>
+          exact ⟨trans, path, hflow⟩
+
+theorem path_to_place_last_transition
+    (net : PetriNet Place Trans)
+    {source : Node Place Trans}
+    {target : Place}
+    (path : Path net source (Node.place target)) :
+    source = Node.place target ∨
+      ∃ last,
+        Path net source (Node.trans last) ∧
+        net.transToPlace last target := by
+  rcases reversePath_to_place_last_transition
+      net
+      (ReversePath.of_path path) with hsame | hlast
+  · exact Or.inl hsame
+  · right
+    rcases hlast with ⟨last, rpath, hflow⟩
+    exact ⟨last, ReversePath.to_path rpath, hflow⟩
+
+theorem path_transition_to_place_last
+    (net : PetriNet Place Trans)
+    {source : Trans}
+    {target : Place}
+    (path : Path net (Node.trans source) (Node.place target)) :
+    ∃ last,
+      transitionReachable net source last ∧
+      net.transToPlace last target := by
+  rcases path_to_place_last_transition net path with hsame | hlast
+  · cases hsame
+  · exact hlast
 
 inductive PlacePathTo
     (net : PetriNet Place Trans)

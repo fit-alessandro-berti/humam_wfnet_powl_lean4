@@ -39,6 +39,31 @@ theorem samePart_symm
   rcases h with ⟨part, hmem, hleft, hright⟩
   exact ⟨part, hmem, hright, hleft⟩
 
+theorem left_mem_of_samePart_right_mem
+    (partition : Partition alpha)
+    {part : Set alpha}
+    (hpart : part ∈ partition.parts)
+    {left right : alpha}
+    (hright : part right)
+    (hsame : samePart partition left right) :
+    part left := by
+  rcases hsame with ⟨same, hsameMem, hleft, hrightSame⟩
+  have heq : part = same :=
+    partition.disjoint hpart hsameMem hright hrightSame
+  rw [heq]
+  exact hleft
+
+theorem right_mem_of_samePart_left_mem
+    (partition : Partition alpha)
+    {part : Set alpha}
+    (hpart : part ∈ partition.parts)
+    {left right : alpha}
+    (hleft : part left)
+    (hsame : samePart partition left right) :
+    part right :=
+  left_mem_of_samePart_right_mem
+    partition hpart hleft (samePart_symm partition hsame)
+
 end Partition
 
 namespace Patterns
@@ -194,6 +219,485 @@ theorem xorProjectionRestricted_path_of_pathIn
       (PetriNet.restrictNode source (PetriNet.PathIn.source_mem path))
       (PetriNet.restrictNode target (PetriNet.PathIn.target_mem path)) :=
   PetriNet.PathIn.to_restrict_path path
+
+theorem xorPattern_part_source_touching
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts) :
+    PetriNet.placesTouching net.toPetriNet part net.source := by
+  rcases partition.nonempty part hpart with ⟨target, htargetPart⟩
+  have hsourcePath :
+      PetriNet.Path
+        net.toPetriNet
+        (PetriNet.Node.place net.source)
+        (PetriNet.Node.trans target) :=
+    (net.connected (PetriNet.Node.trans target)).1
+  rcases PetriNet.path_place_to_transition_first net.toPetriNet hsourcePath with
+    ⟨first, hsourceFirst, hfirstReachTarget⟩
+  have hsame : partition.samePart first target :=
+    hpattern.2 first target hfirstReachTarget
+  have hfirstPart : part first :=
+    Partition.left_mem_of_samePart_right_mem
+      partition hpart htargetPart hsame
+  exact PetriNet.placesTouching_of_placeToTrans
+    net.toPetriNet hfirstPart hsourceFirst
+
+theorem xorPattern_part_sink_touching
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts) :
+    PetriNet.placesTouching net.toPetriNet part net.sink := by
+  rcases partition.nonempty part hpart with ⟨source, hsourcePart⟩
+  have hsinkPath :
+      PetriNet.Path
+        net.toPetriNet
+        (PetriNet.Node.trans source)
+        (PetriNet.Node.place net.sink) :=
+    (net.connected (PetriNet.Node.trans source)).2
+  rcases PetriNet.path_transition_to_place_last net.toPetriNet hsinkPath with
+    ⟨last, hsourceReachLast, hlastSink⟩
+  have hsame : partition.samePart source last :=
+    hpattern.2 source last hsourceReachLast
+  have hlastPart : part last :=
+    Partition.right_mem_of_samePart_left_mem
+      partition hpart hsourcePart hsame
+  exact PetriNet.placesTouching_of_transToPlace
+    net.toPetriNet hlastPart hlastSink
+
+theorem xorPattern_node_mem_of_reachable_from_part
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {start : Trans}
+    (hstartPart : part start)
+    {node : PetriNet.Node Place Trans}
+    (path : PetriNet.Path net.toPetriNet (PetriNet.Node.trans start) node) :
+    PetriNet.nodeIn
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      node := by
+  cases node with
+  | trans target =>
+      have hsame : partition.samePart start target :=
+        hpattern.2 start target path
+      exact Partition.right_mem_of_samePart_left_mem
+        partition hpart hstartPart hsame
+  | place place =>
+      rcases PetriNet.path_to_place_last_transition net.toPetriNet path with
+        hsame | hlast
+      · cases hsame
+      · rcases hlast with ⟨last, hpath, hlastFlow⟩
+        have hsame : partition.samePart start last :=
+          hpattern.2 start last hpath
+        have hlastPart : part last :=
+          Partition.right_mem_of_samePart_left_mem
+            partition hpart hstartPart hsame
+        exact PetriNet.placesTouching_of_transToPlace
+          net.toPetriNet hlastPart hlastFlow
+
+theorem xorPattern_pathIn_from_part_transition
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {start : Trans}
+    (hstartPart : part start)
+    {node target : PetriNet.Node Place Trans}
+    (prior :
+      PetriNet.Path net.toPetriNet (PetriNet.Node.trans start) node)
+    (path : PetriNet.Path net.toPetriNet node target) :
+    PetriNet.PathIn
+      net.toPetriNet
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      node
+      target := by
+  induction path with
+  | refl =>
+      exact PetriNet.PathIn.refl
+        (xorPattern_node_mem_of_reachable_from_part
+          hpattern hpart hstartPart prior)
+  | step hflow rest ih =>
+      have hfirst :=
+        xorPattern_node_mem_of_reachable_from_part
+          hpattern hpart hstartPart prior
+      have hsecond :=
+        xorPattern_node_mem_of_reachable_from_part
+          hpattern hpart hstartPart
+          (PetriNet.Path.snoc prior hflow)
+      exact PetriNet.PathIn.step hfirst hsecond hflow
+        (ih (PetriNet.Path.snoc prior hflow))
+
+theorem xorPattern_pathIn_source_to_part_transition
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {target : Trans}
+    (htargetPart : part target) :
+    PetriNet.PathIn
+      net.toPetriNet
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      (PetriNet.Node.place net.source)
+      (PetriNet.Node.trans target) := by
+  have hsourcePath :
+      PetriNet.Path
+        net.toPetriNet
+        (PetriNet.Node.place net.source)
+        (PetriNet.Node.trans target) :=
+    (net.connected (PetriNet.Node.trans target)).1
+  rcases PetriNet.path_place_to_transition_first net.toPetriNet hsourcePath with
+    ⟨first, hsourceFirst, hfirstReachTarget⟩
+  have hsame : partition.samePart first target :=
+    hpattern.2 first target hfirstReachTarget
+  have hfirstPart : part first :=
+    Partition.left_mem_of_samePart_right_mem
+      partition hpart htargetPart hsame
+  have hsourceIn :
+      PetriNet.nodeIn
+        (PetriNet.placesTouching net.toPetriNet part)
+        part
+        (PetriNet.Node.place net.source) :=
+    xorPattern_part_source_touching hpattern hpart
+  have hfirstIn :
+      PetriNet.nodeIn
+        (PetriNet.placesTouching net.toPetriNet part)
+        part
+        (PetriNet.Node.trans first) :=
+    hfirstPart
+  exact PetriNet.PathIn.step hsourceIn hfirstIn hsourceFirst
+    (xorPattern_pathIn_from_part_transition
+      hpattern hpart hfirstPart PetriNet.Path.refl hfirstReachTarget)
+
+theorem xorPattern_pathIn_part_transition_to_sink
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {source : Trans}
+    (hsourcePart : part source) :
+    PetriNet.PathIn
+      net.toPetriNet
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      (PetriNet.Node.trans source)
+      (PetriNet.Node.place net.sink) := by
+  have hsinkPath :
+      PetriNet.Path
+        net.toPetriNet
+        (PetriNet.Node.trans source)
+        (PetriNet.Node.place net.sink) :=
+    (net.connected (PetriNet.Node.trans source)).2
+  rcases PetriNet.path_transition_to_place_last net.toPetriNet hsinkPath with
+    ⟨last, hsourceReachLast, hlastSink⟩
+  have hsame : partition.samePart source last :=
+    hpattern.2 source last hsourceReachLast
+  have hlastPart : part last :=
+    Partition.right_mem_of_samePart_left_mem
+      partition hpart hsourcePart hsame
+  have htoLast :
+      PetriNet.PathIn
+        net.toPetriNet
+        (PetriNet.placesTouching net.toPetriNet part)
+        part
+        (PetriNet.Node.trans source)
+        (PetriNet.Node.trans last) :=
+    xorPattern_pathIn_from_part_transition
+      hpattern hpart hsourcePart PetriNet.Path.refl hsourceReachLast
+  have hlastIn :
+      PetriNet.nodeIn
+        (PetriNet.placesTouching net.toPetriNet part)
+        part
+        (PetriNet.Node.trans last) :=
+    hlastPart
+  have hsinkIn :
+      PetriNet.nodeIn
+        (PetriNet.placesTouching net.toPetriNet part)
+        part
+        (PetriNet.Node.place net.sink) :=
+    xorPattern_part_sink_touching hpattern hpart
+  exact PetriNet.PathIn.snoc htoLast hlastIn hsinkIn hlastSink
+
+theorem xorPattern_restricted_source_to_part_transition
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {target : Trans}
+    (htargetPart : part target) :
+    PetriNet.Path
+      (xorProjectionRestricted net part)
+      (PetriNet.Node.place
+        ⟨net.source, xorPattern_part_source_touching hpattern hpart⟩)
+      (PetriNet.Node.trans ⟨target, htargetPart⟩) := by
+  have hpath :=
+    xorProjectionRestricted_path_of_pathIn net part
+      (xorPattern_pathIn_source_to_part_transition
+        hpattern hpart htargetPart)
+  simpa [PetriNet.restrictNode] using hpath
+
+theorem xorPattern_restricted_part_transition_to_sink
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {source : Trans}
+    (hsourcePart : part source) :
+    PetriNet.Path
+      (xorProjectionRestricted net part)
+      (PetriNet.Node.trans ⟨source, hsourcePart⟩)
+      (PetriNet.Node.place
+        ⟨net.sink, xorPattern_part_sink_touching hpattern hpart⟩) := by
+  have hpath :=
+    xorProjectionRestricted_path_of_pathIn net part
+      (xorPattern_pathIn_part_transition_to_sink
+        hpattern hpart hsourcePart)
+  simpa [PetriNet.restrictNode] using hpath
+
+theorem xorPattern_restricted_transition_connected
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (transition : {trans : Trans // part trans}) :
+    PetriNet.Path
+        (xorProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨net.source, xorPattern_part_source_touching hpattern hpart⟩)
+        (PetriNet.Node.trans transition) ∧
+      PetriNet.Path
+        (xorProjectionRestricted net part)
+        (PetriNet.Node.trans transition)
+        (PetriNet.Node.place
+          ⟨net.sink, xorPattern_part_sink_touching hpattern hpart⟩) :=
+  ⟨xorPattern_restricted_source_to_part_transition
+      hpattern hpart transition.property,
+    xorPattern_restricted_part_transition_to_sink
+      hpattern hpart transition.property⟩
+
+theorem xorPattern_node_mem_of_reaches_part
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {target : Trans}
+    (htargetPart : part target)
+    {node : PetriNet.Node Place Trans}
+    (path : PetriNet.Path net.toPetriNet node (PetriNet.Node.trans target)) :
+    PetriNet.nodeIn
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      node := by
+  cases node with
+  | trans source =>
+      have hsame : partition.samePart source target :=
+        hpattern.2 source target path
+      exact Partition.left_mem_of_samePart_right_mem
+        partition hpart htargetPart hsame
+  | place place =>
+      rcases PetriNet.path_place_to_transition_first net.toPetriNet path with
+        ⟨first, hplaceFirst, hfirstReachTarget⟩
+      have hsame : partition.samePart first target :=
+        hpattern.2 first target hfirstReachTarget
+      have hfirstPart : part first :=
+        Partition.left_mem_of_samePart_right_mem
+          partition hpart htargetPart hsame
+      exact PetriNet.placesTouching_of_placeToTrans
+        net.toPetriNet hfirstPart hplaceFirst
+
+theorem xorPattern_pathIn_to_part_transition_aux
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {target : Trans}
+    (htargetPart : part target)
+    {node targetNode : PetriNet.Node Place Trans}
+    (path : PetriNet.Path net.toPetriNet node targetNode)
+    (htargetNode : targetNode = PetriNet.Node.trans target) :
+    PetriNet.PathIn
+      net.toPetriNet
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      node
+      targetNode := by
+  induction path with
+  | refl =>
+      subst htargetNode
+      exact PetriNet.PathIn.refl htargetPart
+  | step hflow rest ih =>
+      have hfirst :=
+        xorPattern_node_mem_of_reaches_part
+          hpattern hpart htargetPart
+          (by
+            rw [← htargetNode]
+            exact PetriNet.Path.step hflow rest)
+      have hsecond :=
+        xorPattern_node_mem_of_reaches_part
+          hpattern hpart htargetPart
+          (by
+            rw [← htargetNode]
+            exact rest)
+      exact PetriNet.PathIn.step hfirst hsecond hflow (ih htargetNode)
+
+theorem xorPattern_pathIn_to_part_transition
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {target : Trans}
+    (htargetPart : part target)
+    {node : PetriNet.Node Place Trans}
+    (path : PetriNet.Path net.toPetriNet node (PetriNet.Node.trans target)) :
+    PetriNet.PathIn
+      net.toPetriNet
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      node
+      (PetriNet.Node.trans target) :=
+  xorPattern_pathIn_to_part_transition_aux
+    hpattern hpart htargetPart path rfl
+
+theorem xorPattern_pathIn_prefix_to_part_transition
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {target : Trans}
+    (htargetPart : part target)
+    {node middle : PetriNet.Node Place Trans}
+    (path : PetriNet.Path net.toPetriNet node middle)
+    (suffix : PetriNet.Path net.toPetriNet middle (PetriNet.Node.trans target)) :
+    PetriNet.PathIn
+      net.toPetriNet
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      node
+      middle := by
+  induction path with
+  | refl =>
+      exact PetriNet.PathIn.refl
+        (xorPattern_node_mem_of_reaches_part
+          hpattern hpart htargetPart suffix)
+  | step hflow rest ih =>
+      have hfirst :=
+        xorPattern_node_mem_of_reaches_part
+          hpattern hpart htargetPart
+          (PetriNet.Path.trans (PetriNet.Path.step hflow rest) suffix)
+      have hsecond :=
+        xorPattern_node_mem_of_reaches_part
+          hpattern hpart htargetPart
+          (PetriNet.Path.trans rest suffix)
+      exact PetriNet.PathIn.step hfirst hsecond hflow (ih suffix)
+
+theorem xorPattern_pathIn_touching_place_connected
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {place : Place}
+    (hplace : PetriNet.placesTouching net.toPetriNet part place) :
+    PetriNet.PathIn
+        net.toPetriNet
+        (PetriNet.placesTouching net.toPetriNet part)
+        part
+        (PetriNet.Node.place net.source)
+        (PetriNet.Node.place place) ∧
+      PetriNet.PathIn
+        net.toPetriNet
+        (PetriNet.placesTouching net.toPetriNet part)
+        part
+        (PetriNet.Node.place place)
+        (PetriNet.Node.place net.sink) := by
+  rcases hplace with ⟨trans, htransPart, hflow | hflow⟩
+  · have hsourcePath :
+        PetriNet.Path
+          net.toPetriNet
+          (PetriNet.Node.place net.source)
+          (PetriNet.Node.place place) :=
+      (net.connected (PetriNet.Node.place place)).1
+    have hsourceToPlace :
+        PetriNet.PathIn
+          net.toPetriNet
+          (PetriNet.placesTouching net.toPetriNet part)
+          part
+          (PetriNet.Node.place net.source)
+          (PetriNet.Node.place place) :=
+      xorPattern_pathIn_prefix_to_part_transition
+        hpattern hpart htransPart hsourcePath
+        (PetriNet.Path.step hflow PetriNet.Path.refl)
+    have hplaceIn :
+        PetriNet.nodeIn
+          (PetriNet.placesTouching net.toPetriNet part)
+          part
+          (PetriNet.Node.place place) :=
+      ⟨trans, htransPart, Or.inl hflow⟩
+    have htransIn :
+        PetriNet.nodeIn
+          (PetriNet.placesTouching net.toPetriNet part)
+          part
+          (PetriNet.Node.trans trans) :=
+      htransPart
+    have hplaceToSink :
+        PetriNet.PathIn
+          net.toPetriNet
+          (PetriNet.placesTouching net.toPetriNet part)
+          part
+          (PetriNet.Node.place place)
+          (PetriNet.Node.place net.sink) :=
+      PetriNet.PathIn.step hplaceIn htransIn hflow
+        (xorPattern_pathIn_part_transition_to_sink
+          hpattern hpart htransPart)
+    exact ⟨hsourceToPlace, hplaceToSink⟩
+  · have hsourceToPlace :
+        PetriNet.PathIn
+          net.toPetriNet
+          (PetriNet.placesTouching net.toPetriNet part)
+          part
+          (PetriNet.Node.place net.source)
+          (PetriNet.Node.place place) :=
+      PetriNet.PathIn.snoc
+        (xorPattern_pathIn_source_to_part_transition
+          hpattern hpart htransPart)
+        htransPart
+        ⟨trans, htransPart, Or.inr hflow⟩
+        hflow
+    have hsinkPath :
+        PetriNet.Path
+          net.toPetriNet
+          (PetriNet.Node.place place)
+          (PetriNet.Node.place net.sink) :=
+      (net.connected (PetriNet.Node.place place)).2
+    have hplaceToSink :
+        PetriNet.PathIn
+          net.toPetriNet
+          (PetriNet.placesTouching net.toPetriNet part)
+          part
+          (PetriNet.Node.place place)
+          (PetriNet.Node.place net.sink) :=
+      xorPattern_pathIn_from_part_transition
+        hpattern hpart htransPart
+        (PetriNet.Path.step hflow PetriNet.Path.refl)
+        hsinkPath
+    exact ⟨hsourceToPlace, hplaceToSink⟩
 
 def loopPattern
     {Activity : Type w}

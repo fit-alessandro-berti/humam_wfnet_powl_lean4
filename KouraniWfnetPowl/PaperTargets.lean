@@ -131,6 +131,128 @@ theorem partial_order_pattern_execution_order_asymmetric
       (TransGen (Patterns.executionOrder net partition)) :=
   Patterns.partialOrderPattern_asymmetric net partition hpattern
 
+theorem lemma1_xor_projection_restricts_internal_paths
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {part : Set Trans}
+    {source target : PetriNet.Node Place Trans}
+    (path :
+      PetriNet.PathIn
+        net.toPetriNet
+        (PetriNet.placesTouching net.toPetriNet part)
+        part
+        source
+        target) :
+    PetriNet.Path
+      (Patterns.xorProjectionRestricted net part)
+      (PetriNet.restrictNode source (PetriNet.PathIn.source_mem path))
+      (PetriNet.restrictNode target (PetriNet.PathIn.target_mem path)) :=
+  Patterns.xorProjectionRestricted_path_of_pathIn net part path
+
+theorem lemma1_xor_projection_contains_source
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts) :
+    PetriNet.placesTouching net.toPetriNet part net.source :=
+  Patterns.xorPattern_part_source_touching hpattern hpart
+
+theorem lemma1_xor_projection_contains_sink
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts) :
+    PetriNet.placesTouching net.toPetriNet part net.sink :=
+  Patterns.xorPattern_part_sink_touching hpattern hpart
+
+theorem lemma1_xor_projection_internal_source_path
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {target : Trans}
+    (htargetPart : part target) :
+    PetriNet.PathIn
+      net.toPetriNet
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      (PetriNet.Node.place net.source)
+      (PetriNet.Node.trans target) :=
+  Patterns.xorPattern_pathIn_source_to_part_transition
+    hpattern hpart htargetPart
+
+theorem lemma1_xor_projection_internal_sink_path
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {source : Trans}
+    (hsourcePart : part source) :
+    PetriNet.PathIn
+      net.toPetriNet
+      (PetriNet.placesTouching net.toPetriNet part)
+      part
+      (PetriNet.Node.trans source)
+      (PetriNet.Node.place net.sink) :=
+  Patterns.xorPattern_pathIn_part_transition_to_sink
+    hpattern hpart hsourcePart
+
+theorem lemma1_xor_projection_restricted_transition_connected
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (transition : {trans : Trans // part trans}) :
+    PetriNet.Path
+        (Patterns.xorProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨net.source,
+            Patterns.xorPattern_part_source_touching hpattern hpart⟩)
+        (PetriNet.Node.trans transition) ∧
+      PetriNet.Path
+        (Patterns.xorProjectionRestricted net part)
+        (PetriNet.Node.trans transition)
+        (PetriNet.Node.place
+          ⟨net.sink,
+            Patterns.xorPattern_part_sink_touching hpattern hpart⟩) :=
+  Patterns.xorPattern_restricted_transition_connected
+    hpattern hpart transition
+
+theorem lemma2_loop_pattern_trace_closure
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ trace,
+        PetriNet.PlacePathTo net.toPetriNet predo pdo trace ->
+          ∀ trans, trans ∈ trace -> doPart trans) ∧
+      (∀ trace,
+        PetriNet.PlacePathTo net.toPetriNet pdo predo trace ->
+          ∀ trans, trans ∈ trace -> redoPart trans) :=
+  Patterns.loopPattern_part_trace_closed hpattern
+
 end Paper2503_20363
 
 end KouraniWfnetPowl
