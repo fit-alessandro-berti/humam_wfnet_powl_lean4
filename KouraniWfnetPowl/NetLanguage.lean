@@ -668,6 +668,57 @@ theorem restricted_language_iff_subtypeTraceLanguage
       original restricted hsource hsink hplaceToTrans htransToPlace
       sequence hword
 
+theorem mapped_subtype_powl_language_iff_subtypeTraceLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source)
+    (hsink : restricted.sink.val = original.sink)
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    (label : Trans -> TransitionLabel Activity)
+    (model : Powl {trans : Trans // transitions trans})
+    (hmodel :
+      ∀ word,
+        Powl.language (fun trans : {trans : Trans // transitions trans} =>
+            label trans.val) model word ↔
+          language restricted
+            (fun trans : {trans : Trans // transitions trans} =>
+              label trans.val)
+            word)
+    (word : List Activity) :
+    Powl.language label (Powl.map Subtype.val model) word ↔
+      subtypeTraceLanguage original label transitions word := by
+  exact Iff.trans
+    (Powl.language_map Subtype.val label model word)
+    (Iff.trans
+      (hmodel word)
+      (restricted_language_iff_subtypeTraceLanguage
+        original restricted hsource hsink hplaceToTrans htransToPlace
+        hpreset hpostset label word))
+
 theorem atom_language_of_single_trace_net_language
     {Place : Type u}
     {Trans : Type v}

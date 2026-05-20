@@ -47,13 +47,16 @@ The current proof spine is:
   dead transitions and can complete from reachable markings.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
-  for Definition 5. XOR semantics is also exposed as a finite union of component
-  languages, with an explicitly index-aligned congruence theorem for replacing
-  equivalent branch languages. Loop semantics has a component-language
-  congruence theorem for substituting equivalent body/redo models. Partial-order
-  semantics now has a generic indexed component-language form, plus both
-  map-based and explicitly index-aligned congruence theorems for replacing
-  equivalent submodels componentwise.
+  for Definition 5. POWL models can now be mapped across transition embeddings
+  with checked language preservation under relabeling, which supports lifting
+  recursively translated projection models back to the original transition type.
+  XOR semantics is also exposed as a finite union of component languages, with
+  an explicitly index-aligned congruence theorem for replacing equivalent branch
+  languages. Loop semantics has a component-language congruence theorem for
+  substituting equivalent body/redo models. Partial-order semantics now has a
+  generic indexed component-language form, plus both map-based and explicitly
+  index-aligned congruence theorems for replacing equivalent submodels
+  componentwise.
 - `KouraniWfnetPowl.NetLanguage`: WF-net trace language `L(N)` from firing
   sequences and checked single-transition/base-case language preservation
   lemmas. The language layer now records subtype-trace erasure and generic
@@ -66,6 +69,9 @@ The current proof spine is:
   boundary-shaped enter/original/exit traces. Under original proper completion,
   arbitrary accepting traces of the normalized net are also erased back to
   original accepting traces, yielding full normalized-language equivalence.
+  Recursively translated POWL models over restricted transition subtypes can be
+  mapped back to original transitions and related directly to typed original
+  subtrace languages.
 - `KouraniWfnetPowl.Patterns`: partition, XOR, loop, and partial-order pattern
   predicates plus the corresponding projection constructions from Section 4;
   also includes checked facts that XOR projection paths lift to the original net
@@ -121,13 +127,21 @@ The current proof spine is:
 - `KouraniWfnetPowl.PaperTargets`: named Section 5 proof targets and checked
   semantic preservation theorems corresponding to the POWL-language side of
   Lemmas 4, 5, and 6, the checked base case for Theorem 1, and named checked
-  union-list/component-equivalence variants for the XOR, loop, and partial-order
-  language preservation arguments, including explicitly indexed Lemma 4 and
-  Lemma 6 component-list forms, plus named checked
+  POWL transition-map language preservation facts for recursively translated
+  projection models, union-list/component-equivalence variants for the XOR,
+  loop, and partial-order language preservation arguments, including explicitly
+  indexed Lemma 4 and Lemma 6 component-list forms. The target map now also
+  includes mapped-component variants of the XOR, loop, and partial-order
+  preservation wrappers, so recursive submodel equivalences can be transported
+  through transition embeddings before applying the top-level pattern
+  semantics, plus named checked
   dependencies for Lemma 1 path restriction, reachable-marking lifting,
   selected-sequence restriction, safeness preservation, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
-  language equivalence with typed original subtraces, and Lemma 2 loop trace
+  language equivalence with typed original subtraces, a mapped recursive
+  XOR-branch model-to-typed-subtrace equivalence, and a mapped branch-list
+  theorem that combines recursive XOR branch models with a top-level XOR model
+  under a supplied language decomposition, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, including the
   incidence-based full restricted loop-projection connectedness target, and

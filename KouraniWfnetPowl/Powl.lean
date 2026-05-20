@@ -22,20 +22,28 @@ inductive Powl (Transition : Type u) where
 
 namespace Powl
 
+mutual
+
 def map
     {Transition : Type u}
     {Transition' : Type v}
     (f : Transition -> Transition') :
-    Powl Transition -> Powl Transition' :=
-  Powl.rec
-    (motive_1 := fun _ => Powl Transition')
-    (motive_2 := fun _ => List (Powl Transition'))
-    (fun trans => Powl.atom (f trans))
-    (fun _ mappedModels => Powl.xor mappedModels)
-    (fun _ _ mappedBody mappedRedo => Powl.loop mappedBody mappedRedo)
-    (fun order _ mappedModels => Powl.partialOrder order mappedModels)
-    []
-    (fun _ _ mappedHead mappedTail => mappedHead :: mappedTail)
+    Powl Transition -> Powl Transition'
+  | Powl.atom trans => Powl.atom (f trans)
+  | Powl.xor models => Powl.xor (mapList f models)
+  | Powl.loop body redo => Powl.loop (map f body) (map f redo)
+  | Powl.partialOrder order models =>
+      Powl.partialOrder order (mapList f models)
+
+def mapList
+    {Transition : Type u}
+    {Transition' : Type v}
+    (f : Transition -> Transition') :
+    List (Powl Transition) -> List (Powl Transition')
+  | [] => []
+  | model :: rest => map f model :: mapList f rest
+
+end
 
 theorem map_atom
     {Transition : Type u}
@@ -45,17 +53,25 @@ theorem map_atom
     map f (Powl.atom trans) = Powl.atom (f trans) :=
   rfl
 
+theorem mapList_eq_map
+    {Transition : Type u}
+    {Transition' : Type v}
+    (f : Transition -> Transition')
+    (models : List (Powl Transition)) :
+    mapList f models = models.map (map f) := by
+  induction models with
+  | nil =>
+      rfl
+  | cons head tail ih =>
+      simp [mapList, ih]
+
 theorem map_xor
     {Transition : Type u}
     {Transition' : Type v}
     (f : Transition -> Transition')
     (models : List (Powl Transition)) :
     map f (Powl.xor models) = Powl.xor (models.map (map f)) := by
-  induction models with
-  | nil =>
-      rfl
-  | cons head tail ih =>
-      simp [map, ih]
+  rw [map, mapList_eq_map]
 
 theorem map_loop
     {Transition : Type u}
@@ -74,11 +90,7 @@ theorem map_partialOrder
     (models : List (Powl Transition)) :
     map f (Powl.partialOrder order models) =
       Powl.partialOrder order (models.map (map f)) := by
-  induction models with
-  | nil =>
-      rfl
-  | cons head tail ih =>
-      simp [map, ih]
+  rw [map, mapList_eq_map]
 
 def listGet? : List alpha -> Nat -> Option alpha
   | [], _ => none
@@ -633,6 +645,86 @@ theorem partial_order_language_iff_componentLanguage
         word :=
   Iff.trans partial_order_language_iff
     partialOrderLanguage_iff_componentLanguage
+
+theorem language_map
+    {Transition : Type u}
+    {Transition' : Type v}
+    {Activity : Type w}
+    (f : Transition -> Transition')
+    (label : Transition' -> TransitionLabel Activity)
+    (model : Powl Transition)
+    (word : List Activity) :
+    language label (map f model) word ↔
+      language (fun trans => label (f trans)) model word :=
+  (Powl.rec
+    (motive_1 := fun model =>
+      ∀ {Transition' : Type v}
+        {Activity : Type w}
+        (f : Transition -> Transition')
+        (label : Transition' -> TransitionLabel Activity)
+        (word : List Activity),
+        language label (map f model) word ↔
+          language (fun trans => label (f trans)) model word)
+    (motive_2 := fun models =>
+      ∀ {Transition' : Type v}
+        {Activity : Type w}
+        (f : Transition -> Transition')
+        (label : Transition' -> TransitionLabel Activity)
+        (index : Nat)
+        (leftLanguage rightLanguage : Language Activity),
+        listGet?
+            (models.map (fun model => language label (map f model)))
+            index =
+          some leftLanguage ->
+        listGet?
+            (models.map (language (fun trans => label (f trans))))
+            index =
+          some rightLanguage ->
+        ∀ word, leftLanguage word ↔ rightLanguage word)
+    (fun trans {Transition'} {Activity} f label word => by
+      rw [map_atom, atom_language_iff, atom_language_iff]
+      rfl)
+    (fun models hmodels {Transition'} {Activity} f label word => by
+      rw [map_xor, xor_language_iff_unionList, xor_language_iff_unionList]
+      simpa [List.map_map] using
+        unionList_congr_indexed
+          (by simp)
+          (hmodels f label)
+          word)
+    (fun body redo hbody hredo {Transition'} {Activity} f label word => by
+      rw [map_loop, loop_language_iff_loop, loop_language_iff_loop]
+      exact
+        Language.loop_congr
+          (hbody f label)
+          (hredo f label)
+          word)
+    (fun order models hmodels {Transition'} {Activity} f label word => by
+      rw [map_partialOrder, partial_order_language_iff_componentLanguage,
+        partial_order_language_iff_componentLanguage]
+      simpa [List.map_map] using
+        partialOrderComponentLanguage_congr
+          order
+          (by simp)
+          (hmodels f label)
+          word)
+    (by
+      intro Transition' Activity f label index leftLanguage rightLanguage
+        hleft _hright word
+      cases index <;> cases hleft)
+    (by
+      intro head tail hhead htail Transition' Activity f label index
+        leftLanguage rightLanguage hleft hright word
+      cases index with
+      | zero =>
+          simp [listGet?] at hleft hright
+          subst leftLanguage
+          subst rightLanguage
+          exact hhead f label word
+      | succ index =>
+          simp [listGet?] at hleft hright
+          exact htail f label index leftLanguage rightLanguage
+            hleft hright word)
+    model) f label word
 
 end Powl
 

@@ -35,6 +35,76 @@ theorem strict_partial_order_asymmetric
     Asymmetric order :=
   irreflexive_transitive_asymmetric hirrefl htrans
 
+theorem powl_language_map
+    {Trans : Type u}
+    {Trans' : Type v}
+    {Activity : Type w}
+    (f : Trans -> Trans')
+    (label : Trans' -> TransitionLabel Activity)
+    (model : Powl Trans)
+    (word : List Activity) :
+    Powl.language label (Powl.map f model) word ↔
+      Powl.language (fun trans => label (f trans)) model word :=
+  Powl.language_map f label model word
+
+theorem subtype_powl_language_lift
+    {Trans : Type u}
+    {Activity : Type v}
+    {transitions : Set Trans}
+    (label : Trans -> TransitionLabel Activity)
+    (model : Powl {trans : Trans // transitions trans})
+    (word : List Activity) :
+    Powl.language label (Powl.map Subtype.val model) word ↔
+      Powl.language (fun trans => label trans.val) model word :=
+  Powl.language_map Subtype.val label model word
+
+theorem mapped_subtype_model_language_iff_subtype_trace_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source)
+    (hsink : restricted.sink.val = original.sink)
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    (label : Trans -> TransitionLabel Activity)
+    (model : Powl {trans : Trans // transitions trans})
+    (hmodel :
+      ∀ word,
+        Powl.language (fun trans : {trans : Trans // transitions trans} =>
+            label trans.val) model word ↔
+          WorkflowNet.language restricted
+            (fun trans : {trans : Trans // transitions trans} =>
+              label trans.val)
+            word)
+    (word : List Activity) :
+    Powl.language label (Powl.map Subtype.val model) word ↔
+      WorkflowNet.subtypeTraceLanguage original label transitions word :=
+  WorkflowNet.mapped_subtype_powl_language_iff_subtypeTraceLanguage
+    original restricted hsource hsink hplaceToTrans htransToPlace
+    hpreset hpostset label model hmodel word
+
 theorem xor_pattern_language_preservation
     {Activity : Type u}
     {Trans : Type v}
@@ -133,6 +203,49 @@ theorem xor_pattern_language_preservation_of_indexed_components
       word)
     (Iff.symm (hnet word))
 
+theorem xor_pattern_language_preservation_of_mapped_indexed_components
+    {Activity : Type u}
+    {SubTrans : Type v}
+    {Trans : Type w}
+    (f : SubTrans -> Trans)
+    {label : Trans -> TransitionLabel Activity}
+    {models : List (Powl SubTrans)}
+    {componentLanguages : List (Language Activity)}
+    {netLanguage : Language Activity}
+    (hlength : componentLanguages.length = models.length)
+    (hcomponent :
+      ∀ index model componentLanguage,
+        Powl.listGet? models index = some model ->
+        Powl.listGet? componentLanguages index = some componentLanguage ->
+          ∀ word,
+            Powl.language (fun trans => label (f trans)) model word ↔
+              componentLanguage word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔ Language.unionList componentLanguages word) :
+    ∀ word,
+      Powl.language label
+          (Powl.xor (models.map (Powl.map f))) word ↔
+        netLanguage word := by
+  exact
+    xor_pattern_language_preservation_of_indexed_components
+      (label := label)
+      (models := models.map (Powl.map f))
+      (componentLanguages := componentLanguages)
+      (netLanguage := netLanguage)
+      (by simpa using hlength)
+      (by
+        intro index mappedModel componentLanguage hmappedModel
+          hcomponentLanguage word
+        rcases Powl.listGet?_map_some hmappedModel with
+          ⟨model, hmodel, hmappedModelEq⟩
+        subst hmappedModelEq
+        exact Iff.trans
+          (Powl.language_map f label model word)
+          (hcomponent index model componentLanguage
+            hmodel hcomponentLanguage word))
+      hnet
+
 theorem loop_pattern_language_preservation
     {Activity : Type u}
     {Trans : Type v}
@@ -183,6 +296,45 @@ theorem loop_pattern_language_preservation_of_component_equiv
           Language.concat_congr hredo hbody item))
       word)
     (Iff.symm (hnet word))
+
+theorem loop_pattern_language_preservation_of_mapped_components
+    {Activity : Type u}
+    {SubTrans : Type v}
+    {Trans : Type w}
+    (f : SubTrans -> Trans)
+    {label : Trans -> TransitionLabel Activity}
+    {body redo : Powl SubTrans}
+    {bodyLanguage redoLanguage netLanguage : Language Activity}
+    (hbody :
+      ∀ word,
+        Powl.language (fun trans => label (f trans)) body word ↔
+          bodyLanguage word)
+    (hredo :
+      ∀ word,
+        Powl.language (fun trans => label (f trans)) redo word ↔
+          redoLanguage word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Language.concat bodyLanguage
+            (Language.Star
+              (Language.concat redoLanguage bodyLanguage)) word) :
+    ∀ word,
+      Powl.language label
+          (Powl.loop (Powl.map f body) (Powl.map f redo)) word ↔
+        netLanguage word :=
+  loop_pattern_language_preservation_of_component_equiv
+    (label := label)
+    (body := Powl.map f body)
+    (redo := Powl.map f redo)
+    (bodyLanguage := bodyLanguage)
+    (redoLanguage := redoLanguage)
+    (netLanguage := netLanguage)
+    (fun word =>
+      Iff.trans (Powl.language_map f label body word) (hbody word))
+    (fun word =>
+      Iff.trans (Powl.language_map f label redo word) (hredo word))
+    hnet
 
 theorem partial_order_pattern_language_preservation
     {Activity : Type u}
@@ -280,6 +432,55 @@ theorem partial_order_pattern_language_preservation_of_indexed_components
           hmodel hcomponentLanguage)
       word)
     (Iff.symm (hnet word))
+
+theorem partial_order_pattern_language_preservation_of_mapped_indexed_components
+    {Activity : Type u}
+    {SubTrans : Type v}
+    {Trans : Type w}
+    (f : SubTrans -> Trans)
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    {models : List (Powl SubTrans)}
+    {componentLanguages : List (Language Activity)}
+    {netLanguage : Language Activity}
+    (hlength : componentLanguages.length = models.length)
+    (hcomponent :
+      ∀ index model componentLanguage,
+        Powl.listGet? models index = some model ->
+        Powl.listGet? componentLanguages index = some componentLanguage ->
+          ∀ word,
+            Powl.language (fun trans => label (f trans)) model word ↔
+              componentLanguage word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            componentLanguages
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.partialOrder order (models.map (Powl.map f))) word ↔
+        netLanguage word := by
+  exact
+    partial_order_pattern_language_preservation_of_indexed_components
+      (label := label)
+      (order := order)
+      (models := models.map (Powl.map f))
+      (componentLanguages := componentLanguages)
+      (netLanguage := netLanguage)
+      (by simpa using hlength)
+      (by
+        intro index mappedModel componentLanguage hmappedModel
+          hcomponentLanguage word
+        rcases Powl.listGet?_map_some hmappedModel with
+          ⟨model, hmodel, hmappedModelEq⟩
+        subst hmappedModelEq
+        exact Iff.trans
+          (Powl.language_map f label model word)
+          (hcomponent index model componentLanguage
+            hmodel hcomponentLanguage word))
+      hnet
 
 theorem theorem1_base_case_single_transition
     {Place : Type u}
@@ -2492,6 +2693,51 @@ theorem lemma4_xor_projection_language_iff_subtype_trace_language
     label
     word
 
+theorem lemma4_xor_projection_mapped_model_language_iff_subtype_trace_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (model : Powl {trans : Trans // part trans})
+    (hmodel :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // part trans} => label trans.val)
+            model
+            word ↔
+          WorkflowNet.language
+            (Patterns.xorProjectionWorkflowNet hpattern hpart)
+            (fun trans : {trans : Trans // part trans} => label trans.val)
+            word)
+    (word : List Activity) :
+    Powl.language label (Powl.map Subtype.val model) word ↔
+      WorkflowNet.subtypeTraceLanguage net label part word :=
+  mapped_subtype_model_language_iff_subtype_trace_language
+    net
+    (Patterns.xorProjectionWorkflowNet hpattern hpart)
+    (by rfl)
+    (by rfl)
+    (by intro place trans; rfl)
+    (by intro trans place; rfl)
+    (by
+      intro place trans htrans hflow
+      exact PetriNet.placesTouching_of_placeToTrans
+        net.toPetriNet htrans hflow)
+    (by
+      intro trans place htrans hflow
+      exact PetriNet.placesTouching_of_transToPlace
+        net.toPetriNet htrans hflow)
+    label
+    model
+    hmodel
+    word
+
 theorem lemma4_xor_projection_language_union_iff_subtype_trace_union
     {Place : Type u}
     {Trans : Type v}
@@ -2587,6 +2833,68 @@ theorem lemma4_xor_projection_union_language_preservation_of_cover
     exact
       (lemma4_xor_projection_language_union_iff_subtype_trace_union
         hpattern word).mpr (hcover word horiginal)
+
+theorem lemma4_xor_pattern_language_preservation_of_mapped_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl {trans : Trans // part.val trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl {trans : Trans // part.val trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.language
+            (Patterns.xorProjectionWorkflowNet hpattern branch.1.property)
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val)
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.subtypeTraceLanguage net label branch.1.val))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word ↔
+        WorkflowNet.language net label word := by
+  intro word
+  rw [Powl.xor_language_iff_unionList]
+  exact Iff.trans
+    (by
+      simpa [List.map_map] using
+        Language.unionList_map_congr
+          branches
+          (fun branch =>
+            Powl.language label (Powl.map Subtype.val branch.2))
+          (fun branch =>
+            WorkflowNet.subtypeTraceLanguage net label branch.1.val)
+          (fun branch word =>
+            lemma4_xor_projection_mapped_model_language_iff_subtype_trace_language
+              hpattern branch.1.property branch.2
+              (hmodels branch)
+              word)
+          word)
+    (Iff.symm (hdecompose word))
 
 theorem lemma2_loop_pattern_trace_closure
     {Place : Type u}
