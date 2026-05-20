@@ -294,7 +294,12 @@ The current proof spine is:
   existential requirements-to-package language theorem continuations, including
   local-language-first variants,
   bundled XOR/partial-order branch-conversion certificates with direct local
-  conversion and language-preservation/equality consumers,
+  conversion and language-preservation/equality consumers plus package and
+  requirements-level certificate builders,
+  source-to-sink bridges from those bundled certificates into the main
+  `SemiBlockCompletenessCase` XOR/partial-order cases and theorem-facing
+  certified-conversion, language-equality, and visible-activity witness
+  consequences,
   conversion builders, and package-returning continuations from the explicit
   branch package, a
   `LocalCertifiedConversion` interface
