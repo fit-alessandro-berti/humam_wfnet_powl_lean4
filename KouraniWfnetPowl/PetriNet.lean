@@ -386,6 +386,36 @@ def restrictNode
     restrictedNode (restrictNode node hnode) = node := by
   cases node <;> rfl
 
+theorem restrictedNode_nodeIn
+    {places : Set Place}
+    {transitions : Set Trans}
+    (node :
+      Node
+        {place : Place // places place}
+        {trans : Trans // transitions trans}) :
+    nodeIn places transitions (restrictedNode node) := by
+  cases node with
+  | place place => exact place.property
+  | trans trans => exact trans.property
+
+@[simp] theorem restrictNode_restrictedNode
+    {places : Set Place}
+    {transitions : Set Trans}
+    (node :
+      Node
+        {place : Place // places place}
+        {trans : Trans // transitions trans}) :
+    restrictNode
+      (restrictedNode node)
+      (restrictedNode_nodeIn node) = node := by
+  cases node with
+  | place place =>
+      cases place
+      rfl
+  | trans trans =>
+      cases trans
+      rfl
+
 theorem restrictNode_irrel
     {places : Set Place}
     {transitions : Set Trans}

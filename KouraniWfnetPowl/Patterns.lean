@@ -3271,6 +3271,36 @@ theorem partialOrderProjectionRestricted_flow_original
     part
     hflow
 
+theorem partialOrderProjectionRestricted_flow_of_original
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    {first second : PetriNet.Node (BoundaryPlace Place) Trans}
+    (hflow :
+      PetriNet.flow
+        (partialOrderProjection net part)
+        first second)
+    (hfirst :
+      PetriNet.nodeIn
+        (partialOrderProjectionPlaces net part)
+        part
+        first)
+    (hsecond :
+      PetriNet.nodeIn
+        (partialOrderProjectionPlaces net part)
+        part
+        second) :
+    PetriNet.flow
+      (partialOrderProjectionRestricted net part)
+      (PetriNet.restrictNode first hfirst)
+      (PetriNet.restrictNode second hsecond) :=
+  PetriNet.restrict_flow_of_original
+    (partialOrderProjection net part)
+    (partialOrderProjectionPlaces net part)
+    part
+    hflow
+    hfirst
+    hsecond
+
 theorem partialOrderProjectionRestricted_path_original
     (net : WorkflowNet Place Trans)
     (part : Set Trans)
@@ -3293,6 +3323,144 @@ theorem partialOrderProjectionRestricted_path_original
     (partialOrderProjectionPlaces net part)
     part
     path
+
+theorem partialOrderProjectionRestricted_path_of_pathIn
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    {source target : PetriNet.Node (BoundaryPlace Place) Trans}
+    (path :
+      PetriNet.PathIn
+        (partialOrderProjection net part)
+        (partialOrderProjectionPlaces net part)
+        part
+        source
+        target) :
+    PetriNet.Path
+      (partialOrderProjectionRestricted net part)
+      (PetriNet.restrictNode source (PetriNet.PathIn.source_mem path))
+      (PetriNet.restrictNode target (PetriNet.PathIn.target_mem path)) :=
+  PetriNet.PathIn.to_restrict_path path
+
+theorem partialOrderProjectionRestricted_connected_of_pathIn
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (hconnected :
+      ∀ node :
+          PetriNet.Node (BoundaryPlace Place) Trans,
+        PetriNet.nodeIn (partialOrderProjectionPlaces net part) part node ->
+          PetriNet.PathIn
+              (partialOrderProjection net part)
+              (partialOrderProjectionPlaces net part)
+              part
+              (PetriNet.Node.place BoundaryPlace.start)
+              node ∧
+            PetriNet.PathIn
+              (partialOrderProjection net part)
+              (partialOrderProjectionPlaces net part)
+              part
+              node
+              (PetriNet.Node.place BoundaryPlace.end_)) :
+    ∀ node :
+      PetriNet.Node
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place}
+        {trans : Trans // part trans},
+      PetriNet.Path
+          (partialOrderProjectionRestricted net part)
+          (PetriNet.Node.place
+            ⟨BoundaryPlace.start, partialOrderProjectionPlaces_start net part⟩)
+          node ∧
+        PetriNet.Path
+          (partialOrderProjectionRestricted net part)
+          node
+          (PetriNet.Node.place
+            ⟨BoundaryPlace.end_,
+              partialOrderProjectionPlaces_end net part⟩) := by
+  intro node
+  let rawNode := PetriNet.restrictedNode node
+  have hnode :
+      PetriNet.nodeIn
+        (partialOrderProjectionPlaces net part)
+        part
+        rawNode :=
+    PetriNet.restrictedNode_nodeIn node
+  rcases hconnected rawNode hnode with ⟨hstartPath, hendPath⟩
+  have hstart :
+      PetriNet.Path
+        (partialOrderProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.start, partialOrderProjectionPlaces_start net part⟩)
+        node := by
+    have hpath :=
+      partialOrderProjectionRestricted_path_of_pathIn
+        net part hstartPath
+    have hsource :
+        PetriNet.restrictNode
+          (PetriNet.Node.place BoundaryPlace.start)
+          (PetriNet.PathIn.source_mem hstartPath) =
+            PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩ := by
+      rw [PetriNet.restrictNode_irrel
+        (PetriNet.Node.place BoundaryPlace.start)
+        (PetriNet.PathIn.source_mem hstartPath)
+        (partialOrderProjectionPlaces_start net part)]
+      rfl
+    have htarget :
+        PetriNet.restrictNode
+          rawNode
+          (PetriNet.PathIn.target_mem hstartPath) = node := by
+      have hsame :
+          PetriNet.restrictNode
+            rawNode
+            (PetriNet.PathIn.target_mem hstartPath) =
+              PetriNet.restrictNode rawNode hnode :=
+        PetriNet.restrictNode_irrel
+          rawNode
+          (PetriNet.PathIn.target_mem hstartPath)
+          hnode
+      rw [hsame]
+      exact PetriNet.restrictNode_restrictedNode node
+    simpa [hsource, htarget] using hpath
+  have hend :
+      PetriNet.Path
+        (partialOrderProjectionRestricted net part)
+        node
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.end_,
+            partialOrderProjectionPlaces_end net part⟩) := by
+    have hpath :=
+      partialOrderProjectionRestricted_path_of_pathIn
+        net part hendPath
+    have hsource :
+        PetriNet.restrictNode
+          rawNode
+          (PetriNet.PathIn.source_mem hendPath) = node := by
+      have hsame :
+          PetriNet.restrictNode
+            rawNode
+            (PetriNet.PathIn.source_mem hendPath) =
+              PetriNet.restrictNode rawNode hnode :=
+        PetriNet.restrictNode_irrel
+          rawNode
+          (PetriNet.PathIn.source_mem hendPath)
+          hnode
+      rw [hsame]
+      exact PetriNet.restrictNode_restrictedNode node
+    have htarget :
+        PetriNet.restrictNode
+          (PetriNet.Node.place BoundaryPlace.end_)
+          (PetriNet.PathIn.target_mem hendPath) =
+            PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩ := by
+      rw [PetriNet.restrictNode_irrel
+        (PetriNet.Node.place BoundaryPlace.end_)
+        (PetriNet.PathIn.target_mem hendPath)
+        (partialOrderProjectionPlaces_end net part)]
+      rfl
+    simpa [hsource, htarget] using hpath
+  exact ⟨hstart, hend⟩
 
 theorem partialOrderProjection_start_placeToTrans_iff
     (net : WorkflowNet Place Trans)
@@ -3647,6 +3815,176 @@ theorem partialOrderProjection_start_to_end
   PetriNet.Path.trans
     (partialOrderProjection_start_to_transition net hpart hentry hstart)
     (partialOrderProjection_transition_to_end net hpart hexit hend)
+
+theorem partialOrderProjection_pathIn_start_to_transition
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hentry : WorkflowNet.entryPoints net part place)
+    (hflow : net.placeToTrans place trans) :
+    PetriNet.PathIn
+      (partialOrderProjection net part)
+      (partialOrderProjectionPlaces net part)
+      part
+      (PetriNet.Node.place BoundaryPlace.start)
+      (PetriNet.Node.trans trans) :=
+  PetriNet.PathIn.step
+    (partialOrderProjectionPlaces_start net part)
+    hpart
+    (by
+      simpa [PetriNet.flow] using
+        partialOrderProjection_start_placeToTrans
+          net hpart hentry hflow)
+    (PetriNet.PathIn.refl hpart)
+
+theorem partialOrderProjection_pathIn_transition_to_start
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {place : Place}
+    (hpart : part trans)
+    (hentry : WorkflowNet.entryPoints net part place)
+    (hflow : net.transToPlace trans place) :
+    PetriNet.PathIn
+      (partialOrderProjection net part)
+      (partialOrderProjectionPlaces net part)
+      part
+      (PetriNet.Node.trans trans)
+      (PetriNet.Node.place BoundaryPlace.start) :=
+  PetriNet.PathIn.step
+    hpart
+    (partialOrderProjectionPlaces_start net part)
+    (by
+      simpa [PetriNet.flow] using
+        partialOrderProjection_transToPlace_start
+          net hpart hentry hflow)
+    (PetriNet.PathIn.refl
+      (partialOrderProjectionPlaces_start net part))
+
+theorem partialOrderProjection_pathIn_end_to_transition
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hexit : WorkflowNet.exitPoints net part place)
+    (hflow : net.placeToTrans place trans) :
+    PetriNet.PathIn
+      (partialOrderProjection net part)
+      (partialOrderProjectionPlaces net part)
+      part
+      (PetriNet.Node.place BoundaryPlace.end_)
+      (PetriNet.Node.trans trans) :=
+  PetriNet.PathIn.step
+    (partialOrderProjectionPlaces_end net part)
+    hpart
+    (by
+      simpa [PetriNet.flow] using
+        partialOrderProjection_end_placeToTrans
+          net hpart hexit hflow)
+    (PetriNet.PathIn.refl hpart)
+
+theorem partialOrderProjection_pathIn_transition_to_end
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {place : Place}
+    (hpart : part trans)
+    (hexit : WorkflowNet.exitPoints net part place)
+    (hflow : net.transToPlace trans place) :
+    PetriNet.PathIn
+      (partialOrderProjection net part)
+      (partialOrderProjectionPlaces net part)
+      part
+      (PetriNet.Node.trans trans)
+      (PetriNet.Node.place BoundaryPlace.end_) :=
+  PetriNet.PathIn.step
+    hpart
+    (partialOrderProjectionPlaces_end net part)
+    (by
+      simpa [PetriNet.flow] using
+        partialOrderProjection_transToPlace_end
+          net hpart hexit hflow)
+    (PetriNet.PathIn.refl
+      (partialOrderProjectionPlaces_end net part))
+
+theorem partialOrderProjection_pathIn_original_to_transition
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hnotEntry : ¬ WorkflowNet.entryPoints net part place)
+    (hnotExit : ¬ WorkflowNet.exitPoints net part place)
+    (hflow : net.placeToTrans place trans) :
+    PetriNet.PathIn
+      (partialOrderProjection net part)
+      (partialOrderProjectionPlaces net part)
+      part
+      (PetriNet.Node.place (BoundaryPlace.original place))
+      (PetriNet.Node.trans trans) :=
+  PetriNet.PathIn.step
+    (partialOrderProjectionPlaces_original
+      net htouching hnotEntry hnotExit)
+    hpart
+    (by
+      simpa [PetriNet.flow] using
+        partialOrderProjection_original_placeToTrans
+          net hpart htouching hnotEntry hnotExit hflow)
+    (PetriNet.PathIn.refl hpart)
+
+theorem partialOrderProjection_pathIn_transition_to_original
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {place : Place}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hnotEntry : ¬ WorkflowNet.entryPoints net part place)
+    (hnotExit : ¬ WorkflowNet.exitPoints net part place)
+    (hflow : net.transToPlace trans place) :
+    PetriNet.PathIn
+      (partialOrderProjection net part)
+      (partialOrderProjectionPlaces net part)
+      part
+      (PetriNet.Node.trans trans)
+      (PetriNet.Node.place (BoundaryPlace.original place)) :=
+  PetriNet.PathIn.step
+    hpart
+    (partialOrderProjectionPlaces_original
+      net htouching hnotEntry hnotExit)
+    (by
+      simpa [PetriNet.flow] using
+        partialOrderProjection_transToPlace_original
+          net hpart htouching hnotEntry hnotExit hflow)
+    (PetriNet.PathIn.refl
+      (partialOrderProjectionPlaces_original
+        net htouching hnotEntry hnotExit))
+
+theorem partialOrderProjection_pathIn_start_to_end
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {entry exit : Place}
+    (hpart : part trans)
+    (hentry : WorkflowNet.entryPoints net part entry)
+    (hexit : WorkflowNet.exitPoints net part exit)
+    (hstart : net.placeToTrans entry trans)
+    (hend : net.transToPlace trans exit) :
+    PetriNet.PathIn
+      (partialOrderProjection net part)
+      (partialOrderProjectionPlaces net part)
+      part
+      (PetriNet.Node.place BoundaryPlace.start)
+      (PetriNet.Node.place BoundaryPlace.end_) :=
+  PetriNet.PathIn.trans
+    (partialOrderProjection_pathIn_start_to_transition
+      net hpart hentry hstart)
+    (partialOrderProjection_pathIn_transition_to_end
+      net hpart hexit hend)
 
 theorem partialOrderProjectionRestricted_start_placeToTrans
     (net : WorkflowNet Place Trans)
@@ -4084,6 +4422,35 @@ def partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
     ⟨BoundaryPlace.start, partialOrderProjectionPlaces_start net part⟩
     ⟨BoundaryPlace.end_, partialOrderProjectionPlaces_end net part⟩
     hconnected
+
+def partialOrderProjectionRestrictedNormalizedWorkflowNetOfPathIn
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (hconnected :
+      ∀ node :
+          PetriNet.Node (BoundaryPlace Place) Trans,
+        PetriNet.nodeIn (partialOrderProjectionPlaces net part) part node ->
+          PetriNet.PathIn
+              (partialOrderProjection net part)
+              (partialOrderProjectionPlaces net part)
+              part
+              (PetriNet.Node.place BoundaryPlace.start)
+              node ∧
+            PetriNet.PathIn
+              (partialOrderProjection net part)
+              (partialOrderProjectionPlaces net part)
+              part
+              node
+              (PetriNet.Node.place BoundaryPlace.end_)) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})
+      (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
+  partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+    net part
+    (partialOrderProjectionRestricted_connected_of_pathIn
+      net part hconnected)
 
 def partialOrderProjectionRestrictedNormalizedWorkflowNetOfIncidence
     (net : WorkflowNet Place Trans)

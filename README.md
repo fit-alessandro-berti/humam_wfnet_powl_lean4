@@ -220,7 +220,8 @@ The current proof spine is:
   pattern-level do/redo loop-projection WF-net existence theorem, and
   Lemma 3
   partial-order projection boundary/internal edge and one-step path
-  facts plus restricted-path lifting, generic normalization,
+  facts plus bidirectional restricted-path lifting, `PathIn`-connected
+  restricted projection normalization, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
   normalized-language equivalence targets, execution-order, source/sink-aware
