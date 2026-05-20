@@ -6302,6 +6302,59 @@ theorem theorem2_semi_block_base_safe_and_sound
     WorkflowNet.safeAndSound net :=
   WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound hbase
 
+theorem theorem2_semi_block_base_safe
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net) :
+    WorkflowNet.safe net :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_safe hbase
+
+theorem theorem2_semi_block_base_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net) :
+    WorkflowNet.sound net :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_sound hbase
+
+theorem theorem2_semi_block_base_no_dead_transitions
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net) :
+    WorkflowNet.noDeadTransitions net :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_noDeadTransitions
+    hbase
+
+theorem theorem2_semi_block_base_option_to_complete
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net) :
+    WorkflowNet.optionToComplete net :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_optionToComplete
+    hbase
+
+theorem theorem2_semi_block_base_proper_completion
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net) :
+    WorkflowNet.properCompletion net :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_properCompletion
+    hbase
+
 theorem theorem2_semi_block_base_explicit_decision_points
     {Place : Type u}
     {Trans : Type v}
@@ -6474,6 +6527,93 @@ theorem theorem2_semi_block_base_free_choice
       WorkflowNet.semiBlockStructuredBaseRequirements net) :
     PetriNet.freeChoice net.toPetriNet :=
   WorkflowNet.semiBlockStructuredBaseRequirements_freeChoice hbase
+
+theorem theorem2_semi_block_base_no_decision_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net) :
+    PetriNet.markedGraph net.toPetriNet :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_noDecision_markedGraph
+    hbase hnoDecision
+
+theorem theorem2_semi_block_base_no_decision_safe_and_sound_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net) :
+    WorkflowNet.safeAndSound net ∧
+      PetriNet.markedGraph net.toPetriNet :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_noDecision_safeAndSoundMarkedGraph
+    hbase hnoDecision
+
+theorem theorem2_semi_block_base_no_decision_unique_preset_of_non_source_place
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source) :
+    WorkflowNet.uniquePresetOfPlace net place :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_noDecision_uniquePresetOfPlace_of_ne_source
+    hbase hnoDecision hplace
+
+theorem theorem2_semi_block_base_no_decision_unique_postset_of_non_sink_place
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink) :
+    WorkflowNet.uniquePostsetOfPlace net place :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_noDecision_uniquePostsetOfPlace_of_ne_sink
+    hbase hnoDecision hplace
+
+theorem theorem2_semi_block_base_no_decision_trans_to_place_iff_of_non_source
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source)
+    {trans : Trans}
+    (hflow : net.transToPlace trans place)
+    (other : Trans) :
+    net.transToPlace other place ↔ other = trans :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_noDecision_transToPlace_iff_of_ne_source
+    hbase hnoDecision hplace hflow other
+
+theorem theorem2_semi_block_base_no_decision_place_to_trans_iff_of_non_sink
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink)
+    {trans : Trans}
+    (hflow : net.placeToTrans place trans)
+    (other : Trans) :
+    net.placeToTrans place other ↔ other = trans :=
+  WorkflowNet.semiBlockStructuredBaseRequirements_noDecision_placeToTrans_iff_of_ne_sink
+    hbase hnoDecision hplace hflow other
 
 theorem theorem2_no_decision_places_marked_graph
     {Place : Type u}
@@ -6718,6 +6858,61 @@ theorem theorem2_semi_block_decision_safe_and_sound
   WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
     hrequirements
 
+theorem theorem2_semi_block_decision_safe
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    WorkflowNet.safe net :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_safe
+    hrequirements
+
+theorem theorem2_semi_block_decision_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    WorkflowNet.sound net :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_sound
+    hrequirements
+
+theorem theorem2_semi_block_decision_no_dead_transitions
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    WorkflowNet.noDeadTransitions net :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_noDeadTransitions
+    hrequirements
+
+theorem theorem2_semi_block_decision_option_to_complete
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    WorkflowNet.optionToComplete net :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_optionToComplete
+    hrequirements
+
+theorem theorem2_semi_block_decision_proper_completion
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    WorkflowNet.properCompletion net :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_properCompletion
+    hrequirements
+
 theorem theorem2_semi_block_decision_explicit_decision_points
     {Place : Type u}
     {Trans : Type v}
@@ -6739,6 +6934,93 @@ theorem theorem2_semi_block_decision_free_choice
     PetriNet.freeChoice net.toPetriNet :=
   WorkflowNet.semiBlockStructuredDecisionRequirements_freeChoice
     hrequirements
+
+theorem theorem2_semi_block_decision_no_decision_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net) :
+    PetriNet.markedGraph net.toPetriNet :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_noDecision_markedGraph
+    hrequirements hnoDecision
+
+theorem theorem2_semi_block_decision_no_decision_safe_and_sound_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net) :
+    WorkflowNet.safeAndSound net ∧
+      PetriNet.markedGraph net.toPetriNet :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_noDecision_safeAndSoundMarkedGraph
+    hrequirements hnoDecision
+
+theorem theorem2_semi_block_decision_no_decision_unique_preset_of_non_source_place
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source) :
+    WorkflowNet.uniquePresetOfPlace net place :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_noDecision_uniquePresetOfPlace_of_ne_source
+    hrequirements hnoDecision hplace
+
+theorem theorem2_semi_block_decision_no_decision_unique_postset_of_non_sink_place
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink) :
+    WorkflowNet.uniquePostsetOfPlace net place :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_noDecision_uniquePostsetOfPlace_of_ne_sink
+    hrequirements hnoDecision hplace
+
+theorem theorem2_semi_block_decision_no_decision_trans_to_place_iff_of_non_source
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source)
+    {trans : Trans}
+    (hflow : net.transToPlace trans place)
+    (other : Trans) :
+    net.transToPlace other place ↔ other = trans :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_noDecision_transToPlace_iff_of_ne_source
+    hrequirements hnoDecision hplace hflow other
+
+theorem theorem2_semi_block_decision_no_decision_place_to_trans_iff_of_non_sink
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink)
+    {trans : Trans}
+    (hflow : net.placeToTrans place trans)
+    (other : Trans) :
+    net.placeToTrans place other ↔ other = trans :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_noDecision_placeToTrans_iff_of_ne_sink
+    hrequirements hnoDecision hplace hflow other
 
 theorem theorem2_semi_block_decision_pairing_exists
     {Place : Type u}
@@ -8280,6 +8562,61 @@ theorem theorem2_semi_block_subnet_safe_and_sound
   WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
     hrequirements
 
+theorem theorem2_semi_block_subnet_safe
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.safe net :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_safe
+    hrequirements
+
+theorem theorem2_semi_block_subnet_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.sound net :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_sound
+    hrequirements
+
+theorem theorem2_semi_block_subnet_no_dead_transitions
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.noDeadTransitions net :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_noDeadTransitions
+    hrequirements
+
+theorem theorem2_semi_block_subnet_option_to_complete
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.optionToComplete net :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_optionToComplete
+    hrequirements
+
+theorem theorem2_semi_block_subnet_proper_completion
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.properCompletion net :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_properCompletion
+    hrequirements
+
 theorem theorem2_semi_block_subnet_explicit_decision_points
     {Place : Type u}
     {Trans : Type v}
@@ -8301,6 +8638,93 @@ theorem theorem2_semi_block_subnet_free_choice
     PetriNet.freeChoice net.toPetriNet :=
   WorkflowNet.semiBlockStructuredSubnetRequirements_freeChoice
     hrequirements
+
+theorem theorem2_semi_block_subnet_no_decision_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net) :
+    PetriNet.markedGraph net.toPetriNet :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_noDecision_markedGraph
+    hrequirements hnoDecision
+
+theorem theorem2_semi_block_subnet_no_decision_safe_and_sound_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net) :
+    WorkflowNet.safeAndSound net ∧
+      PetriNet.markedGraph net.toPetriNet :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_noDecision_safeAndSoundMarkedGraph
+    hrequirements hnoDecision
+
+theorem theorem2_semi_block_subnet_no_decision_unique_preset_of_non_source_place
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source) :
+    WorkflowNet.uniquePresetOfPlace net place :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_noDecision_uniquePresetOfPlace_of_ne_source
+    hrequirements hnoDecision hplace
+
+theorem theorem2_semi_block_subnet_no_decision_unique_postset_of_non_sink_place
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink) :
+    WorkflowNet.uniquePostsetOfPlace net place :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_noDecision_uniquePostsetOfPlace_of_ne_sink
+    hrequirements hnoDecision hplace
+
+theorem theorem2_semi_block_subnet_no_decision_trans_to_place_iff_of_non_source
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source)
+    {trans : Trans}
+    (hflow : net.transToPlace trans place)
+    (other : Trans) :
+    net.transToPlace other place ↔ other = trans :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_noDecision_transToPlace_iff_of_ne_source
+    hrequirements hnoDecision hplace hflow other
+
+theorem theorem2_semi_block_subnet_no_decision_place_to_trans_iff_of_non_sink
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink)
+    {trans : Trans}
+    (hflow : net.placeToTrans place trans)
+    (other : Trans) :
+    net.placeToTrans place other ↔ other = trans :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_noDecision_placeToTrans_iff_of_ne_sink
+    hrequirements hnoDecision hplace hflow other
 
 theorem theorem2_semi_block_subnet_pairing_exists
     {Place : Type u}

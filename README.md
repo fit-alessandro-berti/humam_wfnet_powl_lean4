@@ -205,12 +205,14 @@ The current proof spine is:
   constructors from local subtype conversions, a checked bridge from the
   stronger disjoint branch-subnet requirement to the weaker decision-pairing
   requirement plus per-split branch-family witnesses, direct safe-and-sound,
-  explicit-decision, and free-choice consequences for the semi-block
-  requirement layers, exact
+  Definition 3 soundness-component, explicit-decision, and free-choice
+  consequences for the semi-block requirement layers, exact
   uniqueness,
   free-choice preset-equality,
-  marked-graph/no-decision equivalence, and non-boundary unique-place-flow
-  consequences used by the completeness argument, and Lemma 2 loop trace
+  marked-graph/no-decision equivalence, semi-block no-decision
+  safe-and-sound marked-graph consequences, and no-decision semi-block
+  non-boundary unique-place-flow wrappers with exact `↔` rewrite forms used
+  by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, including the
   incidence-based full restricted loop-projection connectedness target and a
