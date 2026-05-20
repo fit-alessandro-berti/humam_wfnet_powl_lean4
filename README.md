@@ -36,8 +36,8 @@ The current proof spine is:
   reachable final marking from the initial marking, and that no-dead-transition
   assumptions yield concrete firing witnesses whose post-markings are reachable
   from the initial marking; combined with option-to-complete, those witnesses
-  extend to accepting firing sequences containing the transition. The fresh
-  enter/exit transitions have checked
+  extend to accepting firing sequences and accepting traces that contain the
+  transition. The fresh enter/exit transitions have checked
   enabledness characterizations, and wrapped original
   transitions, including sequences made only of wrapped original transitions,
   preserve the fresh source/sink token counts. Original reachable markings lift
@@ -79,7 +79,11 @@ The current proof spine is:
   actual language equalities.
 - `KouraniWfnetPowl.NetLanguage`: WF-net trace language `L(N)` from firing
   sequences and checked single-transition/base-case language preservation
-  lemmas. The language layer now records subtype-trace erasure, local
+  lemmas. Accepting traces that contain a transition can now be packaged as
+  concrete WF-net language words while retaining the underlying trace
+  membership evidence, and visible transitions in such traces yield concrete
+  activity membership in the generated word. The language layer also records
+  subtype-trace erasure, local
   source-to-sink languages between arbitrary places, generic language transfer
   lemmas between closed restricted subnets and their original WF-nets, and
   local restricted-subnet language equivalence with typed original branch
@@ -216,8 +220,9 @@ The current proof spine is:
   conversions, and subtype-composed XOR/loop/partial-order models, with
   theorem-facing aliases for the Theorem 1 semantic conversion statement,
   including the paper-style `L(N) = L(ψ)` equality form and an explicit
-  existential POWL-model form. Theorem 2 now has checked targets for the
-  safe-and-sound,
+  existential POWL-model form. Visible-activity WF-net language witnesses
+  transfer across semantic conversions to accepted POWL-model words. Theorem 2
+  now has checked targets for the safe-and-sound,
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
   checked branch-subnet closure/disjointness, local branch-language transfer,
@@ -228,8 +233,9 @@ The current proof spine is:
   languages, and local-to-global language preservation for source/sink
   certified conversions, including packaging source/sink local conversions as
   global `SemanticCertifiedConversion`s and explicit existential POWL-model
-  statements, plus no-dead-transition and accepting-run firing witnesses for
-  semi-block requirement layers,
+  statements, plus no-dead-transition, accepting-run trace-membership,
+  language-word, visible-activity, and converted-POWL visible-activity
+  witnesses for semi-block requirement layers,
   local XOR composition for decision-branch models and local loop composition
   for source-to-sink/redo-back submodels plus local partial-order composition
   for component submodels under supplied local decompositions, and constructors

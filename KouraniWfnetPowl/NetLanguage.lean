@@ -51,6 +51,29 @@ theorem traceWord_singleton
     traceWord label [trans] = Powl.transitionWord label trans := by
   simp [traceWord]
 
+theorem traceWord_mem_of_visible_mem
+    {Activity : Type u}
+    {Trans : Type v}
+    (label : Trans -> TransitionLabel Activity)
+    {trace : List Trans}
+    {trans : Trans}
+    {activity : Activity}
+    (hmem : trans ∈ trace)
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    activity ∈ traceWord label trace := by
+  induction trace with
+  | nil =>
+      cases hmem
+  | cons head tail ih =>
+      cases hmem with
+      | head =>
+          simp [traceWord, Powl.transitionWord, TransitionLabel.word, hlabel]
+      | tail _ htail =>
+          exact
+            List.mem_append_right
+              (Powl.transitionWord label head)
+              (ih htail)
+
 theorem traceWord_map_subtype
     {Activity : Type u}
     {Trans : Type v}
@@ -271,6 +294,221 @@ theorem language_intro
     (hword : traceWord label trace = word) :
     language net label word :=
   ⟨trace, sequence, hword⟩
+
+theorem accepting_trace_mem_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {trace : List Trans}
+    {trans : Trans}
+    (sequence : FiringSequence net (initial net) trace (final net))
+    (hmem : trans ∈ trace) :
+    ∃ word,
+      language net label word ∧
+        ∃ acceptingTrace,
+          FiringSequence
+              net
+              (initial net)
+              acceptingTrace
+              (final net) ∧
+            trans ∈ acceptingTrace ∧
+              traceWord label acceptingTrace = word :=
+  ⟨traceWord label trace,
+    language_intro sequence rfl,
+    trace,
+    sequence,
+    hmem,
+    rfl⟩
+
+theorem accepting_trace_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {trace : List Trans}
+    {trans : Trans}
+    {activity : Activity}
+    (sequence : FiringSequence net (initial net) trace (final net))
+    (hmem : trans ∈ trace)
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            FiringSequence
+                net
+                (initial net)
+                acceptingTrace
+                (final net) ∧
+              trans ∈ acceptingTrace ∧
+                traceWord label acceptingTrace = word :=
+  ⟨traceWord label trace,
+    language_intro sequence rfl,
+    traceWord_mem_of_visible_mem label hmem hlabel,
+    trace,
+    sequence,
+    hmem,
+    rfl⟩
+
+theorem noDeadTransitions_optionToComplete_transition_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hnoDead : noDeadTransitions net)
+    (hcomplete : optionToComplete net)
+    (trans : Trans) :
+    ∃ word,
+      language net label word ∧
+        ∃ acceptingTrace,
+          FiringSequence
+              net
+              (initial net)
+              acceptingTrace
+              (final net) ∧
+            trans ∈ acceptingTrace ∧
+              traceWord label acceptingTrace = word := by
+  rcases noDeadTransitions_optionToComplete_accepting_trace_mem
+      hnoDead hcomplete trans with
+    ⟨trace, sequence, hmem⟩
+  exact accepting_trace_mem_language_witness sequence hmem
+
+theorem noDeadTransitions_optionToComplete_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hnoDead : noDeadTransitions net)
+    (hcomplete : optionToComplete net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            FiringSequence
+                net
+                (initial net)
+                acceptingTrace
+                (final net) ∧
+              trans ∈ acceptingTrace ∧
+                traceWord label acceptingTrace = word := by
+  rcases noDeadTransitions_optionToComplete_accepting_trace_mem
+      hnoDead hcomplete trans with
+    ⟨trace, sequence, hmem⟩
+  exact
+    accepting_trace_visible_activity_language_witness
+      sequence hmem hlabel
+
+theorem sound_transition_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hsound : sound net)
+    (trans : Trans) :
+    ∃ word,
+      language net label word ∧
+        ∃ acceptingTrace,
+          FiringSequence
+              net
+              (initial net)
+              acceptingTrace
+              (final net) ∧
+            trans ∈ acceptingTrace ∧
+              traceWord label acceptingTrace = word :=
+  noDeadTransitions_optionToComplete_transition_language_witness
+    (sound_noDeadTransitions hsound)
+    (sound_optionToComplete hsound)
+    trans
+
+theorem sound_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hsound : sound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            FiringSequence
+                net
+                (initial net)
+                acceptingTrace
+                (final net) ∧
+              trans ∈ acceptingTrace ∧
+                traceWord label acceptingTrace = word :=
+  noDeadTransitions_optionToComplete_visible_activity_language_witness
+    (sound_noDeadTransitions hsound)
+    (sound_optionToComplete hsound)
+    hlabel
+
+theorem safeAndSound_transition_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hsafeSound : safeAndSound net)
+    (trans : Trans) :
+    ∃ word,
+      language net label word ∧
+        ∃ acceptingTrace,
+          FiringSequence
+              net
+              (initial net)
+              acceptingTrace
+              (final net) ∧
+            trans ∈ acceptingTrace ∧
+              traceWord label acceptingTrace = word :=
+  sound_transition_language_witness
+    (safeAndSound_sound hsafeSound)
+    trans
+
+theorem safeAndSound_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hsafeSound : safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            FiringSequence
+                net
+                (initial net)
+                acceptingTrace
+                (final net) ∧
+              trans ∈ acceptingTrace ∧
+                traceWord label acceptingTrace = word :=
+  sound_visible_activity_language_witness
+    (safeAndSound_sound hsafeSound)
+    hlabel
 
 theorem localLanguage_intro
     {Place : Type u}

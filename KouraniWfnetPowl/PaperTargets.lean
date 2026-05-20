@@ -2269,6 +2269,220 @@ theorem workflow_safe_and_sound_accepting_trace_mem
         trans ∈ trace :=
   WorkflowNet.safeAndSound_accepting_trace_mem hsafeSound trans
 
+theorem workflow_accepting_trace_mem_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {trace : List Trans}
+    {trans : Trans}
+    (sequence :
+      WorkflowNet.FiringSequence
+        net
+        (WorkflowNet.initial net)
+        trace
+        (WorkflowNet.final net))
+    (hmem : trans ∈ trace) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        ∃ acceptingTrace,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              acceptingTrace
+              (WorkflowNet.final net) ∧
+            trans ∈ acceptingTrace ∧
+              WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.accepting_trace_mem_language_witness sequence hmem
+
+theorem workflow_no_dead_transition_option_to_complete_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    (trans : Trans) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        ∃ acceptingTrace,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              acceptingTrace
+              (WorkflowNet.final net) ∧
+            trans ∈ acceptingTrace ∧
+              WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.noDeadTransitions_optionToComplete_transition_language_witness
+    hnoDead hcomplete trans
+
+theorem workflow_sound_transition_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hsound : WorkflowNet.sound net)
+    (trans : Trans) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        ∃ acceptingTrace,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              acceptingTrace
+              (WorkflowNet.final net) ∧
+            trans ∈ acceptingTrace ∧
+              WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.sound_transition_language_witness hsound trans
+
+theorem workflow_safe_and_sound_transition_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (trans : Trans) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        ∃ acceptingTrace,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              acceptingTrace
+              (WorkflowNet.final net) ∧
+            trans ∈ acceptingTrace ∧
+              WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.safeAndSound_transition_language_witness
+    hsafeSound trans
+
+theorem workflow_trace_word_mem_of_visible_mem
+    {Trans : Type v}
+    {Activity : Type w}
+    (label : Trans -> TransitionLabel Activity)
+    {trace : List Trans}
+    {trans : Trans}
+    {activity : Activity}
+    (hmem : trans ∈ trace)
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    activity ∈ WorkflowNet.traceWord label trace :=
+  WorkflowNet.traceWord_mem_of_visible_mem label hmem hlabel
+
+theorem workflow_accepting_trace_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {trace : List Trans}
+    {trans : Trans}
+    {activity : Activity}
+    (sequence :
+      WorkflowNet.FiringSequence
+        net
+        (WorkflowNet.initial net)
+        trace
+        (WorkflowNet.final net))
+    (hmem : trans ∈ trace)
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            WorkflowNet.FiringSequence
+                net
+                (WorkflowNet.initial net)
+                acceptingTrace
+                (WorkflowNet.final net) ∧
+              trans ∈ acceptingTrace ∧
+                WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.accepting_trace_visible_activity_language_witness
+    sequence hmem hlabel
+
+theorem workflow_no_dead_transition_option_to_complete_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            WorkflowNet.FiringSequence
+                net
+                (WorkflowNet.initial net)
+                acceptingTrace
+                (WorkflowNet.final net) ∧
+              trans ∈ acceptingTrace ∧
+                WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.noDeadTransitions_optionToComplete_visible_activity_language_witness
+    hnoDead hcomplete hlabel
+
+theorem workflow_sound_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hsound : WorkflowNet.sound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            WorkflowNet.FiringSequence
+                net
+                (WorkflowNet.initial net)
+                acceptingTrace
+                (WorkflowNet.final net) ∧
+              trans ∈ acceptingTrace ∧
+                WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.sound_visible_activity_language_witness
+    hsound hlabel
+
+theorem workflow_safe_and_sound_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            WorkflowNet.FiringSequence
+                net
+                (WorkflowNet.initial net)
+                acceptingTrace
+                (WorkflowNet.final net) ∧
+              trans ∈ acceptingTrace ∧
+                WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.safeAndSound_visible_activity_language_witness
+    hsafeSound hlabel
+
 theorem workflow_safe_and_sound_initial_to_final
     {Place : Type u}
     {Trans : Type v}
@@ -7351,6 +7565,28 @@ theorem semantic_certified_conversion_exists_model_language_eq
     conversion.model,
     semantic_certified_conversion_language_eq conversion⟩
 
+theorem semantic_certified_conversion_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language conversion.outLabel conversion.model word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word :=
+by
+  rcases WorkflowNet.safeAndSound_visible_activity_language_witness
+      hsafeSound hlabel with
+    ⟨word, hnet, hactivity, _htrace⟩
+  exact ⟨word, (conversion.certificate word).mp hnet, hactivity, hnet⟩
+
 def semantic_certified_conversion_of_certified_conversion
     {Place : Type u}
     {Trans : Type v}
@@ -7539,6 +7775,25 @@ theorem theorem1_semantic_conversion_exists_model_language_eq
           WorkflowNet.language net label =
             Powl.language outLabel model :=
   semantic_certified_conversion_exists_model_language_eq conversion
+
+theorem theorem1_semantic_conversion_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language conversion.outLabel conversion.model word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word :=
+  semantic_certified_conversion_visible_activity_language_witness
+    conversion hsafeSound hlabel
 
 def theorem1_semantic_conversion_of_certified_conversion
     {Place : Type u}
@@ -8344,6 +8599,29 @@ theorem theorem2_semantic_conversion_language_eq_of_local_certified_conversion
     (theorem2_semantic_conversion_of_local_certified_conversion
       conversion)
 
+theorem theorem2_local_certified_conversion_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language conversion.outLabel conversion.model word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word :=
+  semantic_certified_conversion_visible_activity_language_witness
+    (theorem2_semantic_conversion_of_local_certified_conversion
+      conversion)
+    hsafeSound
+    hlabel
+
 theorem theorem2_exists_powl_model_of_local_certified_conversion
     {Place : Type u}
     {Trans : Type v}
@@ -8682,6 +8960,59 @@ theorem theorem2_semi_block_base_transition_accepting_trace_mem
     (WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound
       hbase)
     trans
+
+theorem theorem2_semi_block_base_transition_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (trans : Trans) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        ∃ acceptingTrace,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              acceptingTrace
+              (WorkflowNet.final net) ∧
+            trans ∈ acceptingTrace ∧
+              WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.safeAndSound_transition_language_witness
+    (WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound
+      hbase)
+    trans
+
+theorem theorem2_semi_block_base_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            WorkflowNet.FiringSequence
+                net
+                (WorkflowNet.initial net)
+                acceptingTrace
+                (WorkflowNet.final net) ∧
+              trans ∈ acceptingTrace ∧
+                WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.safeAndSound_visible_activity_language_witness
+    (WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound
+      hbase)
+    hlabel
 
 theorem theorem2_semi_block_base_option_to_complete
     {Place : Type u}
@@ -9595,6 +9926,59 @@ theorem theorem2_semi_block_decision_transition_accepting_trace_mem
     (WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
       hrequirements)
     trans
+
+theorem theorem2_semi_block_decision_transition_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (trans : Trans) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        ∃ acceptingTrace,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              acceptingTrace
+              (WorkflowNet.final net) ∧
+            trans ∈ acceptingTrace ∧
+              WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.safeAndSound_transition_language_witness
+    (WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_decision_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            WorkflowNet.FiringSequence
+                net
+                (WorkflowNet.initial net)
+                acceptingTrace
+                (WorkflowNet.final net) ∧
+              trans ∈ acceptingTrace ∧
+                WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.safeAndSound_visible_activity_language_witness
+    (WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
+      hrequirements)
+    hlabel
 
 theorem theorem2_semi_block_decision_option_to_complete
     {Place : Type u}
@@ -11464,6 +11848,59 @@ theorem theorem2_semi_block_subnet_transition_accepting_trace_mem
     (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
       hrequirements)
     trans
+
+theorem theorem2_semi_block_subnet_transition_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (trans : Trans) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        ∃ acceptingTrace,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              acceptingTrace
+              (WorkflowNet.final net) ∧
+            trans ∈ acceptingTrace ∧
+              WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.safeAndSound_transition_language_witness
+    (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_subnet_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      WorkflowNet.language net label word ∧
+        activity ∈ word ∧
+          ∃ acceptingTrace,
+            WorkflowNet.FiringSequence
+                net
+                (WorkflowNet.initial net)
+                acceptingTrace
+                (WorkflowNet.final net) ∧
+              trans ∈ acceptingTrace ∧
+                WorkflowNet.traceWord label acceptingTrace = word :=
+  WorkflowNet.safeAndSound_visible_activity_language_witness
+    (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements)
+    hlabel
 
 theorem theorem2_semi_block_subnet_option_to_complete
     {Place : Type u}
