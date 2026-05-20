@@ -150,9 +150,16 @@ The current proof spine is:
   be packaged as no-dead-transition witnesses for wrapped original transitions
   in the normalized projection, and fresh enter/exit witnesses now combine with
   the wrapped-original witnesses into a full `noDeadTransitions` constructor
-  under explicit reachability and boundary-marking hypotheses. A more general
-  raw-projection normalization constructor is also available when connectedness
-  is supplied over the ambient raw projection.
+  under explicit reachability and boundary-marking hypotheses. These witnesses
+  now package into normalized projection `sound` and `safeAndSound` facts when
+  the remaining completion, proper-completion, and safeness obligations are
+  supplied. Pointwise marking bounds now show that restricted and normalized
+  projection markings preserve safeness from original markings, and a
+  reachable-shape invariant turns original safeness into safeness of the
+  normalized projection; the same invariant feeds a `safeAndSound` constructor
+  that only keeps completion and proper-completion as supplied residual
+  obligations. A more general raw-projection normalization constructor is also
+  available when connectedness is supplied over the ambient raw projection.
   Partial-order pattern consequences
   now also expose execution-order boundary construction, cycle exclusion,
   same-component entry/exit exclusion, and entry/exit place equivalence with
@@ -240,7 +247,8 @@ The current proof spine is:
   marking facts, original-transition enabledness, firing witnesses, singleton
   firing sequences, reachability, original-transition and fresh-boundary
   no-dead witnesses, and a full no-dead constructor for normalized projections,
-  generic normalization,
+  reachable-shape-based safeness and `safeAndSound` packaging, sound packaging
+  under supplied residual obligations, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
   normalized-language equivalence targets, execution-order, source/sink-aware
