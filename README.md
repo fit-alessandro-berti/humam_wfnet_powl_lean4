@@ -194,7 +194,8 @@ The current proof spine is:
   the loop wrappers also support separate mapped transition subtypes for do and
   redo models, plus named checked
   dependencies for Lemma 1 path restriction, reachable-marking lifting,
-  selected-sequence restriction, safeness preservation, a checked XOR
+  selected-sequence restriction, safeness preservation, no-dead-transition
+  transfer from selected accepting sequences, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, a mapped recursive
   XOR-branch model-to-typed-subtrace equivalence, and a mapped branch-list
@@ -238,24 +239,28 @@ The current proof spine is:
   and exposes safe-and-soundness, pointwise language preservation, language
   equality, existential POWL-model, and visible-activity witness consequences;
   combined completeness statements now package safe-and-soundness together
-  with an existential language-equal POWL model, and existentially package
-  visible-activity witness words with the generated POWL model;
+  with existential pointwise-equivalent and language-equal POWL models, and
+  existentially package visible-activity witness words with the generated
+  POWL model;
   theorem-facing constructors now cover the single-transition base case and
   the XOR, loop, and partial-order recursive cases from supplied local subtype
   conversions and global language decompositions, and a
   `SemiBlockCompletenessCase`/`SemiBlockCompletenessCertificate` layer packages
-  that case split into one algorithm-certificate object with language
-  preservation/equality, existential POWL-model, safe-and-soundness, and
+  that case split into one algorithm-certificate object; the raw case evidence
+  and bundled algorithm certificates both expose language preservation/equality,
+  existential POWL-model, safe-and-soundness, combined completeness, and
   visible-activity witness consequences. A
   pattern-aware `SemiBlockPatternCompletenessCase` variant carries detected
   XOR/loop/partial-order pattern evidence, with the partial-order branch using
   the transitive closure of the execution-order relation and exposing the
-  corresponding strict-partial-order object, while exposing the same
-  consequence surface. Named constructors now package the single-transition,
+  corresponding strict-partial-order object; raw pattern cases and bundled
+  pattern certificates both expose the same completeness consequence surface.
+  Named constructors now package the single-transition,
   XOR-pattern, loop-pattern, and partial-order-pattern cases directly as
   pattern completeness certificates, and direct theorem wrappers turn each
   case's hypotheses into existential POWL-model pointwise language-preservation,
-  language-equality, and visible-activity witness results,
+  language-equality, combined safe-and-language-equality completeness, and
+  visible-activity witness results,
   plus no-dead-transition, accepting-run trace-membership,
   language-word, visible-activity, semi-block local-conversion language
   equivalences, and local-conversion converted-POWL visible-activity witnesses

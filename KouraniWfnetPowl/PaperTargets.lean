@@ -1984,6 +1984,21 @@ theorem workflow_reachable_trans
     WorkflowNet.reachable net before after :=
   WorkflowNet.reachable_trans hleft hright
 
+theorem workflow_firing_sequence_mem_enabled_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {trace : List Trans}
+    {trans : Trans}
+    (sequence :
+      WorkflowNet.FiringSequence net before trace after)
+    (hmem : trans ∈ trace) :
+    ∃ marking,
+      WorkflowNet.reachable net before marking ∧
+        WorkflowNet.enabled net marking trans :=
+  WorkflowNet.firingSequence_mem_enabled_witness sequence hmem
+
 theorem workflow_initial_reachable
     {Place : Type u}
     {Trans : Type v}
@@ -2020,6 +2035,23 @@ theorem workflow_no_dead_transition_reachable_after_firing
           WorkflowNet.reachable net (WorkflowNet.initial net) after :=
   WorkflowNet.noDeadTransitions_reachable_after_firing
     hnoDead trans
+
+theorem workflow_no_dead_transitions_of_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (haccepting :
+      ∀ trans,
+        ∃ trace,
+          WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            trace
+            (WorkflowNet.final net) ∧
+            trans ∈ trace) :
+    WorkflowNet.noDeadTransitions net :=
+  WorkflowNet.noDeadTransitions_of_accepting_trace_mem haccepting
 
 theorem workflow_no_dead_transition_option_to_complete_accepting_witness
     {Place : Type u}
@@ -5860,6 +5892,63 @@ theorem lemma1_xor_projection_selected_accepting_sequence_restricts
   Patterns.xorProjectionWorkflowNet_firingSequence_restrict_initial_final
     hpattern hpart sequence
 
+theorem lemma1_xor_projection_no_dead_transitions_of_selected_accepting_sequences
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net) ∧
+            trans ∈ trace) :
+    WorkflowNet.noDeadTransitions
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  workflow_no_dead_transitions_of_accepting_trace_mem
+    (net := Patterns.xorProjectionWorkflowNet hpattern hpart)
+    (fun trans =>
+      by
+        rcases haccepting trans with ⟨trace, sequence, hmem⟩
+        exact
+          ⟨trace,
+            lemma1_xor_projection_selected_accepting_sequence_restricts
+              hpattern hpart sequence,
+            hmem⟩)
+
+theorem lemma1_xor_projection_safe_and_no_dead_transitions_of_selected_accepting_sequences
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafe : WorkflowNet.safe net)
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net) ∧
+            trans ∈ trace) :
+    WorkflowNet.safe (Patterns.xorProjectionWorkflowNet hpattern hpart) ∧
+      WorkflowNet.noDeadTransitions
+        (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  ⟨lemma1_xor_projection_safe hpattern hpart hsafe,
+    lemma1_xor_projection_no_dead_transitions_of_selected_accepting_sequences
+      hpattern hpart haccepting⟩
+
 theorem lemma4_xor_projection_language_of_selected_original_sequence
     {Place : Type u}
     {Trans : Type v}
@@ -8745,6 +8834,26 @@ theorem theorem2_completeness_exists_powl_model_of_semi_block_certified_conversi
   theorem2_exists_powl_model_of_local_certified_conversion
     certificate.conversion
 
+theorem theorem2_completeness_safe_and_exists_powl_model_of_semi_block_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (certificate : SemiBlockCertifiedConversion net label) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  ⟨theorem2_completeness_safe_and_sound_of_semi_block_certified_conversion
+      certificate,
+    theorem2_completeness_exists_powl_model_of_semi_block_certified_conversion
+      certificate⟩
+
 theorem theorem2_completeness_exists_powl_model_language_eq_of_semi_block_certified_conversion
     {Place : Type u}
     {Trans : Type v}
@@ -9270,6 +9379,195 @@ def theorem2_completeness_semi_block_certified_conversion_of_algorithm_certifica
     certificate.requirements
     certificate.caseEvidence
 
+theorem theorem2_completeness_safe_and_sound_of_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockCompletenessCase net label) :
+    WorkflowNet.safeAndSound net :=
+  theorem2_completeness_safe_and_sound_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_language_preservation_of_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockCompletenessCase net label) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language
+          (theorem2_completeness_semi_block_certified_conversion_of_case
+            hrequirements caseEvidence).conversion.outLabel
+          (theorem2_completeness_semi_block_certified_conversion_of_case
+            hrequirements caseEvidence).conversion.model
+          word :=
+  theorem2_completeness_language_preservation_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_language_eq_of_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockCompletenessCase net label) :
+    WorkflowNet.language net label =
+      Powl.language
+        (theorem2_completeness_semi_block_certified_conversion_of_case
+          hrequirements caseEvidence).conversion.outLabel
+        (theorem2_completeness_semi_block_certified_conversion_of_case
+          hrequirements caseEvidence).conversion.model :=
+  theorem2_completeness_language_eq_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_exists_powl_model_of_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockCompletenessCase net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  theorem2_completeness_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_safe_and_exists_powl_model_of_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockCompletenessCase net label) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  theorem2_completeness_safe_and_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_exists_powl_model_language_eq_of_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockCompletenessCase net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  theorem2_completeness_exists_powl_model_language_eq_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_safe_and_exists_powl_model_language_eq_of_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockCompletenessCase net label) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            WorkflowNet.language net label =
+              Powl.language outLabel model :=
+  theorem2_completeness_safe_and_exists_powl_model_language_eq_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_visible_activity_language_witness_of_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockCompletenessCase net label)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language
+          (theorem2_completeness_semi_block_certified_conversion_of_case
+            hrequirements caseEvidence).conversion.outLabel
+          (theorem2_completeness_semi_block_certified_conversion_of_case
+            hrequirements caseEvidence).conversion.model
+          word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word :=
+  theorem2_completeness_visible_activity_language_witness_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_case
+      hrequirements caseEvidence)
+    hlabel
+
+theorem theorem2_completeness_exists_powl_model_visible_activity_language_witness_of_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockCompletenessCase net label)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  theorem2_completeness_exists_powl_model_visible_activity_language_witness_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_case
+      hrequirements caseEvidence)
+    hlabel
+
 theorem theorem2_completeness_safe_and_sound_of_algorithm_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -9340,6 +9638,26 @@ theorem theorem2_completeness_exists_powl_model_of_algorithm_certificate
             WorkflowNet.language net label word ↔
               Powl.language outLabel model word :=
   theorem2_completeness_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_algorithm_certificate
+      certificate)
+
+theorem theorem2_completeness_safe_and_exists_powl_model_of_algorithm_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (certificate :
+      SemiBlockCompletenessCertificate net label) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  theorem2_completeness_safe_and_exists_powl_model_of_semi_block_certified_conversion
     (theorem2_completeness_semi_block_certified_conversion_of_algorithm_certificate
       certificate)
 
@@ -9713,6 +10031,195 @@ def theorem2_completeness_semi_block_certified_conversion_of_pattern_certificate
     certificate.requirements
     certificate.caseEvidence
 
+theorem theorem2_completeness_safe_and_sound_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label) :
+    WorkflowNet.safeAndSound net :=
+  theorem2_completeness_safe_and_sound_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_language_preservation_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language
+          (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+            hrequirements caseEvidence).conversion.outLabel
+          (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+            hrequirements caseEvidence).conversion.model
+          word :=
+  theorem2_completeness_language_preservation_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_language_eq_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label) :
+    WorkflowNet.language net label =
+      Powl.language
+        (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+          hrequirements caseEvidence).conversion.outLabel
+        (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+          hrequirements caseEvidence).conversion.model :=
+  theorem2_completeness_language_eq_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_exists_powl_model_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  theorem2_completeness_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_safe_and_exists_powl_model_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  theorem2_completeness_safe_and_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_exists_powl_model_language_eq_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  theorem2_completeness_exists_powl_model_language_eq_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_safe_and_exists_powl_model_language_eq_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            WorkflowNet.language net label =
+              Powl.language outLabel model :=
+  theorem2_completeness_safe_and_exists_powl_model_language_eq_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+      hrequirements caseEvidence)
+
+theorem theorem2_completeness_visible_activity_language_witness_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language
+          (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+            hrequirements caseEvidence).conversion.outLabel
+          (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+            hrequirements caseEvidence).conversion.model
+          word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word :=
+  theorem2_completeness_visible_activity_language_witness_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+      hrequirements caseEvidence)
+    hlabel
+
+theorem theorem2_completeness_exists_powl_model_visible_activity_language_witness_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  theorem2_completeness_exists_powl_model_visible_activity_language_witness_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_case
+      hrequirements caseEvidence)
+    hlabel
+
 def theorem2_completeness_partial_order_pattern_case_strict_partial_order
     {Place : Type u}
     {Trans : Type v}
@@ -9793,6 +10300,26 @@ theorem theorem2_completeness_exists_powl_model_of_pattern_certificate
             WorkflowNet.language net label word ↔
               Powl.language outLabel model word :=
   theorem2_completeness_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_semi_block_certified_conversion_of_pattern_certificate
+      certificate)
+
+theorem theorem2_completeness_safe_and_exists_powl_model_of_pattern_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (certificate :
+      SemiBlockPatternCompletenessCertificate net label) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  theorem2_completeness_safe_and_exists_powl_model_of_semi_block_certified_conversion
     (theorem2_completeness_semi_block_certified_conversion_of_pattern_certificate
       certificate)
 

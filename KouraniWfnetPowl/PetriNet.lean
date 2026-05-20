@@ -2400,6 +2400,29 @@ theorem reachable_trans
     ⟨leftTrace ++ rightTrace,
       firingSequence_append leftSequence rightSequence⟩
 
+theorem firingSequence_mem_enabled_witness
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {trace : List Trans}
+    {trans : Trans}
+    (sequence : FiringSequence net before trace after)
+    (hmem : trans ∈ trace) :
+    ∃ marking,
+      reachable net before marking ∧
+        enabled net marking trans := by
+  induction sequence with
+  | nil =>
+      cases hmem
+  | cons hfires tail ih =>
+      rcases List.mem_cons.mp hmem with hhead | htail
+      · subst hhead
+        exact ⟨_, reachable_refl _, hfires.1⟩
+      · rcases ih htail with ⟨marking, hreachable, henabled⟩
+        exact
+          ⟨marking,
+            reachable_trans (reachable_of_fires hfires) hreachable,
+            henabled⟩
+
 noncomputable def initial [DecidableEq Place]
     (net : WorkflowNet Place Trans) : Marking Place :=
   Marking.single net.source
@@ -2458,6 +2481,50 @@ theorem noDeadTransitions_reachable_after_firing
       hreachable,
       hfires,
       reachable_trans hreachable (reachable_of_fires hfires)⟩
+
+theorem noDeadTransitions_of_accepting_trace_mem
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (haccepting :
+      ∀ trans,
+        ∃ trace,
+          FiringSequence net (initial net) trace (final net) ∧
+            trans ∈ trace) :
+    noDeadTransitions net := by
+  intro trans
+  rcases haccepting trans with ⟨trace, sequence, hmem⟩
+  exact firingSequence_mem_enabled_witness sequence hmem
+
+theorem sound_of_accepting_trace_mem_option_proper
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (haccepting :
+      ∀ trans,
+        ∃ trace,
+          FiringSequence net (initial net) trace (final net) ∧
+            trans ∈ trace)
+    (hcomplete : optionToComplete net)
+    (hproper : properCompletion net) :
+    sound net :=
+  ⟨noDeadTransitions_of_accepting_trace_mem haccepting,
+    hcomplete,
+    hproper⟩
+
+theorem safeAndSound_of_accepting_trace_mem_option_proper
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafe : safe net)
+    (haccepting :
+      ∀ trans,
+        ∃ trace,
+          FiringSequence net (initial net) trace (final net) ∧
+            trans ∈ trace)
+    (hcomplete : optionToComplete net)
+    (hproper : properCompletion net) :
+    safeAndSound net :=
+  ⟨hsafe,
+    sound_of_accepting_trace_mem_option_proper
+      haccepting hcomplete hproper⟩
 
 theorem noDeadTransitions_optionToComplete_accepting_witness
     [DecidableEq Place]
