@@ -11811,6 +11811,84 @@ structure Theorem2Case3BoundaryWorkflowSoundContractionCertificate
         PetriNet.placeEquivalentWrt
           net.toPetriNet part leftPlace rightPlace
 
+structure Theorem2Case3ActiveBoundarySoundContractionCertificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) where
+  hasAtLeastTwoParts : partition.hasAtLeastTwoParts
+  samePartOfSharedPostsetReach :
+    ∀ place left right,
+      Patterns.reachesFromPostset net place left ->
+      Patterns.reachesFromPostset net place right ->
+        partition.samePart left right
+  markedGraphEvidence :
+    Patterns.partitionContractionMarkedGraphEvidence
+      net partition
+  contracted :
+    WorkflowNet
+      {place : Place //
+        Patterns.partitionContractionBoundaryPlaces
+          net partition place}
+      {index : Nat //
+        Patterns.partitionContractionActiveIndices partition index}
+  contractedToPetriNet :
+    contracted.toPetriNet =
+      Patterns.partitionContractionActiveBoundaryNet net partition
+  contractedSound : WorkflowNet.sound contracted
+  uniqueEntryEquivalent :
+    ∀ index part leftPlace rightPlace,
+      Powl.listGet? partition.parts index = some part ->
+      WorkflowNet.entryPoints net part leftPlace ->
+      WorkflowNet.entryPoints net part rightPlace ->
+        PetriNet.placeEquivalentWrt
+          net.toPetriNet part leftPlace rightPlace
+  uniqueExitEquivalent :
+    ∀ index part leftPlace rightPlace,
+      Powl.listGet? partition.parts index = some part ->
+      WorkflowNet.exitPoints net part leftPlace ->
+      WorkflowNet.exitPoints net part rightPlace ->
+        PetriNet.placeEquivalentWrt
+          net.toPetriNet part leftPlace rightPlace
+
+structure Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) where
+  hasAtLeastTwoParts : partition.hasAtLeastTwoParts
+  samePartOfSharedPostsetReach :
+    ∀ place left right,
+      Patterns.reachesFromPostset net place left ->
+      Patterns.reachesFromPostset net place right ->
+        partition.samePart left right
+  markedGraphEvidence :
+    Patterns.partitionContractionMarkedGraphEvidence
+      net partition
+  workflowEvidence :
+    Patterns.PartitionContractionActiveBoundaryWorkflowEvidence
+      net partition
+  contractedSound :
+    WorkflowNet.sound
+      (Patterns.partitionContractionActiveBoundaryWorkflowNet
+        workflowEvidence)
+  uniqueEntryEquivalent :
+    ∀ index part leftPlace rightPlace,
+      Powl.listGet? partition.parts index = some part ->
+      WorkflowNet.entryPoints net part leftPlace ->
+      WorkflowNet.entryPoints net part rightPlace ->
+        PetriNet.placeEquivalentWrt
+          net.toPetriNet part leftPlace rightPlace
+  uniqueExitEquivalent :
+    ∀ index part leftPlace rightPlace,
+      Powl.listGet? partition.parts index = some part ->
+      WorkflowNet.exitPoints net part leftPlace ->
+      WorkflowNet.exitPoints net part rightPlace ->
+        PetriNet.placeEquivalentWrt
+          net.toPetriNet part leftPlace rightPlace
+
 theorem theorem2_case3_contraction_certificate_marked_graph
     {Place : Type u}
     {Trans : Type v}
@@ -11944,6 +12022,49 @@ theorem theorem2_case3_partition_contraction_boundary_flow_acyclic_iff
   Patterns.partitionContractionBoundaryNet_transitionFlowAcyclic_iff
     net partition
 
+theorem theorem2_case3_partition_contraction_active_boundary_flow_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {left right :
+      {index : Nat //
+        Patterns.partitionContractionActiveIndices partition index}} :
+    PetriNet.transitionFlow
+        (Patterns.partitionContractionActiveBoundaryNet net partition)
+        left
+        right ↔
+      PetriNet.transitionFlow
+        (Patterns.partitionContraction net partition)
+        left.val
+        right.val :=
+  Patterns.partitionContractionActiveBoundaryNet_transitionFlow_iff
+    net partition
+
+theorem theorem2_case3_partition_contraction_active_boundary_flow_no_return_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition) ↔
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContractionActiveBoundaryNet_transitionFlowNoReturn_iff
+    net partition
+
+theorem theorem2_case3_partition_contraction_active_boundary_flow_acyclic_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition) ↔
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContractionActiveBoundaryNet_transitionFlowAcyclic_iff
+    net partition
+
 theorem theorem2_case3_partition_contraction_acyclic_of_sound_marked_boundary_workflow
     {Place : Type u}
     {Trans : Type v}
@@ -11966,6 +12087,56 @@ theorem theorem2_case3_partition_contraction_acyclic_of_sound_marked_boundary_wo
     PetriNet.transitionFlowAcyclic
       (Patterns.partitionContraction net partition) :=
   Patterns.partitionContraction_transitionFlowAcyclic_of_sound_marked_boundary_workflow
+    net partition contracted hcontracted hmarked hsound
+
+theorem theorem2_case3_partition_contraction_no_return_of_sound_marked_active_boundary_workflow
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (contracted :
+      WorkflowNet
+        {place : Place //
+          Patterns.partitionContractionBoundaryPlaces
+            net partition place}
+        {index : Nat //
+          Patterns.partitionContractionActiveIndices partition index})
+    (hcontracted :
+      contracted.toPetriNet =
+        Patterns.partitionContractionActiveBoundaryNet net partition)
+    (hmarked :
+      PetriNet.markedGraph
+        (Patterns.partitionContraction net partition))
+    (hsound : WorkflowNet.sound contracted) :
+    PetriNet.transitionFlowNoReturn
+      (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContraction_transitionFlowNoReturn_of_sound_marked_active_boundary_workflow
+    net partition contracted hcontracted hmarked hsound
+
+theorem theorem2_case3_partition_contraction_acyclic_of_sound_marked_active_boundary_workflow
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (contracted :
+      WorkflowNet
+        {place : Place //
+          Patterns.partitionContractionBoundaryPlaces
+            net partition place}
+        {index : Nat //
+          Patterns.partitionContractionActiveIndices partition index})
+    (hcontracted :
+      contracted.toPetriNet =
+        Patterns.partitionContractionActiveBoundaryNet net partition)
+    (hmarked :
+      PetriNet.markedGraph
+        (Patterns.partitionContraction net partition))
+    (hsound : WorkflowNet.sound contracted) :
+    PetriNet.transitionFlowAcyclic
+      (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContraction_transitionFlowAcyclic_of_sound_marked_active_boundary_workflow
     net partition contracted hcontracted hmarked hsound
 
 theorem theorem2_case3_sound_contraction_certificate_marked_graph
@@ -12034,6 +12205,60 @@ theorem theorem2_case3_boundary_workflow_sound_contraction_certificate_marked_gr
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
       certificate)
 
+theorem theorem2_case3_active_boundary_sound_contraction_certificate_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    PetriNet.markedGraph
+      (Patterns.partitionContraction net partition) :=
+  theorem2_case3_partition_contraction_marked_graph_of_unique_boundary_places
+    certificate.markedGraphEvidence
+
+def theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    Theorem2Case3ActiveBoundarySoundContractionCertificate
+      net partition where
+  hasAtLeastTwoParts := certificate.hasAtLeastTwoParts
+  samePartOfSharedPostsetReach :=
+    certificate.samePartOfSharedPostsetReach
+  markedGraphEvidence := certificate.markedGraphEvidence
+  contracted :=
+    Patterns.partitionContractionActiveBoundaryWorkflowNet
+      certificate.workflowEvidence
+  contractedToPetriNet :=
+    Patterns.partitionContractionActiveBoundaryWorkflowNet_toPetriNet
+      certificate.workflowEvidence
+  contractedSound := certificate.contractedSound
+  uniqueEntryEquivalent := certificate.uniqueEntryEquivalent
+  uniqueExitEquivalent := certificate.uniqueExitEquivalent
+
+theorem theorem2_case3_active_boundary_workflow_sound_contraction_certificate_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    PetriNet.markedGraph
+      (Patterns.partitionContraction net partition) :=
+  theorem2_case3_active_boundary_sound_contraction_certificate_marked_graph
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+
 theorem theorem2_case3_sound_contraction_certificate_no_return
     {Place : Type u}
     {Trans : Type v}
@@ -12085,6 +12310,41 @@ theorem theorem2_case3_boundary_workflow_sound_contraction_certificate_no_return
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
       certificate)
 
+theorem theorem2_case3_active_boundary_sound_contraction_certificate_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowNoReturn
+      (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContraction_transitionFlowNoReturn_of_sound_marked_active_boundary_workflow
+    net
+    partition
+    certificate.contracted
+    certificate.contractedToPetriNet
+    (theorem2_case3_active_boundary_sound_contraction_certificate_marked_graph
+      certificate)
+    certificate.contractedSound
+
+theorem theorem2_case3_active_boundary_workflow_sound_contraction_certificate_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowNoReturn
+      (Patterns.partitionContraction net partition) :=
+  theorem2_case3_active_boundary_sound_contraction_certificate_no_return
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+
 theorem theorem2_case3_sound_contraction_certificate_transition_flow_acyclic
     {Place : Type u}
     {Trans : Type v}
@@ -12132,6 +12392,39 @@ theorem theorem2_case3_boundary_workflow_sound_contraction_certificate_transitio
       (Patterns.partitionContraction net partition) :=
   theorem2_case3_boundary_sound_contraction_certificate_transition_flow_acyclic
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+
+theorem theorem2_case3_active_boundary_sound_contraction_certificate_transition_flow_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowAcyclic
+      (Patterns.partitionContraction net partition) :=
+  theorem2_case3_partition_contraction_acyclic_of_sound_marked_active_boundary_workflow
+    certificate.contracted
+    certificate.contractedToPetriNet
+    (theorem2_case3_active_boundary_sound_contraction_certificate_marked_graph
+      certificate)
+    certificate.contractedSound
+
+theorem theorem2_case3_active_boundary_workflow_sound_contraction_certificate_transition_flow_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowAcyclic
+      (Patterns.partitionContraction net partition) :=
+  theorem2_case3_active_boundary_sound_contraction_certificate_transition_flow_acyclic
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
 
 def theorem2_case3_contraction_certificate_of_sound_contraction_certificate
@@ -12186,6 +12479,40 @@ def theorem2_case3_contraction_certificate_of_boundary_workflow_sound_contractio
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
       certificate)
 
+def theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    Theorem2Case3ContractionCertificate net partition where
+  hasAtLeastTwoParts := certificate.hasAtLeastTwoParts
+  samePartOfSharedPostsetReach :=
+    certificate.samePartOfSharedPostsetReach
+  markedGraphEvidence := certificate.markedGraphEvidence
+  transitionFlowAcyclic :=
+    theorem2_case3_active_boundary_sound_contraction_certificate_transition_flow_acyclic
+      certificate
+  uniqueEntryEquivalent := certificate.uniqueEntryEquivalent
+  uniqueExitEquivalent := certificate.uniqueExitEquivalent
+
+def theorem2_case3_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    Theorem2Case3ContractionCertificate net partition :=
+  theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+
 theorem theorem2_case3_contraction_certificate_no_return
     {Place : Type u}
     {Trans : Type v}
@@ -12235,6 +12562,34 @@ theorem theorem2_case3_execution_order_no_return_of_boundary_workflow_sound_cont
     Patterns.executionOrderNoReturn net partition :=
   theorem2_case3_contraction_certificate_no_return
     (theorem2_case3_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+
+theorem theorem2_case3_execution_order_no_return_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    Patterns.executionOrderNoReturn net partition :=
+  theorem2_case3_contraction_certificate_no_return
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+
+theorem theorem2_case3_execution_order_no_return_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    Patterns.executionOrderNoReturn net partition :=
+  theorem2_case3_contraction_certificate_no_return
+    (theorem2_case3_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
 
 theorem theorem2_case3_partial_order_pattern_of_contraction_certificate
@@ -12294,6 +12649,34 @@ theorem theorem2_case3_partial_order_pattern_of_boundary_workflow_sound_contract
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
       certificate)
 
+theorem theorem2_case3_partial_order_pattern_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    Patterns.partialOrderPattern net partition :=
+  theorem2_case3_partial_order_pattern_of_contraction_certificate
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+
+theorem theorem2_case3_partial_order_pattern_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    Patterns.partialOrderPattern net partition :=
+  theorem2_case3_partial_order_pattern_of_active_boundary_sound_contraction_certificate
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+
 def theorem2_case3_strict_partial_order_of_contraction_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -12350,6 +12733,36 @@ def theorem2_case3_strict_partial_order_of_boundary_workflow_sound_contraction_c
     StrictPartialOrder Nat :=
   theorem2_case3_strict_partial_order_of_boundary_sound_contraction_certificate
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+
+def theorem2_case3_strict_partial_order_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    StrictPartialOrder Nat :=
+  Patterns.partialOrderPattern_strictPartialOrder
+    net
+    partition
+    (theorem2_case3_partial_order_pattern_of_active_boundary_sound_contraction_certificate
+      certificate)
+
+def theorem2_case3_strict_partial_order_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    StrictPartialOrder Nat :=
+  theorem2_case3_strict_partial_order_of_active_boundary_sound_contraction_certificate
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
 
 def theorem2_case3_partial_order_pattern_certificate_of_contraction_certificate
@@ -12489,6 +12902,76 @@ def theorem2_case3_partial_order_pattern_certificate_of_boundary_workflow_sound_
     branches
     hdecompose
 
+def theorem2_case3_partial_order_pattern_certificate_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    SemiBlockPatternCompletenessCertificate net label :=
+  theorem2_case3_partial_order_pattern_certificate_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+def theorem2_case3_partial_order_pattern_certificate_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    SemiBlockPatternCompletenessCertificate net label :=
+  theorem2_case3_partial_order_pattern_certificate_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
 def theorem2_case3_algorithm_certificate_of_contraction_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -12619,6 +13102,76 @@ def theorem2_case3_algorithm_certificate_of_boundary_workflow_sound_contraction_
   theorem2_case3_algorithm_certificate_of_boundary_sound_contraction_certificate
     hrequirements
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+def theorem2_case3_algorithm_certificate_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    SemiBlockCompletenessCertificate net label :=
+  theorem2_case3_algorithm_certificate_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+def theorem2_case3_algorithm_certificate_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    SemiBlockCompletenessCertificate net label :=
+  theorem2_case3_algorithm_certificate_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
     branches
     hdecompose
@@ -12769,6 +13322,84 @@ theorem theorem2_case3_algorithm_exists_powl_model_language_eq_of_boundary_workf
   theorem2_case3_algorithm_exists_powl_model_language_eq_of_boundary_sound_contraction_certificate
     hrequirements
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+theorem theorem2_case3_algorithm_exists_powl_model_language_eq_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  theorem2_case3_algorithm_exists_powl_model_language_eq_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+theorem theorem2_case3_algorithm_exists_powl_model_language_eq_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  theorem2_case3_algorithm_exists_powl_model_language_eq_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
     branches
     hdecompose
@@ -12947,6 +13578,96 @@ theorem theorem2_case3_algorithm_exists_powl_model_visible_activity_language_wit
     hdecompose
     hlabel
 
+theorem theorem2_case3_algorithm_exists_powl_model_visible_activity_language_witness_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  theorem2_case3_algorithm_exists_powl_model_visible_activity_language_witness_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+    hlabel
+
+theorem theorem2_case3_algorithm_exists_powl_model_visible_activity_language_witness_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  theorem2_case3_algorithm_exists_powl_model_visible_activity_language_witness_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+    hlabel
+
 def theorem2_case3_semi_block_certified_conversion_of_contraction_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -13077,6 +13798,76 @@ def theorem2_case3_semi_block_certified_conversion_of_boundary_workflow_sound_co
   theorem2_case3_semi_block_certified_conversion_of_boundary_sound_contraction_certificate
     hrequirements
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+def theorem2_case3_semi_block_certified_conversion_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    SemiBlockCertifiedConversion net label :=
+  theorem2_case3_semi_block_certified_conversion_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+def theorem2_case3_semi_block_certified_conversion_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    SemiBlockCertifiedConversion net label :=
+  theorem2_case3_semi_block_certified_conversion_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
     branches
     hdecompose
@@ -13234,6 +14025,84 @@ theorem theorem2_case3_language_preservation_of_boundary_workflow_sound_contract
     (theorem2_case3_semi_block_certified_conversion_of_boundary_workflow_sound_contraction_certificate
       hrequirements certificate branches hdecompose)
 
+theorem theorem2_case3_language_preservation_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language
+          (theorem2_case3_semi_block_certified_conversion_of_active_boundary_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).conversion.outLabel
+          (theorem2_case3_semi_block_certified_conversion_of_active_boundary_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).conversion.model
+          word :=
+  theorem2_completeness_language_preservation_of_semi_block_certified_conversion
+    (theorem2_case3_semi_block_certified_conversion_of_active_boundary_sound_contraction_certificate
+      hrequirements certificate branches hdecompose)
+
+theorem theorem2_case3_language_preservation_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language
+          (theorem2_case3_semi_block_certified_conversion_of_active_boundary_workflow_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).conversion.outLabel
+          (theorem2_case3_semi_block_certified_conversion_of_active_boundary_workflow_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).conversion.model
+          word :=
+  theorem2_completeness_language_preservation_of_semi_block_certified_conversion
+    (theorem2_case3_semi_block_certified_conversion_of_active_boundary_workflow_sound_contraction_certificate
+      hrequirements certificate branches hdecompose)
+
 theorem theorem2_case3_language_eq_of_contraction_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -13377,6 +14246,80 @@ theorem theorem2_case3_language_eq_of_boundary_workflow_sound_contraction_certif
           hrequirements certificate branches hdecompose).conversion.model :=
   theorem2_completeness_language_eq_of_semi_block_certified_conversion
     (theorem2_case3_semi_block_certified_conversion_of_boundary_workflow_sound_contraction_certificate
+      hrequirements certificate branches hdecompose)
+
+theorem theorem2_case3_language_eq_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    WorkflowNet.language net label =
+      Powl.language
+        (theorem2_case3_semi_block_certified_conversion_of_active_boundary_sound_contraction_certificate
+          hrequirements certificate branches hdecompose).conversion.outLabel
+        (theorem2_case3_semi_block_certified_conversion_of_active_boundary_sound_contraction_certificate
+          hrequirements certificate branches hdecompose).conversion.model :=
+  theorem2_completeness_language_eq_of_semi_block_certified_conversion
+    (theorem2_case3_semi_block_certified_conversion_of_active_boundary_sound_contraction_certificate
+      hrequirements certificate branches hdecompose)
+
+theorem theorem2_case3_language_eq_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    WorkflowNet.language net label =
+      Powl.language
+        (theorem2_case3_semi_block_certified_conversion_of_active_boundary_workflow_sound_contraction_certificate
+          hrequirements certificate branches hdecompose).conversion.outLabel
+        (theorem2_case3_semi_block_certified_conversion_of_active_boundary_workflow_sound_contraction_certificate
+          hrequirements certificate branches hdecompose).conversion.model :=
+  theorem2_completeness_language_eq_of_semi_block_certified_conversion
+    (theorem2_case3_semi_block_certified_conversion_of_active_boundary_workflow_sound_contraction_certificate
       hrequirements certificate branches hdecompose)
 
 theorem theorem2_case3_execution_order_iff_partition_contraction_transition_flow
@@ -14960,6 +15903,76 @@ def theorem2_case3_concrete_powl_witness_of_boundary_workflow_sound_contraction_
     branches
     hdecompose
 
+def theorem2_case3_concrete_powl_witness_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ConcretePowlWitness net label :=
+  theorem2_case3_concrete_powl_witness_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+def theorem2_case3_concrete_powl_witness_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ConcretePowlWitness net label :=
+  theorem2_case3_concrete_powl_witness_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
 theorem concrete_powl_witness_language_preservation
     {Place : Type u}
     {Trans : Type v}
@@ -15419,6 +16432,90 @@ theorem theorem2_case3_concrete_language_preservation_of_boundary_workflow_sound
     branches
     hdecompose
 
+theorem theorem2_case3_concrete_language_preservation_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language
+          (theorem2_case3_concrete_powl_witness_of_active_boundary_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).outLabel
+          (theorem2_case3_concrete_powl_witness_of_active_boundary_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).model
+          word :=
+  theorem2_case3_concrete_language_preservation_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+theorem theorem2_case3_concrete_language_preservation_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language
+          (theorem2_case3_concrete_powl_witness_of_active_boundary_workflow_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).outLabel
+          (theorem2_case3_concrete_powl_witness_of_active_boundary_workflow_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).model
+          word :=
+  theorem2_case3_concrete_language_preservation_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
 theorem theorem2_case3_concrete_exists_powl_model_language_eq_of_sound_contraction_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -15530,6 +16627,84 @@ theorem theorem2_case3_concrete_exists_powl_model_language_eq_of_boundary_workfl
   theorem2_case3_concrete_exists_powl_model_language_eq_of_boundary_sound_contraction_certificate
     hrequirements
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+theorem theorem2_case3_concrete_exists_powl_model_language_eq_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  theorem2_case3_concrete_exists_powl_model_language_eq_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+theorem theorem2_case3_concrete_exists_powl_model_language_eq_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  theorem2_case3_concrete_exists_powl_model_language_eq_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
     branches
     hdecompose
@@ -15648,6 +16823,86 @@ theorem theorem2_case3_concrete_safe_and_exists_powl_model_language_eq_of_bounda
   theorem2_case3_concrete_safe_and_exists_powl_model_language_eq_of_boundary_sound_contraction_certificate
     hrequirements
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+theorem theorem2_case3_concrete_safe_and_exists_powl_model_language_eq_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            WorkflowNet.language net label =
+              Powl.language outLabel model :=
+  theorem2_case3_concrete_safe_and_exists_powl_model_language_eq_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+
+theorem theorem2_case3_concrete_safe_and_exists_powl_model_language_eq_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            WorkflowNet.language net label =
+              Powl.language outLabel model :=
+  theorem2_case3_concrete_safe_and_exists_powl_model_language_eq_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
     branches
     hdecompose
@@ -15791,6 +17046,100 @@ theorem theorem2_case3_concrete_visible_activity_language_witness_of_boundary_wo
     hdecompose
     hlabel
 
+theorem theorem2_case3_concrete_visible_activity_language_witness_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language
+          (theorem2_case3_concrete_powl_witness_of_active_boundary_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).outLabel
+          (theorem2_case3_concrete_powl_witness_of_active_boundary_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).model
+          word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word :=
+  theorem2_case3_concrete_visible_activity_language_witness_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+    hlabel
+
+theorem theorem2_case3_concrete_visible_activity_language_witness_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language
+          (theorem2_case3_concrete_powl_witness_of_active_boundary_workflow_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).outLabel
+          (theorem2_case3_concrete_powl_witness_of_active_boundary_workflow_sound_contraction_certificate
+            hrequirements certificate branches hdecompose).model
+          word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word :=
+  theorem2_case3_concrete_visible_activity_language_witness_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+    hlabel
+
 theorem theorem2_case3_concrete_exists_powl_model_visible_activity_language_witness_of_sound_contraction_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -15919,6 +17268,96 @@ theorem theorem2_case3_concrete_exists_powl_model_visible_activity_language_witn
   theorem2_case3_concrete_exists_powl_model_visible_activity_language_witness_of_boundary_sound_contraction_certificate
     hrequirements
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+    hlabel
+
+theorem theorem2_case3_concrete_exists_powl_model_visible_activity_language_witness_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  theorem2_case3_concrete_exists_powl_model_visible_activity_language_witness_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+    hlabel
+
+theorem theorem2_case3_concrete_exists_powl_model_visible_activity_language_witness_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  theorem2_case3_concrete_exists_powl_model_visible_activity_language_witness_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
     branches
     hdecompose
@@ -16055,6 +17494,98 @@ theorem theorem2_case3_concrete_safe_and_exists_powl_model_visible_activity_lang
   theorem2_case3_concrete_safe_and_exists_powl_model_visible_activity_language_witness_of_boundary_sound_contraction_certificate
     hrequirements
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+    hlabel
+
+theorem theorem2_case3_concrete_safe_and_exists_powl_model_visible_activity_language_witness_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∃ word,
+              Powl.language outLabel model word ∧
+                activity ∈ word ∧
+                  WorkflowNet.language net label word :=
+  theorem2_case3_concrete_safe_and_exists_powl_model_visible_activity_language_witness_of_contraction_certificate
+    hrequirements
+    (theorem2_case3_contraction_certificate_of_active_boundary_sound_contraction_certificate
+      certificate)
+    branches
+    hdecompose
+    hlabel
+
+theorem theorem2_case3_concrete_safe_and_exists_powl_model_visible_activity_language_witness_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∃ word,
+              Powl.language outLabel model word ∧
+                activity ∈ word ∧
+                  WorkflowNet.language net label word :=
+  theorem2_case3_concrete_safe_and_exists_powl_model_visible_activity_language_witness_of_active_boundary_sound_contraction_certificate
+    hrequirements
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
     branches
     hdecompose
