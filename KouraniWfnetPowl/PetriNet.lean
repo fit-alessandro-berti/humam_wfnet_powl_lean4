@@ -2755,6 +2755,29 @@ def PlaceCycleFiringSupport
     PlaceCycleSupport net places ∧
       ∃ place, place ∈ places ∧ net.transToPlace trans place
 
+def placesMarkedIn
+    (marking : Marking Place)
+    (places : Set Place) : Prop :=
+  ∃ place, places place ∧ marking place > 0
+
+structure PlaceCycleSetSupport
+    (net : WorkflowNet Place Trans)
+    (places : Set Place) : Prop where
+  nonSink :
+    ∀ place, places place -> place ≠ net.sink
+  successor :
+    ∀ place trans,
+      places place ->
+        net.placeToTrans place trans ->
+          ∃ next, places next ∧ net.transToPlace trans next
+
+def PlaceCycleSetFiringSupport
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) : Prop :=
+  ∃ places,
+    PlaceCycleSetSupport net places ∧
+      ∃ place, places place ∧ net.transToPlace trans place
+
 theorem fires_placesMarked_of_placeCycleSupport
     {net : WorkflowNet Place Trans}
     {places : List Place}
@@ -2834,6 +2857,164 @@ theorem no_completion_after_placeCycleFiringSupport_firing
         hplace,
         fires_positive_of_transToPlace hfires hpost⟩
 
+theorem fires_placesMarkedIn_of_placeCycleSetSupport
+    {net : WorkflowNet Place Trans}
+    {places : Set Place}
+    (support : PlaceCycleSetSupport net places)
+    {before after : Marking Place}
+    {trans : Trans}
+    (hfires : fires net before trans after)
+    (hmarked : placesMarkedIn before places) :
+    placesMarkedIn after places := by
+  rcases hmarked with ⟨place, hplace, hpositive⟩
+  by_cases hinput : net.placeToTrans place trans
+  · rcases support.successor place trans hplace hinput with
+      ⟨next, hnext, hpost⟩
+    exact
+      ⟨next,
+        hnext,
+        fires_positive_of_transToPlace hfires hpost⟩
+  · exact
+      ⟨place,
+        hplace,
+        by
+          rw [hfires.2]
+          exact fire_positive_of_not_placeToTrans hinput hpositive⟩
+
+theorem firingSequence_placesMarkedIn_of_placeCycleSetSupport
+    {net : WorkflowNet Place Trans}
+    {places : Set Place}
+    (support : PlaceCycleSetSupport net places)
+    {before after : Marking Place}
+    {trace : List Trans}
+    (sequence : FiringSequence net before trace after)
+    (hmarked : placesMarkedIn before places) :
+    placesMarkedIn after places := by
+  induction sequence with
+  | nil =>
+      exact hmarked
+  | cons hfires _ ih =>
+      exact
+        ih
+          (fires_placesMarkedIn_of_placeCycleSetSupport
+            support hfires hmarked)
+
+theorem no_completion_of_placeCycleSetSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {places : Set Place}
+    (support : PlaceCycleSetSupport net places)
+    {before : Marking Place}
+    {trace : List Trans}
+    (sequence : FiringSequence net before trace (final net))
+    (hmarked : placesMarkedIn before places) :
+    False := by
+  rcases firingSequence_placesMarkedIn_of_placeCycleSetSupport
+      support sequence hmarked with
+    ⟨place, hplace, hpositive⟩
+  have hnonSink : place ≠ net.sink := support.nonSink place hplace
+  have hfinalZero : ¬ final net place > 0 := by
+    simp [final, Marking.single, hnonSink]
+  exact hfinalZero hpositive
+
+theorem no_completion_after_placeCycleSetFiringSupport_firing
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {trans : Trans}
+    (cycle : PlaceCycleSetFiringSupport net trans)
+    {before after : Marking Place}
+    {suffix : List Trans}
+    (hfires : fires net before trans after)
+    (hsuffix : FiringSequence net after suffix (final net)) :
+    False := by
+  rcases cycle with ⟨places, support, place, hplace, hpost⟩
+  exact
+    no_completion_of_placeCycleSetSupport
+      support
+      hsuffix
+      ⟨place,
+        hplace,
+        fires_positive_of_transToPlace hfires hpost⟩
+
+theorem markedGraph_transitionFlow_cycle_setFiringSupport
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {left right : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right)
+    (hreturn :
+      TransGen (PetriNet.transitionFlow net.toPetriNet) right left) :
+    PlaceCycleSetFiringSupport net left := by
+  let r := PetriNet.transitionFlow net.toPetriNet
+  let cycleTrans : Set Trans :=
+    fun trans => TransGen r left trans ∧ TransGen r trans left
+  let cyclePlaces : Set Place :=
+    fun place =>
+      ∃ source target,
+        cycleTrans source ∧
+          cycleTrans target ∧
+            net.transToPlace source place ∧
+              net.placeToTrans place target
+  have hleftCycle : TransGen r left left :=
+    TransGen.tail hflow hreturn
+  refine
+    ⟨cyclePlaces,
+      ?_,
+      ?_⟩
+  · refine
+      { nonSink := ?_,
+        successor := ?_ }
+    · intro place hplace
+      rcases hplace with
+        ⟨source, target, _hsourceCycle, _htargetCycle,
+          _hpost, hpre⟩
+      intro hsink
+      rw [hsink] at hpre
+      exact sink_no_output net target hpre
+    · intro place trans hplace hconsumer
+      rcases hplace with
+        ⟨source, target, _hsourceCycle, htargetCycle,
+          _hpost, htargetPre⟩
+      have hsame : trans = target :=
+        hmarked.2 place trans target hconsumer htargetPre
+      subst hsame
+      rcases TransGen.head htargetCycle.2 with
+        ⟨next, htargetNext, hnextEq | hnextLeft⟩
+      · rcases htargetNext with ⟨nextPlace, htargetPost, hnextPre⟩
+        subst hnextEq
+        exact
+          ⟨nextPlace,
+            ⟨target,
+              left,
+              htargetCycle,
+              ⟨hleftCycle, hleftCycle⟩,
+              htargetPost,
+              hnextPre⟩,
+            htargetPost⟩
+      · rcases htargetNext with ⟨nextPlace, htargetPost, hnextPre⟩
+        have hleftNext : TransGen r left next :=
+          TransGen.trans
+            htargetCycle.1
+            (TransGen.single htargetNext)
+        exact
+          ⟨nextPlace,
+            ⟨target,
+              next,
+              htargetCycle,
+              ⟨hleftNext, hnextLeft⟩,
+              htargetPost,
+              hnextPre⟩,
+            htargetPost⟩
+  · rcases hflow with ⟨place, hleftPost, hrightPre⟩
+    exact
+      ⟨place,
+        ⟨left,
+          right,
+          ⟨hleftCycle, hleftCycle⟩,
+          ⟨TransGen.single hflow, hreturn⟩,
+          hleftPost,
+          hrightPre⟩,
+        hleftPost⟩
+
 theorem markedGraph_prepend_transitionFlow_placeCycleSupport
     {net : WorkflowNet Place Trans}
     (hmarked : PetriNet.markedGraph net.toPetriNet)
@@ -2904,6 +3085,26 @@ theorem markedGraph_prepend_transitionFlow_placesMarked_after_firing
       place,
       by simp,
       fires_positive_of_transToPlace hfires hsourcePost⟩
+
+theorem markedGraph_prepend_transitionFlow_firingSupport
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {source target : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet source target)
+    (targetCycle : PlaceCycleFiringSupport net target) :
+    PlaceCycleFiringSupport net source := by
+  rcases targetCycle with
+    ⟨places, support, postPlace, hpostPlace, htargetPost⟩
+  rcases markedGraph_prepend_transitionFlow_placeCycleSupport
+      hmarked hflow support
+      ⟨postPlace, hpostPlace, htargetPost⟩ with
+    ⟨edgePlace, hsourcePost, _htargetPre, extendedSupport⟩
+  exact
+    ⟨edgePlace :: places,
+      extendedSupport,
+      edgePlace,
+      by simp,
+      hsourcePost⟩
 
 theorem markedGraph_two_transitionFlow_cycle_placeCycleSupport
     {net : WorkflowNet Place Trans}
@@ -3533,6 +3734,87 @@ theorem sound_accepting_firing_sequence
     (sound_noDeadTransitions hsound)
     hsound.2.1
     trans
+
+theorem sound_no_placeCycleFiringSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net)
+    {trans : Trans}
+    (cycle : PlaceCycleFiringSupport net trans) :
+    False := by
+  rcases sound_accepting_firing_sequence hsound trans with
+    ⟨_before,
+      _after,
+      _preTrace,
+      _suffix,
+      _hpre,
+      hfires,
+      hsuffix,
+      _hcombined⟩
+  exact
+    no_completion_after_placeCycleFiringSupport_firing
+      cycle hfires hsuffix
+
+theorem safeAndSound_no_placeCycleFiringSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net)
+    {trans : Trans}
+    (cycle : PlaceCycleFiringSupport net trans) :
+    False :=
+  sound_no_placeCycleFiringSupport hsafeSound.2 cycle
+
+theorem sound_transitionFlowNoReturn_of_cycleFiringSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net)
+    (hcycle :
+      ∀ {left right : Trans},
+        PetriNet.transitionFlow net.toPetriNet left right ->
+          TransGen (PetriNet.transitionFlow net.toPetriNet) right left ->
+            PlaceCycleFiringSupport net left) :
+    PetriNet.transitionFlowNoReturn net.toPetriNet := by
+  intro left right hflow hreturn
+  exact sound_no_placeCycleFiringSupport hsound (hcycle hflow hreturn)
+
+theorem sound_transitionFlowAcyclic_of_cycleFiringSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net)
+    (hcycle :
+      ∀ {left right : Trans},
+        PetriNet.transitionFlow net.toPetriNet left right ->
+          TransGen (PetriNet.transitionFlow net.toPetriNet) right left ->
+            PlaceCycleFiringSupport net left) :
+    PetriNet.transitionFlowAcyclic net.toPetriNet :=
+  (PetriNet.transitionFlowNoReturn_iff_acyclic net.toPetriNet).mp
+    (sound_transitionFlowNoReturn_of_cycleFiringSupport hsound hcycle)
+
+theorem safeAndSound_transitionFlowNoReturn_of_cycleFiringSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net)
+    (hcycle :
+      ∀ {left right : Trans},
+        PetriNet.transitionFlow net.toPetriNet left right ->
+          TransGen (PetriNet.transitionFlow net.toPetriNet) right left ->
+            PlaceCycleFiringSupport net left) :
+    PetriNet.transitionFlowNoReturn net.toPetriNet :=
+  sound_transitionFlowNoReturn_of_cycleFiringSupport
+    hsafeSound.2 hcycle
+
+theorem safeAndSound_transitionFlowAcyclic_of_cycleFiringSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net)
+    (hcycle :
+      ∀ {left right : Trans},
+        PetriNet.transitionFlow net.toPetriNet left right ->
+          TransGen (PetriNet.transitionFlow net.toPetriNet) right left ->
+            PlaceCycleFiringSupport net left) :
+    PetriNet.transitionFlowAcyclic net.toPetriNet :=
+  sound_transitionFlowAcyclic_of_cycleFiringSupport
+    hsafeSound.2 hcycle
 
 theorem markedGraph_no_completion_after_self_transitionFlow_firing
     [DecidableEq Place]

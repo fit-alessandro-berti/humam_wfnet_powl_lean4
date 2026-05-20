@@ -85,6 +85,17 @@ theorem mono
   | tail h _ ih =>
       exact TransGen.tail (hrel h) ih
 
+theorem head
+    {r : Rel alpha}
+    {x z : alpha}
+    (hpath : TransGen r x z) :
+    ∃ y, r x y ∧ (y = z ∨ TransGen r y z) := by
+  cases hpath with
+  | single h =>
+      exact ⟨z, h, Or.inl rfl⟩
+  | tail h rest =>
+      exact ⟨_, h, Or.inr rest⟩
+
 theorem congr
     {r s : Rel alpha}
     (hrel : ∀ x y, r x y ↔ s x y)

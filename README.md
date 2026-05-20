@@ -66,9 +66,12 @@ The current proof spine is:
   place-cycle support invariant now shows that if every consumer of a listed
   cycle place produces back into the listed set, then completion to the final
   marking is impossible once any listed place is marked; the two-edge
-  transition-flow cycle case is packaged into this support form, a prepend
-  constructor extends such supports along an incoming transition-flow edge, and
-  direct three-edge transition-flow cycles are now ruled out under soundness.
+  and three-edge transition-flow cycle cases are packaged into a firing-support
+  form that is immediately contradictory under soundness, a prepend constructor
+  extends such supports along an incoming transition-flow edge, direct
+  three-edge transition-flow cycles are now ruled out under soundness, and a
+  generic bridge turns any complete cycle-to-firing-support constructor into
+  the exact transition-flow no-return and acyclicity statements.
   Definition 6 work
   has started with checked explicit-decision-point predicates, split/join
   decision-place predicates, a checked split-to-join pairing skeleton with
@@ -346,8 +349,10 @@ The current proof spine is:
   predecessors fire, ruling out direct transition-flow self-loops, and ruling
   out direct two-edge transition-flow cycles via asymmetry, plus a reusable
   finite place-cycle support/no-completion invariant with a checked two-edge
-  transition-flow support constructor, a prepend constructor, and checked
-  direct three-edge cycle contradiction, plus
+  transition-flow support constructor, a generic firing-support contradiction
+  under soundness, prepend constructors for place-support and firing-support,
+  a bridge from firing-support constructors to transition-flow no-return and
+  acyclicity, and checked direct three-edge cycle contradiction, plus
   semi-block
   specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and

@@ -14689,6 +14689,66 @@ theorem theorem2_place_cycle_support_no_completion
   WorkflowNet.no_completion_of_placeCycleSupport
     support sequence hmarked
 
+theorem theorem2_no_place_cycle_firing_support_under_soundness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : WorkflowNet.sound net)
+    {trans : Trans}
+    (cycle : WorkflowNet.PlaceCycleFiringSupport net trans) :
+    False :=
+  WorkflowNet.sound_no_placeCycleFiringSupport
+    hsound cycle
+
+theorem theorem2_no_place_cycle_firing_support_under_safe_and_soundness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    (cycle : WorkflowNet.PlaceCycleFiringSupport net trans) :
+    False :=
+  WorkflowNet.safeAndSound_no_placeCycleFiringSupport
+    hsafeSound cycle
+
+theorem theorem2_sound_transition_flow_no_return_of_cycle_firing_support
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : WorkflowNet.sound net)
+    (hcycle :
+      ∀ {left right : Trans},
+        PetriNet.transitionFlow net.toPetriNet left right ->
+          TransGen
+            (PetriNet.transitionFlow net.toPetriNet)
+            right
+            left ->
+            WorkflowNet.PlaceCycleFiringSupport net left) :
+    PetriNet.transitionFlowNoReturn net.toPetriNet :=
+  WorkflowNet.sound_transitionFlowNoReturn_of_cycleFiringSupport
+    hsound hcycle
+
+theorem theorem2_sound_transition_flow_acyclic_of_cycle_firing_support
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : WorkflowNet.sound net)
+    (hcycle :
+      ∀ {left right : Trans},
+        PetriNet.transitionFlow net.toPetriNet left right ->
+          TransGen
+            (PetriNet.transitionFlow net.toPetriNet)
+            right
+            left ->
+            WorkflowNet.PlaceCycleFiringSupport net left) :
+    PetriNet.transitionFlowAcyclic net.toPetriNet :=
+  WorkflowNet.sound_transitionFlowAcyclic_of_cycleFiringSupport
+    hsound hcycle
+
 theorem theorem2_marked_graph_prepend_transition_flow_place_cycle_support
     {Place : Type u}
     {Trans : Type v}
@@ -14706,6 +14766,19 @@ theorem theorem2_marked_graph_prepend_transition_flow_place_cycle_support
           WorkflowNet.PlaceCycleSupport net (place :: places) :=
   WorkflowNet.markedGraph_prepend_transitionFlow_placeCycleSupport
     hmarked hflow support htargetPost
+
+theorem theorem2_marked_graph_prepend_transition_flow_firing_support
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {source target : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet source target)
+    (targetCycle :
+      WorkflowNet.PlaceCycleFiringSupport net target) :
+    WorkflowNet.PlaceCycleFiringSupport net source :=
+  WorkflowNet.markedGraph_prepend_transitionFlow_firingSupport
+    hmarked hflow targetCycle
 
 theorem theorem2_marked_graph_two_transition_flow_cycle_place_cycle_support
     {Place : Type u}
@@ -14745,6 +14818,20 @@ theorem theorem2_marked_graph_two_transition_flow_cycle_places_marked_after_left
   WorkflowNet.markedGraph_two_transitionFlow_cycle_placesMarked_after_left_firing
     hmarked hleftRight hrightLeft hfires
 
+theorem theorem2_marked_graph_two_transition_flow_cycle_firing_support
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {left right : Trans}
+    (hleftRight :
+      PetriNet.transitionFlow net.toPetriNet left right)
+    (hrightLeft :
+      PetriNet.transitionFlow net.toPetriNet right left) :
+    WorkflowNet.PlaceCycleFiringSupport net left :=
+  WorkflowNet.markedGraph_two_transitionFlow_cycle_firingSupport
+    hmarked hleftRight hrightLeft
+
 theorem theorem2_marked_graph_three_transition_flow_cycle_places_marked_after_first_firing
     {Place : Type u}
     {Trans : Type v}
@@ -14764,6 +14851,22 @@ theorem theorem2_marked_graph_three_transition_flow_cycle_places_marked_after_fi
         WorkflowNet.placesMarked after places :=
   WorkflowNet.markedGraph_three_transitionFlow_cycle_placesMarked_after_first_firing
     hmarked hfirstSecond hsecondThird hthirdFirst hfires
+
+theorem theorem2_marked_graph_three_transition_flow_cycle_firing_support
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {first second third : Trans}
+    (hfirstSecond :
+      PetriNet.transitionFlow net.toPetriNet first second)
+    (hsecondThird :
+      PetriNet.transitionFlow net.toPetriNet second third)
+    (hthirdFirst :
+      PetriNet.transitionFlow net.toPetriNet third first) :
+    WorkflowNet.PlaceCycleFiringSupport net first :=
+  WorkflowNet.markedGraph_three_transitionFlow_cycle_firingSupport
+    hmarked hfirstSecond hsecondThird hthirdFirst
 
 theorem theorem2_marked_graph_sound_no_three_transition_flow_cycle
     {Place : Type u}
