@@ -2956,6 +2956,7 @@ theorem markedGraph_transitionFlow_cycle_setFiringSupport
               net.placeToTrans place target
   have hleftCycle : TransGen r left left :=
     TransGen.tail hflow hreturn
+  have hleftRightFlow : r left right := hflow
   refine
     ⟨cyclePlaces,
       ?_,
@@ -2976,11 +2977,11 @@ theorem markedGraph_transitionFlow_cycle_setFiringSupport
           _hpost, htargetPre⟩
       have hsame : trans = target :=
         hmarked.2 place trans target hconsumer htargetPre
-      subst hsame
       rcases TransGen.head htargetCycle.2 with
-        ⟨next, htargetNext, hnextEq | hnextLeft⟩
+        ⟨next, htargetNext, hnextStep⟩
+      have htargetNextFlow : r target next := htargetNext
+      rcases hnextStep with hnextEq | hnextLeft
       · rcases htargetNext with ⟨nextPlace, htargetPost, hnextPre⟩
-        subst hnextEq
         exact
           ⟨nextPlace,
             ⟨target,
@@ -2988,13 +2989,13 @@ theorem markedGraph_transitionFlow_cycle_setFiringSupport
               htargetCycle,
               ⟨hleftCycle, hleftCycle⟩,
               htargetPost,
-              hnextPre⟩,
-            htargetPost⟩
+              by simpa [hnextEq] using hnextPre⟩,
+            by simpa [hsame] using htargetPost⟩
       · rcases htargetNext with ⟨nextPlace, htargetPost, hnextPre⟩
         have hleftNext : TransGen r left next :=
           TransGen.trans
             htargetCycle.1
-            (TransGen.single htargetNext)
+            (TransGen.single htargetNextFlow)
         exact
           ⟨nextPlace,
             ⟨target,
@@ -3003,14 +3004,14 @@ theorem markedGraph_transitionFlow_cycle_setFiringSupport
               ⟨hleftNext, hnextLeft⟩,
               htargetPost,
               hnextPre⟩,
-            htargetPost⟩
+            by simpa [hsame] using htargetPost⟩
   · rcases hflow with ⟨place, hleftPost, hrightPre⟩
     exact
       ⟨place,
         ⟨left,
           right,
           ⟨hleftCycle, hleftCycle⟩,
-          ⟨TransGen.single hflow, hreturn⟩,
+          ⟨TransGen.single hleftRightFlow, hreturn⟩,
           hleftPost,
           hrightPre⟩,
         hleftPost⟩
@@ -3755,6 +3756,26 @@ theorem sound_no_placeCycleFiringSupport
     no_completion_after_placeCycleFiringSupport_firing
       cycle hfires hsuffix
 
+theorem sound_no_placeCycleSetFiringSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net)
+    {trans : Trans}
+    (cycle : PlaceCycleSetFiringSupport net trans) :
+    False := by
+  rcases sound_accepting_firing_sequence hsound trans with
+    ⟨_before,
+      _after,
+      _preTrace,
+      _suffix,
+      _hpre,
+      hfires,
+      hsuffix,
+      _hcombined⟩
+  exact
+    no_completion_after_placeCycleSetFiringSupport_firing
+      cycle hfires hsuffix
+
 theorem safeAndSound_no_placeCycleFiringSupport
     [DecidableEq Place]
     {net : WorkflowNet Place Trans}
@@ -3763,6 +3784,15 @@ theorem safeAndSound_no_placeCycleFiringSupport
     (cycle : PlaceCycleFiringSupport net trans) :
     False :=
   sound_no_placeCycleFiringSupport hsafeSound.2 cycle
+
+theorem safeAndSound_no_placeCycleSetFiringSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net)
+    {trans : Trans}
+    (cycle : PlaceCycleSetFiringSupport net trans) :
+    False :=
+  sound_no_placeCycleSetFiringSupport hsafeSound.2 cycle
 
 theorem sound_transitionFlowNoReturn_of_cycleFiringSupport
     [DecidableEq Place]
@@ -3776,6 +3806,44 @@ theorem sound_transitionFlowNoReturn_of_cycleFiringSupport
     PetriNet.transitionFlowNoReturn net.toPetriNet := by
   intro left right hflow hreturn
   exact sound_no_placeCycleFiringSupport hsound (hcycle hflow hreturn)
+
+theorem markedGraph_sound_transitionFlowNoReturn
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : sound net) :
+    PetriNet.transitionFlowNoReturn net.toPetriNet := by
+  intro left right hflow hreturn
+  exact
+    sound_no_placeCycleSetFiringSupport
+      hsound
+      (markedGraph_transitionFlow_cycle_setFiringSupport
+        hmarked hflow hreturn)
+
+theorem markedGraph_sound_transitionFlowAcyclic
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : sound net) :
+    PetriNet.transitionFlowAcyclic net.toPetriNet :=
+  (PetriNet.transitionFlowNoReturn_iff_acyclic net.toPetriNet).mp
+    (markedGraph_sound_transitionFlowNoReturn hmarked hsound)
+
+theorem markedGraph_safeAndSound_transitionFlowNoReturn
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : safeAndSound net) :
+    PetriNet.transitionFlowNoReturn net.toPetriNet :=
+  markedGraph_sound_transitionFlowNoReturn hmarked hsafeSound.2
+
+theorem markedGraph_safeAndSound_transitionFlowAcyclic
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : safeAndSound net) :
+    PetriNet.transitionFlowAcyclic net.toPetriNet :=
+  markedGraph_sound_transitionFlowAcyclic hmarked hsafeSound.2
 
 theorem sound_transitionFlowAcyclic_of_cycleFiringSupport
     [DecidableEq Place]

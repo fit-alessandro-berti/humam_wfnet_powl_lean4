@@ -70,8 +70,10 @@ The current proof spine is:
   form that is immediately contradictory under soundness, a prepend constructor
   extends such supports along an incoming transition-flow edge, direct
   three-edge transition-flow cycles are now ruled out under soundness, and a
-  generic bridge turns any complete cycle-to-firing-support constructor into
-  the exact transition-flow no-return and acyclicity statements.
+  set-based cycle support now turns any transition-flow edge plus transitive
+  return path into a firing-support contradiction, giving the exact
+  marked-graph soundness-to-transition-flow-no-return and acyclicity
+  statements.
   Definition 6 work
   has started with checked explicit-decision-point predicates, split/join
   decision-place predicates, a checked split-to-join pairing skeleton with
@@ -145,7 +147,9 @@ The current proof spine is:
   transition flow in that contracted net. The contraction is a marked graph
   exactly when every original place is an entry point for at most one part and
   an exit point for at most one part; contracted-flow acyclicity builds the
-  partial-order pattern required in Case 3 of the completeness proof. The loop
+  partial-order pattern required in Case 3 of the completeness proof, and a
+  checked bridge now derives that no-return/acyclicity fact whenever the
+  contracted net is packaged as a sound marked-graph WF-net. The loop
   pattern now has checked extraction theorems showing do/redo transitions lie
   on the corresponding place-to-place paths, that loop-projection boundary
   edges are created from the original entry/exit places, that loop entry/exit
@@ -339,8 +343,10 @@ The current proof spine is:
   direct no-decision non-boundary unique-place-flow wrappers with exact `↔`
   rewrite forms and transition-equality corollaries, Case 3 contraction,
   contracted marked-graph equivalence, no-return, acyclicity wrappers, and a
-  bundled contraction certificate that build the partial-order pattern and
-  strict partial order and now feeds the partial-order branch into the raw
+  bundled contraction certificate that builds the partial-order pattern and
+  strict partial order, plus a sound-contraction certificate that derives
+  acyclicity from marked-graph soundness before feeding the same pipeline, and
+  now feeds the partial-order branch into the raw
   algorithm-certificate layer, certified conversion, language-equivalence,
   concrete POWL-witness, and visible-activity-witness pipeline, including
   existential generated-model visible-witness forms, plus checked
@@ -352,7 +358,9 @@ The current proof spine is:
   transition-flow support constructor, a generic firing-support contradiction
   under soundness, prepend constructors for place-support and firing-support,
   a bridge from firing-support constructors to transition-flow no-return and
-  acyclicity, and checked direct three-edge cycle contradiction, plus
+  acyclicity, a set-based support proof of full transition-flow no-return and
+  acyclicity for sound marked graphs, and checked direct three-edge cycle
+  contradiction, plus
   semi-block
   specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and

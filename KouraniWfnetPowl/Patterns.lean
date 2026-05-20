@@ -2957,6 +2957,47 @@ theorem partitionContraction_markedGraph_iff_unique_boundary_places
     partitionContraction_markedGraph_of_unique_boundary_places
       net partition⟩
 
+theorem partitionContraction_transitionFlowNoReturn_of_sound_marked_workflow
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (contracted : WorkflowNet Place Nat)
+    (hcontracted :
+      contracted.toPetriNet = partitionContraction net partition)
+    (hmarked :
+      PetriNet.markedGraph (partitionContraction net partition))
+    (hsound : WorkflowNet.sound contracted) :
+    PetriNet.transitionFlowNoReturn
+      (partitionContraction net partition) := by
+  have hmarkedContracted :
+      PetriNet.markedGraph contracted.toPetriNet := by
+    simpa [hcontracted] using hmarked
+  intro left right hflow hreturn
+  exact
+    (WorkflowNet.markedGraph_sound_transitionFlowNoReturn
+      (net := contracted) hmarkedContracted hsound)
+      (by simpa [hcontracted] using hflow)
+      (by simpa [hcontracted] using hreturn)
+
+theorem partitionContraction_transitionFlowAcyclic_of_sound_marked_workflow
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (contracted : WorkflowNet Place Nat)
+    (hcontracted :
+      contracted.toPetriNet = partitionContraction net partition)
+    (hmarked :
+      PetriNet.markedGraph (partitionContraction net partition))
+    (hsound : WorkflowNet.sound contracted) :
+    PetriNet.transitionFlowAcyclic
+      (partitionContraction net partition) := by
+  have hmarkedContracted :
+      PetriNet.markedGraph contracted.toPetriNet := by
+    simpa [hcontracted] using hmarked
+  simpa [hcontracted] using
+    (WorkflowNet.markedGraph_sound_transitionFlowAcyclic
+      (net := contracted) hmarkedContracted hsound)
+
 theorem executionOrder_iff_partitionContraction_transitionFlow
     (net : WorkflowNet Place Trans)
     (partition : Partition Trans)
@@ -3034,6 +3075,22 @@ theorem executionOrderNoReturn_of_partitionContraction_acyclic
     net partition).mpr
     ((PetriNet.transitionFlowAcyclic_iff_noReturn
       (partitionContraction net partition)).mp hacyclic)
+
+theorem executionOrderNoReturn_of_sound_marked_partitionContraction_workflow
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (contracted : WorkflowNet Place Nat)
+    (hcontracted :
+      contracted.toPetriNet = partitionContraction net partition)
+    (hmarked :
+      PetriNet.markedGraph (partitionContraction net partition))
+    (hsound : WorkflowNet.sound contracted) :
+    executionOrderNoReturn net partition :=
+  (executionOrderNoReturn_iff_partitionContraction_noReturn
+    net partition).mpr
+    (partitionContraction_transitionFlowNoReturn_of_sound_marked_workflow
+      net partition contracted hcontracted hmarked hsound)
 
 theorem executionOrderNoReturn_irreflexive
     (net : WorkflowNet Place Trans)
@@ -3172,6 +3229,47 @@ theorem partialOrderPattern_of_partitionContraction_acyclic
     hsamePart
     (executionOrderNoReturn_of_partitionContraction_acyclic
       net partition hacyclic)
+    hentry
+    hexit
+
+theorem partialOrderPattern_of_sound_marked_partitionContraction_workflow
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (contracted : WorkflowNet Place Nat)
+    (hcontracted :
+      contracted.toPetriNet = partitionContraction net partition)
+    (hmarked :
+      PetriNet.markedGraph (partitionContraction net partition))
+    (hsound : WorkflowNet.sound contracted)
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    partialOrderPattern net partition :=
+  partialOrderPattern_of_no_execution_order_return
+    net
+    partition
+    hparts
+    hsamePart
+    (executionOrderNoReturn_of_sound_marked_partitionContraction_workflow
+      net partition contracted hcontracted hmarked hsound)
     hentry
     hexit
 
