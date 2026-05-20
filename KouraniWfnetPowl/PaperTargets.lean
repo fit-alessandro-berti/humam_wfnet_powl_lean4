@@ -58,6 +58,29 @@ theorem subtype_powl_language_lift
       Powl.language (fun trans => label trans.val) model word :=
   Powl.language_map Subtype.val label model word
 
+theorem language_iff_local_language_source_sink
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity)
+    (word : List Activity) :
+    WorkflowNet.language net label word ↔
+      WorkflowNet.localLanguage net label net.source net.sink word :=
+  WorkflowNet.language_iff_localLanguage_source_sink net label word
+
+theorem language_eq_local_language_source_sink
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity) :
+    WorkflowNet.language net label =
+      WorkflowNet.localLanguage net label net.source net.sink :=
+  WorkflowNet.language_eq_localLanguage_source_sink net label
+
 theorem normalized_subtype_powl_language_lift
     {Trans : Type u}
     {Activity : Type v}
@@ -144,6 +167,62 @@ theorem mapped_subtype_model_language_iff_subtype_trace_language
   WorkflowNet.mapped_subtype_powl_language_iff_subtypeTraceLanguage
     original restricted hsource hsink hplaceToTrans htransToPlace
     hpreset hpostset label model hmodel word
+
+theorem mapped_subtype_model_language_iff_local_subtype_trace_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet
+        {place : Place // places place}
+        {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    (label : Trans -> TransitionLabel Activity)
+    (source sink : {place : Place // places place})
+    (model : Powl {trans : Trans // transitions trans})
+    (hmodel :
+      ∀ word,
+        Powl.language (fun trans : {trans : Trans // transitions trans} =>
+            label trans.val) model word ↔
+          WorkflowNet.localLanguage
+            restricted
+            (fun trans : {trans : Trans // transitions trans} =>
+              label trans.val)
+            source
+            sink
+            word)
+    (word : List Activity) :
+    Powl.language label (Powl.map Subtype.val model) word ↔
+      WorkflowNet.localSubtypeTraceLanguage
+        original
+        label
+        transitions
+        source.val
+        sink.val
+        word :=
+  WorkflowNet.mapped_subtype_powl_language_iff_localSubtypeTraceLanguage
+    original restricted hplaceToTrans htransToPlace
+    hpreset hpostset label source sink model hmodel word
 
 theorem xor_pattern_language_preservation
     {Activity : Type u}
@@ -285,6 +364,358 @@ theorem xor_pattern_language_preservation_of_mapped_indexed_components
           (hcomponent index model componentLanguage
             hmodel hcomponentLanguage word))
       hnet
+
+theorem local_xor_language_preservation_of_mapped_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    (branches : List
+      (Σ part : Set Trans, Powl {trans : Trans // part trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : Set Trans, Powl {trans : Trans // part trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1 trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            branch.1
+            source
+            sink
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1 source sink))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word ↔
+        WorkflowNet.localLanguage net label source sink word := by
+  intro word
+  rw [Powl.xor_language_iff_unionList]
+  exact Iff.trans
+    (by
+      simpa [List.map_map] using
+        Language.unionList_map_congr
+          branches
+          (fun branch =>
+            Powl.language label (Powl.map Subtype.val branch.2))
+          (fun branch =>
+            WorkflowNet.localSubtypeTraceLanguage
+              net label branch.1 source sink)
+          (fun branch word =>
+            Iff.trans
+              (Powl.language_map Subtype.val label branch.2 word)
+              (hmodels branch word))
+          word)
+    (Iff.symm (hdecompose word))
+
+theorem local_xor_language_eq_of_mapped_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    (branches : List
+      (Σ part : Set Trans, Powl {trans : Trans // part trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : Set Trans, Powl {trans : Trans // part trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1 trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            branch.1
+            source
+            sink
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1 source sink))
+            word) :
+    Powl.language label
+        (Powl.xor
+          (branches.map
+            (fun branch => Powl.map Subtype.val branch.2))) =
+      WorkflowNet.localLanguage net label source sink :=
+  Language.ext
+    (local_xor_language_preservation_of_mapped_branch_models
+      branches hmodels hdecompose)
+
+theorem local_loop_language_preservation_of_mapped_subtype_components
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    {bodyPart redoPart : Set Trans}
+    {body : Powl {trans : Trans // bodyPart trans}}
+    {redo : Powl {trans : Trans // redoPart trans}}
+    (hbody :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // bodyPart trans} =>
+              label trans.val)
+            body
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            bodyPart
+            source
+            sink
+            word)
+    (hredo :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // redoPart trans} =>
+              label trans.val)
+            redo
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            redoPart
+            sink
+            source
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Language.concat
+            (WorkflowNet.localSubtypeTraceLanguage
+              net label bodyPart source sink)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label redoPart sink source)
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label bodyPart source sink)))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.loop
+            (Powl.map Subtype.val body)
+            (Powl.map Subtype.val redo))
+          word ↔
+        WorkflowNet.localLanguage net label source sink word := by
+  intro word
+  rw [Powl.loop_language_iff_concat_star]
+  exact Iff.trans
+    (Language.concat_congr
+      (fun item =>
+        Iff.trans
+          (Powl.language_map Subtype.val label body item)
+          (hbody item))
+      (Language.star_congr
+        (fun item =>
+          Language.concat_congr
+            (fun redoWord =>
+              Iff.trans
+                (Powl.language_map Subtype.val label redo redoWord)
+                (hredo redoWord))
+            (fun bodyWord =>
+              Iff.trans
+                (Powl.language_map Subtype.val label body bodyWord)
+                (hbody bodyWord))
+            item))
+      word)
+    (Iff.symm (hdecompose word))
+
+theorem local_loop_language_eq_of_mapped_subtype_components
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    {bodyPart redoPart : Set Trans}
+    {body : Powl {trans : Trans // bodyPart trans}}
+    {redo : Powl {trans : Trans // redoPart trans}}
+    (hbody :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // bodyPart trans} =>
+              label trans.val)
+            body
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            bodyPart
+            source
+            sink
+            word)
+    (hredo :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // redoPart trans} =>
+              label trans.val)
+            redo
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            redoPart
+            sink
+            source
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Language.concat
+            (WorkflowNet.localSubtypeTraceLanguage
+              net label bodyPart source sink)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label redoPart sink source)
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label bodyPart source sink)))
+            word) :
+    Powl.language label
+        (Powl.loop
+          (Powl.map Subtype.val body)
+          (Powl.map Subtype.val redo)) =
+      WorkflowNet.localLanguage net label source sink :=
+  Language.ext
+    (local_loop_language_preservation_of_mapped_subtype_components
+      hbody hredo hdecompose)
+
+theorem local_partial_order_language_preservation_of_mapped_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    {order : Rel Nat}
+    (branches : List
+      (Σ part : Set Trans, Powl {trans : Trans // part trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : Set Trans, Powl {trans : Trans // part trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1 trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            branch.1
+            source
+            sink
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1 source sink))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.partialOrder order
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word ↔
+        WorkflowNet.localLanguage net label source sink word := by
+  intro word
+  rw [Powl.partial_order_language_iff_componentLanguage]
+  exact Iff.trans
+    (by
+      simpa [List.map_map] using
+        Powl.partialOrderComponentLanguage_map_congr
+          order
+          branches
+          (fun branch =>
+            Powl.language label (Powl.map Subtype.val branch.2))
+          (fun branch =>
+            WorkflowNet.localSubtypeTraceLanguage
+              net label branch.1 source sink)
+          (fun branch word =>
+            Iff.trans
+              (Powl.language_map Subtype.val label branch.2 word)
+              (hmodels branch word))
+          word)
+    (Iff.symm (hdecompose word))
+
+theorem local_partial_order_language_eq_of_mapped_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    {order : Rel Nat}
+    (branches : List
+      (Σ part : Set Trans, Powl {trans : Trans // part trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : Set Trans, Powl {trans : Trans // part trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1 trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            branch.1
+            source
+            sink
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1 source sink))
+            word) :
+    Powl.language label
+        (Powl.partialOrder order
+          (branches.map
+            (fun branch => Powl.map Subtype.val branch.2))) =
+      WorkflowNet.localLanguage net label source sink :=
+  Language.ext
+    (local_partial_order_language_preservation_of_mapped_branch_models
+      branches hmodels hdecompose)
 
 theorem loop_pattern_language_preservation
     {Activity : Type u}
@@ -4771,6 +5202,538 @@ theorem theorem2_restricted_decision_branch_local_language_iff
             word) :=
   WorkflowNet.restrictedDecisionBranchWorkflowNet_local_language_iff
     hbranch label word
+
+theorem theorem2_restricted_decision_branch_mapped_powl_language_iff_local_subtype_trace_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {part : Set Trans}
+    (hbranch :
+      WorkflowNet.restrictedDecisionBranchWorkflowNet
+        net split join part)
+    (label : Trans -> TransitionLabel Activity)
+    (model : Powl {trans : Trans // part trans})
+    (hmodel :
+      ∀ (branchNet :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split join part place}
+            {trans : Trans // part trans}),
+        branchNet.source.val = split ->
+        branchNet.sink.val = join ->
+          ∀ word,
+            Powl.language
+                (fun trans : {trans : Trans // part trans} =>
+                  label trans.val)
+                model
+                word ↔
+              WorkflowNet.localLanguage
+                branchNet
+                (fun trans : {trans : Trans // part trans} =>
+                  label trans.val)
+                branchNet.source
+                branchNet.sink
+                word)
+    (word : List Activity) :
+    Powl.language label (Powl.map Subtype.val model) word ↔
+      WorkflowNet.localSubtypeTraceLanguage
+        net
+        label
+        part
+        split
+        join
+        word :=
+  WorkflowNet.restrictedDecisionBranchWorkflowNet_mapped_powl_language_iff_localSubtypeTraceLanguage
+    hbranch label model hmodel word
+
+theorem theorem2_restricted_decision_branch_mapped_powl_language_iff_local_subtype_trace_language_of_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {part : Set Trans}
+    (hbranch :
+      WorkflowNet.restrictedDecisionBranchWorkflowNet
+        net split join part)
+    (label : Trans -> TransitionLabel Activity)
+    (model : Powl {trans : Trans // part trans})
+    (hmodel :
+      ∀ (branchNet :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split join part place}
+            {trans : Trans // part trans}),
+        branchNet.source.val = split ->
+        branchNet.sink.val = join ->
+          ∀ word,
+            Powl.language
+                (fun trans : {trans : Trans // part trans} =>
+                  label trans.val)
+                model
+                word ↔
+              WorkflowNet.language
+                branchNet
+                (fun trans : {trans : Trans // part trans} =>
+                  label trans.val)
+                word)
+    (word : List Activity) :
+    Powl.language label (Powl.map Subtype.val model) word ↔
+      WorkflowNet.localSubtypeTraceLanguage
+        net
+        label
+        part
+        split
+        join
+        word :=
+  WorkflowNet.restrictedDecisionBranchWorkflowNet_mapped_powl_language_iff_localSubtypeTraceLanguage_of_language
+    hbranch label model hmodel word
+
+theorem theorem2_decision_branch_local_xor_language_preservation_of_mapped_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split join : Place}
+    (branches : List
+      (Σ part : Set Trans, Powl {trans : Trans // part trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : Set Trans, Powl {trans : Trans // part trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1 trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            branch.1
+            split
+            join
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label split join word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1 split join))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word ↔
+        WorkflowNet.localLanguage net label split join word :=
+  local_xor_language_preservation_of_mapped_branch_models
+    branches hmodels hdecompose
+
+theorem theorem2_decision_branch_local_xor_language_eq_of_mapped_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split join : Place}
+    (branches : List
+      (Σ part : Set Trans, Powl {trans : Trans // part trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : Set Trans, Powl {trans : Trans // part trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1 trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            branch.1
+            split
+            join
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label split join word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1 split join))
+            word) :
+    Powl.language label
+        (Powl.xor
+          (branches.map
+            (fun branch => Powl.map Subtype.val branch.2))) =
+      WorkflowNet.localLanguage net label split join :=
+  local_xor_language_eq_of_mapped_branch_models
+    branches hmodels hdecompose
+
+theorem theorem2_decision_branch_family_local_xor_language_preservation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split join : Place}
+    {branchParts :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily :
+      WorkflowNet.decisionBranchFamily net split join branchParts)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // branchParts branch trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // branchParts branch trans})
+        word,
+        Powl.language
+            (fun trans :
+              {trans : Trans // branchParts branch.1 trans} =>
+                label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            (branchParts branch.1)
+            split
+            join
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label split join word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (branchParts branch.1) split join))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word ↔
+        WorkflowNet.localLanguage net label split join word := by
+  have hcontainsSource :
+      ∀ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        branchParts branch branch.val :=
+    hfamily.1
+  intro word
+  rw [Powl.xor_language_iff_unionList]
+  exact Iff.trans
+    (by
+      simpa [List.map_map] using
+        Language.unionList_map_congr
+          branches
+          (fun branch =>
+            Powl.language label (Powl.map Subtype.val branch.2))
+          (fun branch =>
+            WorkflowNet.localSubtypeTraceLanguage
+              net label (branchParts branch.1) split join)
+          (fun branch word =>
+            Iff.trans
+              (Powl.language_map Subtype.val label branch.2 word)
+              (hmodels branch word))
+          word)
+    (Iff.symm (hdecompose word))
+
+theorem theorem2_local_loop_language_preservation_of_mapped_subtype_components
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    {bodyPart redoPart : Set Trans}
+    {body : Powl {trans : Trans // bodyPart trans}}
+    {redo : Powl {trans : Trans // redoPart trans}}
+    (hbody :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // bodyPart trans} =>
+              label trans.val)
+            body
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            bodyPart
+            source
+            sink
+            word)
+    (hredo :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // redoPart trans} =>
+              label trans.val)
+            redo
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            redoPart
+            sink
+            source
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Language.concat
+            (WorkflowNet.localSubtypeTraceLanguage
+              net label bodyPart source sink)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label redoPart sink source)
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label bodyPart source sink)))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.loop
+            (Powl.map Subtype.val body)
+            (Powl.map Subtype.val redo))
+          word ↔
+        WorkflowNet.localLanguage net label source sink word :=
+  local_loop_language_preservation_of_mapped_subtype_components
+    hbody hredo hdecompose
+
+theorem theorem2_local_loop_language_eq_of_mapped_subtype_components
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    {bodyPart redoPart : Set Trans}
+    {body : Powl {trans : Trans // bodyPart trans}}
+    {redo : Powl {trans : Trans // redoPart trans}}
+    (hbody :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // bodyPart trans} =>
+              label trans.val)
+            body
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            bodyPart
+            source
+            sink
+            word)
+    (hredo :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // redoPart trans} =>
+              label trans.val)
+            redo
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            redoPart
+            sink
+            source
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Language.concat
+            (WorkflowNet.localSubtypeTraceLanguage
+              net label bodyPart source sink)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label redoPart sink source)
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label bodyPart source sink)))
+            word) :
+    Powl.language label
+        (Powl.loop
+          (Powl.map Subtype.val body)
+          (Powl.map Subtype.val redo)) =
+      WorkflowNet.localLanguage net label source sink :=
+  local_loop_language_eq_of_mapped_subtype_components
+    hbody hredo hdecompose
+
+theorem theorem2_local_partial_order_language_preservation_of_mapped_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    {order : Rel Nat}
+    (branches : List
+      (Σ part : Set Trans, Powl {trans : Trans // part trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : Set Trans, Powl {trans : Trans // part trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1 trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            branch.1
+            source
+            sink
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1 source sink))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.partialOrder order
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word ↔
+        WorkflowNet.localLanguage net label source sink word :=
+  local_partial_order_language_preservation_of_mapped_branch_models
+    branches hmodels hdecompose
+
+theorem theorem2_local_partial_order_language_eq_of_mapped_branch_models
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    {order : Rel Nat}
+    (branches : List
+      (Σ part : Set Trans, Powl {trans : Trans // part trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : Set Trans, Powl {trans : Trans // part trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1 trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            branch.1
+            source
+            sink
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label source sink word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1 source sink))
+            word) :
+    Powl.language label
+        (Powl.partialOrder order
+          (branches.map
+            (fun branch => Powl.map Subtype.val branch.2))) =
+      WorkflowNet.localLanguage net label source sink :=
+  local_partial_order_language_eq_of_mapped_branch_models
+    branches hmodels hdecompose
+
+theorem theorem2_decision_branch_family_local_partial_order_language_preservation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split join : Place}
+    {order : Rel Nat}
+    {branchParts :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily :
+      WorkflowNet.decisionBranchFamily net split join branchParts)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // branchParts branch trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // branchParts branch trans})
+        word,
+        Powl.language
+            (fun trans :
+              {trans : Trans // branchParts branch.1 trans} =>
+                label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            (branchParts branch.1)
+            split
+            join
+            word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage net label split join word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (branchParts branch.1) split join))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.partialOrder order
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word ↔
+        WorkflowNet.localLanguage net label split join word := by
+  have hcontainsSource :
+      ∀ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        branchParts branch branch.val :=
+    hfamily.1
+  intro word
+  rw [Powl.partial_order_language_iff_componentLanguage]
+  exact Iff.trans
+    (by
+      simpa [List.map_map] using
+        Powl.partialOrderComponentLanguage_map_congr
+          order
+          branches
+          (fun branch =>
+            Powl.language label (Powl.map Subtype.val branch.2))
+          (fun branch =>
+            WorkflowNet.localSubtypeTraceLanguage
+              net label (branchParts branch.1) split join)
+          (fun branch word =>
+            Iff.trans
+              (Powl.language_map Subtype.val label branch.2 word)
+              (hmodels branch word))
+          word)
+    (Iff.symm (hdecompose word))
 
 theorem theorem2_semi_block_subnet_base_requirements
     {Place : Type u}

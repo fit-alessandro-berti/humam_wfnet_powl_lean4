@@ -77,10 +77,13 @@ The current proof spine is:
   source-to-sink languages between arbitrary places, generic language transfer
   lemmas between closed restricted subnets and their original WF-nets, and
   local restricted-subnet language equivalence with typed original branch
-  traces. Decision-branch WF-net certificates now expose a checked local
-  language equivalence between the restricted branch net and the corresponding
-  split-to-join typed trace language. A typed subtype trace is also already an
-  original accepting trace. Normalized labels map enter/exit transitions to silent
+  traces. Ordinary WF-net language is checked equivalent to local language at
+  the net's own source and sink, and mapped subtype POWL models can now be
+  related directly to local typed trace languages. Decision-branch WF-net
+  certificates now expose checked local-language and mapped-POWL equivalences
+  between the restricted branch net and the corresponding split-to-join typed
+  trace language. A typed subtype trace is also already an original accepting
+  trace. Normalized labels map enter/exit transitions to silent
   labels and preserve trace words for original traces with silent normalization
   boundaries, yielding a checked original-language-to-normalized-language
   inclusion and an equivalence with the normalized language restricted to
@@ -177,7 +180,11 @@ The current proof spine is:
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
   checked branch-subnet closure/disjointness, local branch-language transfer,
-  exact uniqueness, free-choice preset-equality,
+  mapped local subtype POWL transfer, local XOR composition for decision-branch
+  models and local loop composition for source-to-sink/redo-back submodels
+  plus local partial-order composition for component submodels under supplied
+  local decompositions, exact uniqueness,
+  free-choice preset-equality,
   marked-graph/no-decision equivalence, and non-boundary unique-place-flow
   consequences used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
