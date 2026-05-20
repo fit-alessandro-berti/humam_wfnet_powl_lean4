@@ -49,11 +49,12 @@ The current proof spine is:
   has started with checked explicit-decision-point predicates, split/join
   decision-place predicates, a checked split-to-join pairing skeleton with
   branch-count equivalence, a disjoint branch-subnet family specification, and
-  checked split/join consequences of the explicit-decision-point condition, and
-  checked free-choice, no-decision-place-to-marked-graph, and marked-graph
-  non-boundary unique-preset/postset consequences, plus the corresponding
-  safe-and-sound, explicit-decision, paired-decision, and branch-subnet
-  requirement layers for
+  branch-subnet closure/disjointness API lemmas, exact unique-preset/postset
+  API lemmas plus checked split/join consequences of the
+  explicit-decision-point condition, and checked free-choice preset equality,
+  no-decision-place-to-marked-graph equivalence, and marked-graph non-boundary
+  unique-preset/postset consequences, plus the corresponding safe-and-sound,
+  explicit-decision, paired-decision, and branch-subnet requirement layers for
   semi-block-structured WF-nets.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
@@ -72,10 +73,14 @@ The current proof spine is:
   actual language equalities.
 - `KouraniWfnetPowl.NetLanguage`: WF-net trace language `L(N)` from firing
   sequences and checked single-transition/base-case language preservation
-  lemmas. The language layer now records subtype-trace erasure and generic
-  language transfer lemmas between closed restricted subnets and their original
-  WF-nets, plus the fact that a typed subtype trace is already an original
-  accepting trace. Normalized labels map enter/exit transitions to silent
+  lemmas. The language layer now records subtype-trace erasure, local
+  source-to-sink languages between arbitrary places, generic language transfer
+  lemmas between closed restricted subnets and their original WF-nets, and
+  local restricted-subnet language equivalence with typed original branch
+  traces. Decision-branch WF-net certificates now expose a checked local
+  language equivalence between the restricted branch net and the corresponding
+  split-to-join typed trace language. A typed subtype trace is also already an
+  original accepting trace. Normalized labels map enter/exit transitions to silent
   labels and preserve trace words for original traces with silent normalization
   boundaries, yielding a checked original-language-to-normalized-language
   inclusion and an equivalence with the normalized language restricted to
@@ -171,7 +176,9 @@ The current proof spine is:
   form. Theorem 2 now has checked targets for the safe-and-sound,
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
-  checked free-choice, marked-graph, and non-boundary unique-place-flow
+  checked branch-subnet closure/disjointness, local branch-language transfer,
+  exact uniqueness, free-choice preset-equality,
+  marked-graph/no-decision equivalence, and non-boundary unique-place-flow
   consequences used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, including the

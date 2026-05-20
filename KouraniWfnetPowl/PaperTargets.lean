@@ -4111,6 +4111,54 @@ theorem theorem2_explicit_decision_points_transition_to_place
       WorkflowNet.uniquePostsetOfTransition net trans :=
   hdecision.2 trans place hflow
 
+theorem theorem2_unique_preset_of_transition_exact
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {place other : Place}
+    {trans : Trans}
+    (hunique : WorkflowNet.uniquePresetOfTransition net trans)
+    (hflow : net.placeToTrans place trans) :
+    net.placeToTrans other trans ↔ other = place :=
+  WorkflowNet.uniquePresetOfTransition_placeToTrans_iff
+    hunique hflow other
+
+theorem theorem2_unique_postset_of_place_exact
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    {trans other : Trans}
+    (hunique : WorkflowNet.uniquePostsetOfPlace net place)
+    (hflow : net.placeToTrans place trans) :
+    net.placeToTrans place other ↔ other = trans :=
+  WorkflowNet.uniquePostsetOfPlace_placeToTrans_iff
+    hunique hflow other
+
+theorem theorem2_unique_preset_of_place_exact
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    {trans other : Trans}
+    (hunique : WorkflowNet.uniquePresetOfPlace net place)
+    (hflow : net.transToPlace trans place) :
+    net.transToPlace other place ↔ other = trans :=
+  WorkflowNet.uniquePresetOfPlace_transToPlace_iff
+    hunique hflow other
+
+theorem theorem2_unique_postset_of_transition_exact
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {place other : Place}
+    {trans : Trans}
+    (hunique : WorkflowNet.uniquePostsetOfTransition net trans)
+    (hflow : net.transToPlace trans place) :
+    net.transToPlace trans other ↔ other = place :=
+  WorkflowNet.uniquePostsetOfTransition_transToPlace_iff
+    hunique hflow other
+
 theorem theorem2_split_decision_place_not_unique_postset
     {Place : Type u}
     {Trans : Type v}
@@ -4163,6 +4211,34 @@ theorem theorem2_explicit_decision_points_free_choice
     PetriNet.freeChoice net.toPetriNet :=
   WorkflowNet.explicitDecisionPoints_freeChoice hdecision
 
+theorem theorem2_free_choice_common_source_same_preset
+    {Place : Type u}
+    {Trans : Type v}
+    {net : PetriNet Place Trans}
+    (hfree : PetriNet.freeChoice net)
+    {place : Place}
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    PetriNet.transPreset net left =
+      PetriNet.transPreset net right :=
+  PetriNet.freeChoice_transPreset_eq_of_common_source
+    hfree hleft hright
+
+theorem theorem2_free_choice_common_source_preset_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {net : PetriNet Place Trans}
+    (hfree : PetriNet.freeChoice net)
+    {place other : Place}
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    net.placeToTrans other left ↔
+      net.placeToTrans other right :=
+  PetriNet.freeChoice_transPreset_iff_of_common_source
+    hfree hleft hright other
+
 theorem theorem2_semi_block_base_free_choice
     {Place : Type u}
     {Trans : Type v}
@@ -4180,6 +4256,40 @@ theorem theorem2_no_decision_places_marked_graph
     (hnoDecision : WorkflowNet.noDecisionPlaces net) :
     PetriNet.markedGraph net.toPetriNet :=
   WorkflowNet.noDecisionPlaces_markedGraph hnoDecision
+
+theorem theorem2_marked_graph_no_decision_places
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet) :
+    WorkflowNet.noDecisionPlaces net :=
+  WorkflowNet.markedGraph_noDecisionPlaces hmarked
+
+theorem theorem2_no_decision_places_iff_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans} :
+    WorkflowNet.noDecisionPlaces net ↔
+      PetriNet.markedGraph net.toPetriNet :=
+  WorkflowNet.noDecisionPlaces_iff_markedGraph
+
+theorem theorem2_marked_graph_no_split_decision_place
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (place : Place) :
+    ¬ WorkflowNet.splitDecisionPlace net place :=
+  WorkflowNet.markedGraph_noSplitDecisionPlace hmarked place
+
+theorem theorem2_marked_graph_no_join_decision_place
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (place : Place) :
+    ¬ WorkflowNet.joinDecisionPlace net place :=
+  WorkflowNet.markedGraph_noJoinDecisionPlace hmarked place
 
 theorem theorem2_no_decision_places_no_split
     {Place : Type u}
@@ -4405,6 +4515,62 @@ theorem theorem2_decision_branch_family_contains_split_transition
     branches branch branch.val :=
   hfamily.1 branch
 
+theorem theorem2_decision_branch_place_set_contains_split
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (split join : Place)
+    (part : Set Trans) :
+    WorkflowNet.decisionBranchPlaceSet net split join part split :=
+  WorkflowNet.decisionBranchPlaceSet_split net split join part
+
+theorem theorem2_decision_branch_place_set_contains_join
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (split join : Place)
+    (part : Set Trans) :
+    WorkflowNet.decisionBranchPlaceSet net split join part join :=
+  WorkflowNet.decisionBranchPlaceSet_join net split join part
+
+theorem theorem2_decision_branch_place_set_preset_closed
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join place : Place}
+    {part : Set Trans}
+    {trans : Trans}
+    (hpart : part trans)
+    (hflow : net.placeToTrans place trans) :
+    WorkflowNet.decisionBranchPlaceSet net split join part place :=
+  WorkflowNet.decisionBranchPlaceSet_preset_closed
+    net hpart hflow
+
+theorem theorem2_decision_branch_place_set_postset_closed
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join place : Place}
+    {part : Set Trans}
+    {trans : Trans}
+    (hpart : part trans)
+    (hflow : net.transToPlace trans place) :
+    WorkflowNet.decisionBranchPlaceSet net split join part place :=
+  WorkflowNet.decisionBranchPlaceSet_postset_closed
+    net hpart hflow
+
+theorem theorem2_decision_branch_family_branch_nonempty
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : WorkflowNet.decisionBranchFamily net split join branches)
+    (branch : WorkflowNet.transitionPostsetOfPlace net split) :
+    ∃ trans, branches branch trans :=
+  WorkflowNet.decisionBranchFamily_branch_nonempty hfamily branch
+
 theorem theorem2_decision_branch_family_subnet
     {Place : Type u}
     {Trans : Type v}
@@ -4432,6 +4598,36 @@ theorem theorem2_decision_branch_family_disjoint
     (hright : branches right trans) :
     False :=
   hfamily.2.2 left right hne trans hleft hright
+
+theorem theorem2_decision_branch_family_other_not_mem
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : WorkflowNet.decisionBranchFamily net split join branches)
+    {left right : WorkflowNet.transitionPostsetOfPlace net split}
+    (hne : left ≠ right)
+    {trans : Trans}
+    (hleft : branches left trans) :
+    ¬ branches right trans :=
+  WorkflowNet.decisionBranchFamily_other_not_mem
+    hfamily hne hleft
+
+theorem theorem2_decision_branch_family_source_transition_not_in_other
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : WorkflowNet.decisionBranchFamily net split join branches)
+    {left right : WorkflowNet.transitionPostsetOfPlace net split}
+    (hne : left ≠ right) :
+    ¬ branches right left.val :=
+  WorkflowNet.decisionBranchFamily_source_transition_not_mem_other
+    hfamily hne
 
 theorem theorem2_decision_branch_subnet_nonempty
     {Place : Type u}
@@ -4488,6 +4684,93 @@ theorem theorem2_restricted_decision_branch_workflow_net_sink
       branchNet.sink.val = join :=
   let ⟨branchNet, _, hsink, _⟩ := hbranch
   ⟨branchNet, hsink⟩
+
+theorem theorem2_restricted_local_language_iff_local_subtype_trace_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet
+        {place : Place // places place}
+        {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    (label : Trans -> TransitionLabel Activity)
+    (source sink : {place : Place // places place})
+    (word : List Activity) :
+    WorkflowNet.localLanguage
+        restricted
+        (fun trans : {trans : Trans // transitions trans} =>
+          label trans.val)
+        source
+        sink
+        word ↔
+      WorkflowNet.localSubtypeTraceLanguage
+        original
+        label
+        transitions
+        source.val
+        sink.val
+        word :=
+  WorkflowNet.restricted_local_language_iff_localSubtypeTraceLanguage
+    original restricted hplaceToTrans htransToPlace
+    hpreset hpostset label source sink word
+
+theorem theorem2_restricted_decision_branch_local_language_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {part : Set Trans}
+    (hbranch :
+      WorkflowNet.restrictedDecisionBranchWorkflowNet
+        net split join part)
+    (label : Trans -> TransitionLabel Activity)
+    (word : List Activity) :
+    ∃ branchNet :
+        WorkflowNet
+          {place : Place //
+            WorkflowNet.decisionBranchPlaceSet
+              net split join part place}
+          {trans : Trans // part trans},
+      branchNet.source.val = split ∧
+        branchNet.sink.val = join ∧
+        (WorkflowNet.localLanguage
+            branchNet
+            (fun trans : {trans : Trans // part trans} =>
+              label trans.val)
+            branchNet.source
+            branchNet.sink
+            word ↔
+          WorkflowNet.localSubtypeTraceLanguage
+            net
+            label
+            part
+            split
+            join
+            word) :=
+  WorkflowNet.restrictedDecisionBranchWorkflowNet_local_language_iff
+    hbranch label word
 
 theorem theorem2_semi_block_subnet_base_requirements
     {Place : Type u}

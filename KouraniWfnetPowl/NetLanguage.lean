@@ -208,6 +208,41 @@ def subtypeTraceLanguage
         (final net) ∧
       traceWord label (trace.map Subtype.val) = word
 
+def localLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity)
+    (source sink : Place) :
+    Language Activity :=
+  fun word =>
+    ∃ trace : List Trans,
+      FiringSequence
+        net
+        (Marking.single source)
+        trace
+        (Marking.single sink) ∧
+      traceWord label trace = word
+
+def localSubtypeTraceLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity)
+    (transitions : Set Trans)
+    (source sink : Place) :
+    Language Activity :=
+  fun word =>
+    ∃ trace : List {trans : Trans // transitions trans},
+      FiringSequence
+        net
+        (Marking.single source)
+        (trace.map Subtype.val)
+        (Marking.single sink) ∧
+      traceWord label (trace.map Subtype.val) = word
+
 theorem language_intro
     {Place : Type u}
     {Trans : Type v}
@@ -220,6 +255,25 @@ theorem language_intro
     (sequence : FiringSequence net (initial net) trace (final net))
     (hword : traceWord label trace = word) :
     language net label word :=
+  ⟨trace, sequence, hword⟩
+
+theorem localLanguage_intro
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    {trace : List Trans}
+    {word : List Activity}
+    (sequence :
+      FiringSequence
+        net
+        (Marking.single source)
+        trace
+        (Marking.single sink))
+    (hword : traceWord label trace = word) :
+    localLanguage net label source sink word :=
   ⟨trace, sequence, hword⟩
 
 theorem language_of_subtypeTraceLanguage
@@ -235,6 +289,128 @@ theorem language_of_subtypeTraceLanguage
     language net label word := by
   rcases hlanguage with ⟨trace, sequence, hword⟩
   exact language_intro sequence hword
+
+theorem restricted_local_language_iff_localSubtypeTraceLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    (label : Trans -> TransitionLabel Activity)
+    (source sink : {place : Place // places place})
+    (word : List Activity) :
+    localLanguage restricted (fun trans => label trans.val)
+        source sink word ↔
+      localSubtypeTraceLanguage original label transitions
+        source.val sink.val word := by
+  constructor
+  · intro hlanguage
+    rcases hlanguage with ⟨trace, sequence, hword⟩
+    refine ⟨trace, ?_, ?_⟩
+    · have lifted :=
+        WorkflowNet.restricted_firingSequence_lift
+          original restricted hplaceToTrans htransToPlace
+          hpreset hpostset sequence
+      simpa [Marking.extend_single] using lifted
+    · rw [← traceWord_map_subtype label trace]
+      exact hword
+  · intro htyped
+    rcases htyped with ⟨trace, sequence, hword⟩
+    refine ⟨trace, ?_, ?_⟩
+    · have restrictedSequence :=
+        WorkflowNet.restricted_firingSequence_restrict
+          original restricted hplaceToTrans htransToPlace sequence
+      simpa [Marking.restrict_single] using restrictedSequence
+    · rw [traceWord_map_subtype]
+      exact hword
+
+theorem restrictedDecisionBranchWorkflowNet_local_language_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {part : Set Trans}
+    (hbranch :
+      restrictedDecisionBranchWorkflowNet net split join part)
+    (label : Trans -> TransitionLabel Activity)
+    (word : List Activity) :
+    ∃ branchNet :
+        WorkflowNet
+          {place : Place //
+            decisionBranchPlaceSet net split join part place}
+          {trans : Trans // part trans},
+      branchNet.source.val = split ∧
+        branchNet.sink.val = join ∧
+        (localLanguage
+            branchNet
+            (fun trans : {trans : Trans // part trans} =>
+              label trans.val)
+            branchNet.source
+            branchNet.sink
+            word ↔
+          localSubtypeTraceLanguage
+            net
+            label
+            part
+            split
+            join
+            word) := by
+  rcases hbranch with
+    ⟨branchNet, hsource, hsink, hplaceToTrans, htransToPlace⟩
+  have hiff :
+      localLanguage
+          branchNet
+          (fun trans : {trans : Trans // part trans} =>
+            label trans.val)
+          branchNet.source
+          branchNet.sink
+          word ↔
+        localSubtypeTraceLanguage
+          net
+          label
+          part
+          branchNet.source.val
+          branchNet.sink.val
+          word :=
+    restricted_local_language_iff_localSubtypeTraceLanguage
+      net
+      branchNet
+      hplaceToTrans
+      htransToPlace
+      (fun place trans hpart hflow =>
+        decisionBranchPlaceSet_preset_closed
+          net hpart hflow)
+      (fun trans place hpart hflow =>
+        decisionBranchPlaceSet_postset_closed
+          net hpart hflow)
+      label
+      branchNet.source
+      branchNet.sink
+      word
+  rw [hsource, hsink] at hiff
+  exact ⟨branchNet, hsource, hsink, hiff⟩
 
 theorem normalized_language_of_original
     {Place : Type u}

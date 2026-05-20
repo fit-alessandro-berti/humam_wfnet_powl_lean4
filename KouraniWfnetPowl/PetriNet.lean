@@ -154,6 +154,51 @@ def freeChoice (net : PetriNet Place Trans) : Prop :=
           net.placeToTrans other left ↔
             net.placeToTrans other right
 
+theorem markedGraph_placePreset_subsingleton
+    {net : PetriNet Place Trans}
+    (hmarked : markedGraph net)
+    (place : Place) :
+    ∀ left right,
+      net.transToPlace left place ->
+        net.transToPlace right place ->
+          left = right :=
+  hmarked.1 place
+
+theorem markedGraph_placePostset_subsingleton
+    {net : PetriNet Place Trans}
+    (hmarked : markedGraph net)
+    (place : Place) :
+    ∀ left right,
+      net.placeToTrans place left ->
+        net.placeToTrans place right ->
+          left = right :=
+  hmarked.2 place
+
+theorem freeChoice_transPreset_iff_of_common_source
+    {net : PetriNet Place Trans}
+    (hfree : freeChoice net)
+    {place : Place}
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right)
+    (other : Place) :
+    net.placeToTrans other left ↔
+      net.placeToTrans other right :=
+  hfree place left right hleft hright other
+
+theorem freeChoice_transPreset_eq_of_common_source
+    {net : PetriNet Place Trans}
+    (hfree : freeChoice net)
+    {place : Place}
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    transPreset net left = transPreset net right :=
+  Set.ext
+    (fun other =>
+      freeChoice_transPreset_iff_of_common_source
+        hfree hleft hright other)
+
 def placesTouching (net : PetriNet Place Trans) (transitions : Set Trans) :
     Set Place :=
   fun place =>
@@ -1256,6 +1301,74 @@ def uniquePostsetOfTransition
     net.transToPlace trans place ∧
       ∀ other, net.transToPlace trans other -> other = place
 
+theorem uniquePresetOfTransition_placeToTrans_iff
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    {trans : Trans}
+    (hunique : uniquePresetOfTransition net trans)
+    (hflow : net.placeToTrans place trans)
+    (other : Place) :
+    net.placeToTrans other trans ↔ other = place := by
+  rcases hunique with ⟨only, _honlyFlow, honly⟩
+  have hplace : place = only := honly place hflow
+  constructor
+  · intro hother
+    exact (honly other hother).trans hplace.symm
+  · intro hother
+    rw [hother]
+    exact hflow
+
+theorem uniquePostsetOfPlace_placeToTrans_iff
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    {trans : Trans}
+    (hunique : uniquePostsetOfPlace net place)
+    (hflow : net.placeToTrans place trans)
+    (other : Trans) :
+    net.placeToTrans place other ↔ other = trans := by
+  rcases hunique with ⟨only, _honlyFlow, honly⟩
+  have htrans : trans = only := honly trans hflow
+  constructor
+  · intro hother
+    exact (honly other hother).trans htrans.symm
+  · intro hother
+    rw [hother]
+    exact hflow
+
+theorem uniquePresetOfPlace_transToPlace_iff
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    {trans : Trans}
+    (hunique : uniquePresetOfPlace net place)
+    (hflow : net.transToPlace trans place)
+    (other : Trans) :
+    net.transToPlace other place ↔ other = trans := by
+  rcases hunique with ⟨only, _honlyFlow, honly⟩
+  have htrans : trans = only := honly trans hflow
+  constructor
+  · intro hother
+    exact (honly other hother).trans htrans.symm
+  · intro hother
+    rw [hother]
+    exact hflow
+
+theorem uniquePostsetOfTransition_transToPlace_iff
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    {trans : Trans}
+    (hunique : uniquePostsetOfTransition net trans)
+    (hflow : net.transToPlace trans place)
+    (other : Place) :
+    net.transToPlace trans other ↔ other = place := by
+  rcases hunique with ⟨only, _honlyFlow, honly⟩
+  have hplace : place = only := honly place hflow
+  constructor
+  · intro hother
+    exact (honly other hother).trans hplace.symm
+  · intro hother
+    rw [hother]
+    exact hflow
+
 def explicitDecisionPoints
     (net : WorkflowNet Place Trans) : Prop :=
   (∀ place trans,
@@ -1381,6 +1494,110 @@ def decisionPairingWithBranchSubnets
       ∃ branches,
         decisionBranchFamily net split (pair split) branches
 
+theorem decisionBranchPlaceSet_split
+    (net : WorkflowNet Place Trans)
+    (split join : Place)
+    (part : Set Trans) :
+    decisionBranchPlaceSet net split join part split :=
+  Or.inl rfl
+
+theorem decisionBranchPlaceSet_join
+    (net : WorkflowNet Place Trans)
+    (split join : Place)
+    (part : Set Trans) :
+    decisionBranchPlaceSet net split join part join :=
+  Or.inr (Or.inl rfl)
+
+theorem decisionBranchPlaceSet_of_placeToTrans
+    (net : WorkflowNet Place Trans)
+    {split join : Place}
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hflow : net.placeToTrans place trans) :
+    decisionBranchPlaceSet net split join part place :=
+  Or.inr (Or.inr
+    (PetriNet.placesTouching_of_placeToTrans
+      net.toPetriNet hpart hflow))
+
+theorem decisionBranchPlaceSet_of_transToPlace
+    (net : WorkflowNet Place Trans)
+    {split join : Place}
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hflow : net.transToPlace trans place) :
+    decisionBranchPlaceSet net split join part place :=
+  Or.inr (Or.inr
+    (PetriNet.placesTouching_of_transToPlace
+      net.toPetriNet hpart hflow))
+
+theorem decisionBranchPlaceSet_preset_closed
+    (net : WorkflowNet Place Trans)
+    {split join : Place}
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hflow : net.placeToTrans place trans) :
+    decisionBranchPlaceSet net split join part place :=
+  decisionBranchPlaceSet_of_placeToTrans net hpart hflow
+
+theorem decisionBranchPlaceSet_postset_closed
+    (net : WorkflowNet Place Trans)
+    {split join : Place}
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hflow : net.transToPlace trans place) :
+    decisionBranchPlaceSet net split join part place :=
+  decisionBranchPlaceSet_of_transToPlace net hpart hflow
+
+theorem decisionBranchFamily_branch_nonempty
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches : transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : decisionBranchFamily net split join branches)
+    (branch : transitionPostsetOfPlace net split) :
+    ∃ trans, branches branch trans :=
+  (hfamily.2.1 branch).1
+
+theorem decisionBranchFamily_source_transition_mem
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches : transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : decisionBranchFamily net split join branches)
+    (branch : transitionPostsetOfPlace net split) :
+    branches branch branch.val :=
+  hfamily.1 branch
+
+theorem decisionBranchFamily_other_not_mem
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches : transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : decisionBranchFamily net split join branches)
+    {left right : transitionPostsetOfPlace net split}
+    (hne : left ≠ right)
+    {trans : Trans}
+    (hleft : branches left trans) :
+    ¬ branches right trans := by
+  intro hright
+  exact hfamily.2.2 left right hne trans hleft hright
+
+theorem decisionBranchFamily_source_transition_not_mem_other
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches : transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : decisionBranchFamily net split join branches)
+    {left right : transitionPostsetOfPlace net split}
+    (hne : left ≠ right) :
+    ¬ branches right left.val :=
+  decisionBranchFamily_other_not_mem
+    hfamily hne (hfamily.1 left)
+
 def noDecisionPlaces
     (net : WorkflowNet Place Trans) : Prop :=
   (∀ place, ¬ splitDecisionPlace net place) ∧
@@ -1491,6 +1708,41 @@ theorem noDecisionPlaces_markedGraph
     · exact False.elim
         (hnoDecision.1 place
           ⟨left, right, hleft, hright, hsame⟩)
+
+theorem markedGraph_noSplitDecisionPlace
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (place : Place) :
+    ¬ splitDecisionPlace net place := by
+  intro hsplit
+  rcases hsplit with ⟨left, right, hleft, hright, hne⟩
+  exact hne
+    (PetriNet.markedGraph_placePostset_subsingleton
+      hmarked place left right hleft hright)
+
+theorem markedGraph_noJoinDecisionPlace
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (place : Place) :
+    ¬ joinDecisionPlace net place := by
+  intro hjoin
+  rcases hjoin with ⟨left, right, hleft, hright, hne⟩
+  exact hne
+    (PetriNet.markedGraph_placePreset_subsingleton
+      hmarked place left right hleft hright)
+
+theorem markedGraph_noDecisionPlaces
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet) :
+    noDecisionPlaces net :=
+  ⟨markedGraph_noSplitDecisionPlace hmarked,
+    markedGraph_noJoinDecisionPlace hmarked⟩
+
+theorem noDecisionPlaces_iff_markedGraph
+    {net : WorkflowNet Place Trans} :
+    noDecisionPlaces net ↔
+      PetriNet.markedGraph net.toPetriNet :=
+  ⟨noDecisionPlaces_markedGraph, markedGraph_noDecisionPlaces⟩
 
 theorem source_no_input
     (net : WorkflowNet Place Trans)
