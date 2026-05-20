@@ -2299,6 +2299,14 @@ def fires
     (after : Marking Place) : Prop :=
   enabled net before trans ∧ after = fire net before trans
 
+theorem fires_of_enabled
+    {net : WorkflowNet Place Trans}
+    {marking : Marking Place}
+    {trans : Trans}
+    (henabled : enabled net marking trans) :
+    fires net marking trans (fire net marking trans) :=
+  ⟨henabled, rfl⟩
+
 inductive FiringSequence
     (net : WorkflowNet Place Trans) :
     Marking Place -> List Trans -> Marking Place -> Prop where
@@ -2380,6 +2388,18 @@ theorem reachable_of_fires
     reachable net before after :=
   ⟨[trans], firingSequence_singleton hfires⟩
 
+theorem reachable_trans
+    {net : WorkflowNet Place Trans}
+    {before middle after : Marking Place}
+    (hleft : reachable net before middle)
+    (hright : reachable net middle after) :
+    reachable net before after := by
+  rcases hleft with ⟨leftTrace, leftSequence⟩
+  rcases hright with ⟨rightTrace, rightSequence⟩
+  exact
+    ⟨leftTrace ++ rightTrace,
+      firingSequence_append leftSequence rightSequence⟩
+
 noncomputable def initial [DecidableEq Place]
     (net : WorkflowNet Place Trans) : Marking Place :=
   Marking.single net.source
@@ -2406,6 +2426,112 @@ def sound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
 def safeAndSound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
   safe net ∧ sound net
 
+theorem noDeadTransitions_firing_witness
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : noDeadTransitions net)
+    (trans : Trans) :
+    ∃ marking after,
+      reachable net (initial net) marking ∧
+        fires net marking trans after := by
+  rcases hnoDead trans with ⟨marking, hreachable, henabled⟩
+  exact
+    ⟨marking,
+      fire net marking trans,
+      hreachable,
+      fires_of_enabled henabled⟩
+
+theorem noDeadTransitions_reachable_after_firing
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : noDeadTransitions net)
+    (trans : Trans) :
+    ∃ before after,
+      reachable net (initial net) before ∧
+        fires net before trans after ∧
+          reachable net (initial net) after := by
+  rcases noDeadTransitions_firing_witness hnoDead trans with
+    ⟨before, after, hreachable, hfires⟩
+  exact
+    ⟨before,
+      after,
+      hreachable,
+      hfires,
+      reachable_trans hreachable (reachable_of_fires hfires)⟩
+
+theorem noDeadTransitions_optionToComplete_accepting_witness
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : noDeadTransitions net)
+    (hcomplete : optionToComplete net)
+    (trans : Trans) :
+    ∃ before after,
+      reachable net (initial net) before ∧
+        fires net before trans after ∧
+          reachable net after (final net) := by
+  rcases noDeadTransitions_reachable_after_firing hnoDead trans with
+    ⟨before, after, hbefore, hfires, hafter⟩
+  exact
+    ⟨before, after, hbefore, hfires, hcomplete after hafter⟩
+
+theorem noDeadTransitions_optionToComplete_accepting_sequence
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : noDeadTransitions net)
+    (hcomplete : optionToComplete net)
+    (trans : Trans) :
+    ∃ before after preTrace suffix,
+      FiringSequence net (initial net) preTrace before ∧
+        fires net before trans after ∧
+          FiringSequence net after suffix (final net) ∧
+            FiringSequence
+              net
+              (initial net)
+              (preTrace ++ trans :: suffix)
+              (final net) := by
+  rcases noDeadTransitions_optionToComplete_accepting_witness
+      hnoDead hcomplete trans with
+    ⟨before, after, hbefore, hfires, hcompleteAfter⟩
+  rcases hbefore with ⟨preTrace, preSequence⟩
+  rcases hcompleteAfter with ⟨suffix, suffixSequence⟩
+  have hcombined :
+      FiringSequence
+        net
+        (initial net)
+        ((preTrace ++ [trans]) ++ suffix)
+        (final net) :=
+    firingSequence_append
+      (firingSequence_snoc preSequence hfires)
+      suffixSequence
+  exact
+    ⟨before,
+      after,
+      preTrace,
+      suffix,
+      preSequence,
+      hfires,
+      suffixSequence,
+      by
+        simpa [List.append_assoc] using hcombined⟩
+
+theorem noDeadTransitions_optionToComplete_accepting_trace_mem
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : noDeadTransitions net)
+    (hcomplete : optionToComplete net)
+    (trans : Trans) :
+    ∃ trace,
+      FiringSequence net (initial net) trace (final net) ∧
+        trans ∈ trace := by
+  rcases noDeadTransitions_optionToComplete_accepting_sequence
+      hnoDead hcomplete trans with
+    ⟨_before, _after, preTrace, suffix, _preSequence,
+      _hfires, _suffixSequence, sequence⟩
+  exact
+    ⟨preTrace ++ trans :: suffix,
+      sequence,
+      by simp⟩
+
 theorem initial_reachable
     [DecidableEq Place]
     (net : WorkflowNet Place Trans) :
@@ -2425,6 +2551,75 @@ theorem sound_noDeadTransitions
     (hsound : sound net) :
     noDeadTransitions net :=
   hsound.1
+
+theorem sound_firing_witness
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net)
+    (trans : Trans) :
+    ∃ marking after,
+      reachable net (initial net) marking ∧
+        fires net marking trans after :=
+  noDeadTransitions_firing_witness
+    (sound_noDeadTransitions hsound) trans
+
+theorem sound_reachable_after_firing
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net)
+    (trans : Trans) :
+    ∃ before after,
+      reachable net (initial net) before ∧
+        fires net before trans after ∧
+          reachable net (initial net) after :=
+  noDeadTransitions_reachable_after_firing
+    (sound_noDeadTransitions hsound) trans
+
+theorem sound_accepting_firing_witness
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net)
+    (trans : Trans) :
+    ∃ before after,
+      reachable net (initial net) before ∧
+        fires net before trans after ∧
+          reachable net after (final net) :=
+  noDeadTransitions_optionToComplete_accepting_witness
+    (sound_noDeadTransitions hsound)
+    hsound.2.1
+    trans
+
+theorem sound_accepting_firing_sequence
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net)
+    (trans : Trans) :
+    ∃ before after preTrace suffix,
+      FiringSequence net (initial net) preTrace before ∧
+        fires net before trans after ∧
+          FiringSequence net after suffix (final net) ∧
+            FiringSequence
+              net
+              (initial net)
+              (preTrace ++ trans :: suffix)
+              (final net) :=
+  noDeadTransitions_optionToComplete_accepting_sequence
+    (sound_noDeadTransitions hsound)
+    hsound.2.1
+    trans
+
+theorem sound_accepting_trace_mem
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net)
+    (trans : Trans) :
+    ∃ trace,
+      FiringSequence net (initial net) trace (final net) ∧
+        trans ∈ trace :=
+  noDeadTransitions_optionToComplete_accepting_trace_mem
+    (sound_noDeadTransitions hsound)
+    hsound.2.1
+    trans
 
 theorem sound_optionToComplete
     [DecidableEq Place]
@@ -2467,6 +2662,67 @@ theorem safeAndSound_noDeadTransitions
     (hsafeSound : safeAndSound net) :
     noDeadTransitions net :=
   sound_noDeadTransitions (safeAndSound_sound hsafeSound)
+
+theorem safeAndSound_firing_witness
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net)
+    (trans : Trans) :
+    ∃ marking after,
+      reachable net (initial net) marking ∧
+        fires net marking trans after :=
+  sound_firing_witness (safeAndSound_sound hsafeSound) trans
+
+theorem safeAndSound_reachable_after_firing
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net)
+    (trans : Trans) :
+    ∃ before after,
+      reachable net (initial net) before ∧
+        fires net before trans after ∧
+          reachable net (initial net) after :=
+  sound_reachable_after_firing
+    (safeAndSound_sound hsafeSound) trans
+
+theorem safeAndSound_accepting_firing_witness
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net)
+    (trans : Trans) :
+    ∃ before after,
+      reachable net (initial net) before ∧
+        fires net before trans after ∧
+          reachable net after (final net) :=
+  sound_accepting_firing_witness
+    (safeAndSound_sound hsafeSound) trans
+
+theorem safeAndSound_accepting_firing_sequence
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net)
+    (trans : Trans) :
+    ∃ before after preTrace suffix,
+      FiringSequence net (initial net) preTrace before ∧
+        fires net before trans after ∧
+          FiringSequence net after suffix (final net) ∧
+            FiringSequence
+              net
+              (initial net)
+              (preTrace ++ trans :: suffix)
+              (final net) :=
+  sound_accepting_firing_sequence
+    (safeAndSound_sound hsafeSound) trans
+
+theorem safeAndSound_accepting_trace_mem
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net)
+    (trans : Trans) :
+    ∃ trace,
+      FiringSequence net (initial net) trace (final net) ∧
+        trans ∈ trace :=
+  sound_accepting_trace_mem (safeAndSound_sound hsafeSound) trans
 
 theorem safeAndSound_optionToComplete
     [DecidableEq Place]

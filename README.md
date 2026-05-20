@@ -33,8 +33,12 @@ The current proof spine is:
   normalized accepting sequences, with enter/original/exit trace shape, are now
   equivalent to original accepting firing sequences. The soundness API records
   that option-to-complete, soundness, and safe-and-soundness each yield a
-  reachable final marking from the initial marking. The fresh enter/exit
-  transitions have checked enabledness characterizations, and wrapped original
+  reachable final marking from the initial marking, and that no-dead-transition
+  assumptions yield concrete firing witnesses whose post-markings are reachable
+  from the initial marking; combined with option-to-complete, those witnesses
+  extend to accepting firing sequences containing the transition. The fresh
+  enter/exit transitions have checked
+  enabledness characterizations, and wrapped original
   transitions, including sequences made only of wrapped original transitions,
   preserve the fresh source/sink token counts. Original reachable markings lift
   to reachable normalized markings after the fresh enter transition, embedded
@@ -224,7 +228,8 @@ The current proof spine is:
   languages, and local-to-global language preservation for source/sink
   certified conversions, including packaging source/sink local conversions as
   global `SemanticCertifiedConversion`s and explicit existential POWL-model
-  statements,
+  statements, plus no-dead-transition and accepting-run firing witnesses for
+  semi-block requirement layers,
   local XOR composition for decision-branch models and local loop composition
   for source-to-sink/redo-back submodels plus local partial-order composition
   for component submodels under supplied local decompositions, and constructors

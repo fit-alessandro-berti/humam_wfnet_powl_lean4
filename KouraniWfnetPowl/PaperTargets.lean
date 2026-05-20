@@ -1960,6 +1960,30 @@ theorem normalization_reachable_of_original
       (Marking.normalize marking) :=
   WorkflowNet.normalized_reachable_of_original net hreachable
 
+theorem workflow_fires_of_enabled
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {marking : Marking Place}
+    {trans : Trans}
+    (henabled : WorkflowNet.enabled net marking trans) :
+    WorkflowNet.fires
+      net
+      marking
+      trans
+      (WorkflowNet.fire net marking trans) :=
+  WorkflowNet.fires_of_enabled henabled
+
+theorem workflow_reachable_trans
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {before middle after : Marking Place}
+    (hleft : WorkflowNet.reachable net before middle)
+    (hright : WorkflowNet.reachable net middle after) :
+    WorkflowNet.reachable net before after :=
+  WorkflowNet.reachable_trans hleft hright
+
 theorem workflow_initial_reachable
     {Place : Type u}
     {Trans : Type v}
@@ -1970,6 +1994,93 @@ theorem workflow_initial_reachable
       (WorkflowNet.initial net)
       (WorkflowNet.initial net) :=
   WorkflowNet.initial_reachable net
+
+theorem workflow_no_dead_transition_firing_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (trans : Trans) :
+    ∃ marking after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) marking ∧
+        WorkflowNet.fires net marking trans after :=
+  WorkflowNet.noDeadTransitions_firing_witness hnoDead trans
+
+theorem workflow_no_dead_transition_reachable_after_firing
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net (WorkflowNet.initial net) after :=
+  WorkflowNet.noDeadTransitions_reachable_after_firing
+    hnoDead trans
+
+theorem workflow_no_dead_transition_option_to_complete_accepting_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net after (WorkflowNet.final net) :=
+  WorkflowNet.noDeadTransitions_optionToComplete_accepting_witness
+    hnoDead hcomplete trans
+
+theorem workflow_no_dead_transition_option_to_complete_accepting_sequence
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    (trans : Trans) :
+    ∃ before after preTrace suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.FiringSequence
+              net
+              after
+              suffix
+              (WorkflowNet.final net) ∧
+            WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (preTrace ++ trans :: suffix)
+              (WorkflowNet.final net) :=
+  WorkflowNet.noDeadTransitions_optionToComplete_accepting_sequence
+    hnoDead hcomplete trans
+
+theorem workflow_no_dead_transition_option_to_complete_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    (trans : Trans) :
+    ∃ trace,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) ∧
+        trans ∈ trace :=
+  WorkflowNet.noDeadTransitions_optionToComplete_accepting_trace_mem
+    hnoDead hcomplete trans
 
 theorem workflow_option_to_complete_initial_to_final
     {Place : Type u}
@@ -1983,6 +2094,86 @@ theorem workflow_option_to_complete_initial_to_final
       (WorkflowNet.final net) :=
   WorkflowNet.optionToComplete_initial_to_final hcomplete
 
+theorem workflow_sound_firing_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : WorkflowNet.sound net)
+    (trans : Trans) :
+    ∃ marking after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) marking ∧
+        WorkflowNet.fires net marking trans after :=
+  WorkflowNet.sound_firing_witness hsound trans
+
+theorem workflow_sound_reachable_after_firing
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : WorkflowNet.sound net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net (WorkflowNet.initial net) after :=
+  WorkflowNet.sound_reachable_after_firing hsound trans
+
+theorem workflow_sound_accepting_firing_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : WorkflowNet.sound net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net after (WorkflowNet.final net) :=
+  WorkflowNet.sound_accepting_firing_witness hsound trans
+
+theorem workflow_sound_accepting_firing_sequence
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : WorkflowNet.sound net)
+    (trans : Trans) :
+    ∃ before after preTrace suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.FiringSequence
+              net
+              after
+              suffix
+              (WorkflowNet.final net) ∧
+            WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (preTrace ++ trans :: suffix)
+              (WorkflowNet.final net) :=
+  WorkflowNet.sound_accepting_firing_sequence hsound trans
+
+theorem workflow_sound_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : WorkflowNet.sound net)
+    (trans : Trans) :
+    ∃ trace,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) ∧
+        trans ∈ trace :=
+  WorkflowNet.sound_accepting_trace_mem hsound trans
+
 theorem workflow_sound_initial_to_final
     {Place : Type u}
     {Trans : Type v}
@@ -1994,6 +2185,89 @@ theorem workflow_sound_initial_to_final
       (WorkflowNet.initial net)
       (WorkflowNet.final net) :=
   WorkflowNet.sound_initial_to_final hsound
+
+theorem workflow_safe_and_sound_firing_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (trans : Trans) :
+    ∃ marking after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) marking ∧
+        WorkflowNet.fires net marking trans after :=
+  WorkflowNet.safeAndSound_firing_witness hsafeSound trans
+
+theorem workflow_safe_and_sound_reachable_after_firing
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net (WorkflowNet.initial net) after :=
+  WorkflowNet.safeAndSound_reachable_after_firing
+    hsafeSound trans
+
+theorem workflow_safe_and_sound_accepting_firing_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net after (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_accepting_firing_witness
+    hsafeSound trans
+
+theorem workflow_safe_and_sound_accepting_firing_sequence
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (trans : Trans) :
+    ∃ before after preTrace suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.FiringSequence
+              net
+              after
+              suffix
+              (WorkflowNet.final net) ∧
+            WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (preTrace ++ trans :: suffix)
+              (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_accepting_firing_sequence
+    hsafeSound trans
+
+theorem workflow_safe_and_sound_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (trans : Trans) :
+    ∃ trace,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) ∧
+        trans ∈ trace :=
+  WorkflowNet.safeAndSound_accepting_trace_mem hsafeSound trans
 
 theorem workflow_safe_and_sound_initial_to_final
     {Place : Type u}
@@ -8309,6 +8583,106 @@ theorem theorem2_semi_block_base_no_dead_transitions
   WorkflowNet.semiBlockStructuredBaseRequirements_noDeadTransitions
     hbase
 
+theorem theorem2_semi_block_base_transition_firing_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (trans : Trans) :
+    ∃ marking after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) marking ∧
+        WorkflowNet.fires net marking trans after :=
+  WorkflowNet.safeAndSound_firing_witness
+    (WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound
+      hbase)
+    trans
+
+theorem theorem2_semi_block_base_reachable_after_transition
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net (WorkflowNet.initial net) after :=
+  WorkflowNet.safeAndSound_reachable_after_firing
+    (WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound
+      hbase)
+    trans
+
+theorem theorem2_semi_block_base_transition_accepting_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net after (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_accepting_firing_witness
+    (WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound
+      hbase)
+    trans
+
+theorem theorem2_semi_block_base_transition_accepting_sequence
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (trans : Trans) :
+    ∃ before after preTrace suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.FiringSequence
+              net
+              after
+              suffix
+              (WorkflowNet.final net) ∧
+            WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (preTrace ++ trans :: suffix)
+              (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_accepting_firing_sequence
+    (WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound
+      hbase)
+    trans
+
+theorem theorem2_semi_block_base_transition_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net)
+    (trans : Trans) :
+    ∃ trace,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) ∧
+        trans ∈ trace :=
+  WorkflowNet.safeAndSound_accepting_trace_mem
+    (WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound
+      hbase)
+    trans
+
 theorem theorem2_semi_block_base_option_to_complete
     {Place : Type u}
     {Trans : Type v}
@@ -9121,6 +9495,106 @@ theorem theorem2_semi_block_decision_no_dead_transitions
     WorkflowNet.noDeadTransitions net :=
   WorkflowNet.semiBlockStructuredDecisionRequirements_noDeadTransitions
     hrequirements
+
+theorem theorem2_semi_block_decision_transition_firing_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (trans : Trans) :
+    ∃ marking after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) marking ∧
+        WorkflowNet.fires net marking trans after :=
+  WorkflowNet.safeAndSound_firing_witness
+    (WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_decision_reachable_after_transition
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net (WorkflowNet.initial net) after :=
+  WorkflowNet.safeAndSound_reachable_after_firing
+    (WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_decision_transition_accepting_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net after (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_accepting_firing_witness
+    (WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_decision_transition_accepting_sequence
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (trans : Trans) :
+    ∃ before after preTrace suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.FiringSequence
+              net
+              after
+              suffix
+              (WorkflowNet.final net) ∧
+            WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (preTrace ++ trans :: suffix)
+              (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_accepting_firing_sequence
+    (WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_decision_transition_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net)
+    (trans : Trans) :
+    ∃ trace,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) ∧
+        trans ∈ trace :=
+  WorkflowNet.safeAndSound_accepting_trace_mem
+    (WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
+      hrequirements)
+    trans
 
 theorem theorem2_semi_block_decision_option_to_complete
     {Place : Type u}
@@ -10890,6 +11364,106 @@ theorem theorem2_semi_block_subnet_no_dead_transitions
     WorkflowNet.noDeadTransitions net :=
   WorkflowNet.semiBlockStructuredSubnetRequirements_noDeadTransitions
     hrequirements
+
+theorem theorem2_semi_block_subnet_transition_firing_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (trans : Trans) :
+    ∃ marking after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) marking ∧
+        WorkflowNet.fires net marking trans after :=
+  WorkflowNet.safeAndSound_firing_witness
+    (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_subnet_reachable_after_transition
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net (WorkflowNet.initial net) after :=
+  WorkflowNet.safeAndSound_reachable_after_firing
+    (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_subnet_transition_accepting_witness
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (trans : Trans) :
+    ∃ before after,
+      WorkflowNet.reachable net (WorkflowNet.initial net) before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.reachable net after (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_accepting_firing_witness
+    (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_subnet_transition_accepting_sequence
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (trans : Trans) :
+    ∃ before after preTrace suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          before ∧
+        WorkflowNet.fires net before trans after ∧
+          WorkflowNet.FiringSequence
+              net
+              after
+              suffix
+              (WorkflowNet.final net) ∧
+            WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (preTrace ++ trans :: suffix)
+              (WorkflowNet.final net) :=
+  WorkflowNet.safeAndSound_accepting_firing_sequence
+    (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements)
+    trans
+
+theorem theorem2_semi_block_subnet_transition_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (trans : Trans) :
+    ∃ trace,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) ∧
+        trans ∈ trace :=
+  WorkflowNet.safeAndSound_accepting_trace_mem
+    (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements)
+    trans
 
 theorem theorem2_semi_block_subnet_option_to_complete
     {Place : Type u}
