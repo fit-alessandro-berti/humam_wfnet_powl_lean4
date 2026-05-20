@@ -60,7 +60,13 @@ The current proof spine is:
   outgoing transition is identified, so every transition-flow successor of a
   fired transition appears as an actual later firing in the completion suffix
   under soundness; the direct self-loop transition-flow case is ruled out for
-  sound marked-graph WF-nets. Definition 6 work
+  sound marked-graph WF-nets and exposed as an irreflexivity theorem for the
+  raw transition-flow relation, and direct two-edge transition-flow cycles are
+  ruled out as an asymmetry theorem for that relation. A reusable finite
+  place-cycle support invariant now shows that if every consumer of a listed
+  cycle place produces back into the listed set, then completion to the final
+  marking is impossible once any listed place is marked; the two-edge
+  transition-flow cycle case is packaged into this support form. Definition 6 work
   has started with checked explicit-decision-point predicates, split/join
   decision-place predicates, a checked split-to-join pairing skeleton with
   branch-count equivalence, a disjoint branch-subnet family specification, and
@@ -334,7 +340,10 @@ The current proof spine is:
   existential generated-model visible-witness forms, plus checked
   marked-graph soundness wrappers showing that transition-flow successors must
   occur, and can be split out as firings, in the completion suffix after their
-  predecessors fire, and ruling out direct transition-flow self-loops, plus
+  predecessors fire, ruling out direct transition-flow self-loops, and ruling
+  out direct two-edge transition-flow cycles via asymmetry, plus a reusable
+  finite place-cycle support/no-completion invariant with a checked two-edge
+  transition-flow support constructor, plus
   semi-block
   specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and

@@ -2651,6 +2651,252 @@ theorem firingSequence_positive_of_consumers_preserve_place
               (by simp [hmem] : trans ∈ firedTrans :: restTrace)
               hinput)
 
+theorem fires_positive_left_or_right_of_cycle_pair
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {leftPlace rightPlace : Place}
+    {trans : Trans}
+    (hfires : fires net before trans after)
+    (hpositive :
+      before leftPlace > 0 ∨ before rightPlace > 0)
+    (hleftConsumer :
+      net.placeToTrans leftPlace trans ->
+        net.transToPlace trans rightPlace)
+    (hrightConsumer :
+      net.placeToTrans rightPlace trans ->
+        net.transToPlace trans leftPlace) :
+    after leftPlace > 0 ∨ after rightPlace > 0 := by
+  rcases hpositive with hleftPositive | hrightPositive
+  · by_cases hinput : net.placeToTrans leftPlace trans
+    · exact
+        Or.inr
+          (fires_positive_of_transToPlace
+            hfires (hleftConsumer hinput))
+    · left
+      rw [hfires.2]
+      exact fire_positive_of_not_placeToTrans hinput hleftPositive
+  · by_cases hinput : net.placeToTrans rightPlace trans
+    · exact
+        Or.inl
+          (fires_positive_of_transToPlace
+            hfires (hrightConsumer hinput))
+    · right
+      rw [hfires.2]
+      exact fire_positive_of_not_placeToTrans hinput hrightPositive
+
+theorem firingSequence_positive_left_or_right_of_cycle_pair
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {trace : List Trans}
+    {leftPlace rightPlace : Place}
+    (sequence : FiringSequence net before trace after)
+    (hpositive :
+      before leftPlace > 0 ∨ before rightPlace > 0)
+    (hleftConsumer :
+      ∀ trans, trans ∈ trace ->
+        net.placeToTrans leftPlace trans ->
+          net.transToPlace trans rightPlace)
+    (hrightConsumer :
+      ∀ trans, trans ∈ trace ->
+        net.placeToTrans rightPlace trans ->
+          net.transToPlace trans leftPlace) :
+    after leftPlace > 0 ∨ after rightPlace > 0 := by
+  induction sequence with
+  | nil =>
+      exact hpositive
+  | cons hfires tail ih =>
+      rename_i beforeStep middleStep afterStep firedTrans restTrace
+      have hmiddle :
+          middleStep leftPlace > 0 ∨
+            middleStep rightPlace > 0 :=
+        fires_positive_left_or_right_of_cycle_pair
+          hfires
+          hpositive
+          (fun hinput =>
+            hleftConsumer firedTrans
+              (by simp : firedTrans ∈ firedTrans :: restTrace)
+              hinput)
+          (fun hinput =>
+            hrightConsumer firedTrans
+              (by simp : firedTrans ∈ firedTrans :: restTrace)
+              hinput)
+      exact
+        ih
+          hmiddle
+          (fun trans hmem hinput =>
+            hleftConsumer trans
+              (by simp [hmem] : trans ∈ firedTrans :: restTrace)
+              hinput)
+          (fun trans hmem hinput =>
+            hrightConsumer trans
+              (by simp [hmem] : trans ∈ firedTrans :: restTrace)
+              hinput)
+
+def placesMarked
+    (marking : Marking Place)
+    (places : List Place) : Prop :=
+  ∃ place, place ∈ places ∧ marking place > 0
+
+structure PlaceCycleSupport
+    (net : WorkflowNet Place Trans)
+    (places : List Place) : Prop where
+  nonSink :
+    ∀ place, place ∈ places -> place ≠ net.sink
+  successor :
+    ∀ place trans,
+      place ∈ places ->
+        net.placeToTrans place trans ->
+          ∃ next, next ∈ places ∧ net.transToPlace trans next
+
+theorem fires_placesMarked_of_placeCycleSupport
+    {net : WorkflowNet Place Trans}
+    {places : List Place}
+    (support : PlaceCycleSupport net places)
+    {before after : Marking Place}
+    {trans : Trans}
+    (hfires : fires net before trans after)
+    (hmarked : placesMarked before places) :
+    placesMarked after places := by
+  rcases hmarked with ⟨place, hplace, hpositive⟩
+  by_cases hinput : net.placeToTrans place trans
+  · rcases support.successor place trans hplace hinput with
+      ⟨next, hnext, hpost⟩
+    exact
+      ⟨next,
+        hnext,
+        fires_positive_of_transToPlace hfires hpost⟩
+  · exact
+      ⟨place,
+        hplace,
+        by
+          rw [hfires.2]
+          exact fire_positive_of_not_placeToTrans hinput hpositive⟩
+
+theorem firingSequence_placesMarked_of_placeCycleSupport
+    {net : WorkflowNet Place Trans}
+    {places : List Place}
+    (support : PlaceCycleSupport net places)
+    {before after : Marking Place}
+    {trace : List Trans}
+    (sequence : FiringSequence net before trace after)
+    (hmarked : placesMarked before places) :
+    placesMarked after places := by
+  induction sequence with
+  | nil =>
+      exact hmarked
+  | cons hfires _ ih =>
+      exact
+        ih
+          (fires_placesMarked_of_placeCycleSupport
+            support hfires hmarked)
+
+theorem no_completion_of_placeCycleSupport
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {places : List Place}
+    (support : PlaceCycleSupport net places)
+    {before : Marking Place}
+    {trace : List Trans}
+    (sequence : FiringSequence net before trace (final net))
+    (hmarked : placesMarked before places) :
+    False := by
+  rcases firingSequence_placesMarked_of_placeCycleSupport
+      support sequence hmarked with
+    ⟨place, hplace, hpositive⟩
+  have hnonSink : place ≠ net.sink := support.nonSink place hplace
+  have hfinalZero : ¬ final net place > 0 := by
+    simp [final, Marking.single, hnonSink]
+  exact hfinalZero hpositive
+
+theorem markedGraph_two_transitionFlow_cycle_placeCycleSupport
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {left right : Trans}
+    (hleftRight :
+      PetriNet.transitionFlow net.toPetriNet left right)
+    (hrightLeft :
+      PetriNet.transitionFlow net.toPetriNet right left) :
+    ∃ leftRightPlace rightLeftPlace,
+      net.transToPlace left leftRightPlace ∧
+        net.placeToTrans leftRightPlace right ∧
+          net.transToPlace right rightLeftPlace ∧
+            net.placeToTrans rightLeftPlace left ∧
+              PlaceCycleSupport net [leftRightPlace, rightLeftPlace] := by
+  rcases hleftRight with
+    ⟨leftRightPlace, hleftPost, hrightPre⟩
+  rcases hrightLeft with
+    ⟨rightLeftPlace, hrightPost, hleftPre⟩
+  refine
+    ⟨leftRightPlace,
+      rightLeftPlace,
+      hleftPost,
+      hrightPre,
+      hrightPost,
+      hleftPre,
+      ?_⟩
+  refine
+    { nonSink := ?_,
+      successor := ?_ }
+  · intro place hmem
+    simp at hmem
+    rcases hmem with hfirst | hsecond
+    · rw [hfirst]
+      intro hsink
+      rw [hsink] at hrightPre
+      exact sink_no_output net right hrightPre
+    · rw [hsecond]
+      intro hsink
+      rw [hsink] at hleftPre
+      exact sink_no_output net left hleftPre
+  · intro place trans hmem hconsumer
+    simp at hmem
+    rcases hmem with hfirst | hsecond
+    · rw [hfirst] at hconsumer
+      have hsame : trans = right :=
+        hmarked.2 leftRightPlace trans right hconsumer hrightPre
+      subst hsame
+      exact
+        ⟨rightLeftPlace,
+          by simp,
+          hrightPost⟩
+    · rw [hsecond] at hconsumer
+      have hsame : trans = left :=
+        hmarked.2 rightLeftPlace trans left hconsumer hleftPre
+      subst hsame
+      exact
+        ⟨leftRightPlace,
+          by simp,
+          hleftPost⟩
+
+theorem markedGraph_two_transitionFlow_cycle_placesMarked_after_left_firing
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {left right : Trans}
+    (hleftRight :
+      PetriNet.transitionFlow net.toPetriNet left right)
+    (hrightLeft :
+      PetriNet.transitionFlow net.toPetriNet right left)
+    {before after : Marking Place}
+    (hfires : fires net before left after) :
+    ∃ places,
+      PlaceCycleSupport net places ∧
+        placesMarked after places := by
+  rcases markedGraph_two_transitionFlow_cycle_placeCycleSupport
+      hmarked hleftRight hrightLeft with
+    ⟨leftRightPlace,
+      rightLeftPlace,
+      hleftPost,
+      _hrightPre,
+      _hrightPost,
+      _hleftPre,
+      support⟩
+  exact
+    ⟨[leftRightPlace, rightLeftPlace],
+      support,
+      leftRightPlace,
+      by simp,
+      fires_positive_of_transToPlace hfires hleftPost⟩
+
 theorem firingSequence_positive_of_no_consuming_transition
     {net : WorkflowNet Place Trans}
     {before after : Marking Place}
@@ -3050,6 +3296,95 @@ theorem markedGraph_safeAndSound_transitionFlow_irreflexive
     (hsafeSound : safeAndSound net) :
     Irreflexive (PetriNet.transitionFlow net.toPetriNet) :=
   markedGraph_sound_transitionFlow_irreflexive
+    hmarked hsafeSound.2
+
+theorem markedGraph_no_completion_after_two_transitionFlow_cycle_firing
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {left right : Trans}
+    (hleftRight :
+      PetriNet.transitionFlow net.toPetriNet left right)
+    (hrightLeft :
+      PetriNet.transitionFlow net.toPetriNet right left)
+    {before after : Marking Place}
+    {suffix : List Trans}
+    (hfires : fires net before left after)
+    (hsuffix : FiringSequence net after suffix (final net)) :
+    False := by
+  rcases hleftRight with
+    ⟨leftRightPlace, hleftPost, hrightPre⟩
+  rcases hrightLeft with
+    ⟨rightLeftPlace, hrightPost, hleftPre⟩
+  have hleftRightPlace : leftRightPlace ≠ net.sink := by
+    intro hsink
+    rw [hsink] at hrightPre
+    exact sink_no_output net right hrightPre
+  have hrightLeftPlace : rightLeftPlace ≠ net.sink := by
+    intro hsink
+    rw [hsink] at hleftPre
+    exact sink_no_output net left hleftPre
+  have hpositive :
+      after leftRightPlace > 0 ∨ after rightLeftPlace > 0 :=
+    Or.inl (fires_positive_of_transToPlace hfires hleftPost)
+  have hleftConsumer :
+      ∀ trans, trans ∈ suffix ->
+        net.placeToTrans leftRightPlace trans ->
+          net.transToPlace trans rightLeftPlace := by
+    intro trans _hmem hconsumer
+    have hsame : trans = right :=
+      hmarked.2 leftRightPlace trans right hconsumer hrightPre
+    subst hsame
+    exact hrightPost
+  have hrightConsumer :
+      ∀ trans, trans ∈ suffix ->
+        net.placeToTrans rightLeftPlace trans ->
+          net.transToPlace trans leftRightPlace := by
+    intro trans _hmem hconsumer
+    have hsame : trans = left :=
+      hmarked.2 rightLeftPlace trans left hconsumer hleftPre
+    subst hsame
+    exact hleftPost
+  have hfinalPositive :
+      final net leftRightPlace > 0 ∨
+        final net rightLeftPlace > 0 :=
+    firingSequence_positive_left_or_right_of_cycle_pair
+      hsuffix hpositive hleftConsumer hrightConsumer
+  rcases hfinalPositive with hleftFinal | hrightFinal
+  · have hfinalZero : ¬ final net leftRightPlace > 0 := by
+      simp [final, Marking.single, hleftRightPlace]
+    exact hfinalZero hleftFinal
+  · have hfinalZero : ¬ final net rightLeftPlace > 0 := by
+      simp [final, Marking.single, hrightLeftPlace]
+    exact hfinalZero hrightFinal
+
+theorem markedGraph_sound_transitionFlow_asymmetric
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : sound net) :
+    Asymmetric (PetriNet.transitionFlow net.toPetriNet) := by
+  intro left right hleftRight hrightLeft
+  rcases sound_accepting_firing_sequence hsound left with
+    ⟨_before,
+      _after,
+      _preTrace,
+      _suffix,
+      _hpre,
+      hfires,
+      hsuffix,
+      _hcombined⟩
+  exact
+    markedGraph_no_completion_after_two_transitionFlow_cycle_firing
+      hmarked hleftRight hrightLeft hfires hsuffix
+
+theorem markedGraph_safeAndSound_transitionFlow_asymmetric
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : safeAndSound net) :
+    Asymmetric (PetriNet.transitionFlow net.toPetriNet) :=
+  markedGraph_sound_transitionFlow_asymmetric
     hmarked hsafeSound.2
 
 theorem markedGraph_sound_transitionFlow_successor_mem_completion_suffix

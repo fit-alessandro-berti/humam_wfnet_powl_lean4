@@ -14650,6 +14650,83 @@ theorem theorem2_marked_graph_safe_and_sound_transition_flow_irreflexive
   WorkflowNet.markedGraph_safeAndSound_transitionFlow_irreflexive
     hmarked hsafeSound
 
+theorem theorem2_marked_graph_sound_transition_flow_asymmetric
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : WorkflowNet.sound net) :
+    Asymmetric (PetriNet.transitionFlow net.toPetriNet) :=
+  WorkflowNet.markedGraph_sound_transitionFlow_asymmetric
+    hmarked hsound
+
+theorem theorem2_marked_graph_safe_and_sound_transition_flow_asymmetric
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    Asymmetric (PetriNet.transitionFlow net.toPetriNet) :=
+  WorkflowNet.markedGraph_safeAndSound_transitionFlow_asymmetric
+    hmarked hsafeSound
+
+theorem theorem2_place_cycle_support_no_completion
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {places : List Place}
+    (support : WorkflowNet.PlaceCycleSupport net places)
+    {before : Marking Place}
+    {trace : List Trans}
+    (sequence :
+      WorkflowNet.FiringSequence
+        net before trace (WorkflowNet.final net))
+    (hmarked : WorkflowNet.placesMarked before places) :
+    False :=
+  WorkflowNet.no_completion_of_placeCycleSupport
+    support sequence hmarked
+
+theorem theorem2_marked_graph_two_transition_flow_cycle_place_cycle_support
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {left right : Trans}
+    (hleftRight :
+      PetriNet.transitionFlow net.toPetriNet left right)
+    (hrightLeft :
+      PetriNet.transitionFlow net.toPetriNet right left) :
+    ∃ leftRightPlace rightLeftPlace,
+      net.transToPlace left leftRightPlace ∧
+        net.placeToTrans leftRightPlace right ∧
+          net.transToPlace right rightLeftPlace ∧
+            net.placeToTrans rightLeftPlace left ∧
+              WorkflowNet.PlaceCycleSupport
+                net [leftRightPlace, rightLeftPlace] :=
+  WorkflowNet.markedGraph_two_transitionFlow_cycle_placeCycleSupport
+    hmarked hleftRight hrightLeft
+
+theorem theorem2_marked_graph_two_transition_flow_cycle_places_marked_after_left_firing
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {left right : Trans}
+    (hleftRight :
+      PetriNet.transitionFlow net.toPetriNet left right)
+    (hrightLeft :
+      PetriNet.transitionFlow net.toPetriNet right left)
+    {before after : Marking Place}
+    (hfires : WorkflowNet.fires net before left after) :
+    ∃ places,
+      WorkflowNet.PlaceCycleSupport net places ∧
+        WorkflowNet.placesMarked after places :=
+  WorkflowNet.markedGraph_two_transitionFlow_cycle_placesMarked_after_left_firing
+    hmarked hleftRight hrightLeft hfires
+
 theorem theorem2_no_decision_places_free_choice
     {Place : Type u}
     {Trans : Type v}
