@@ -131,6 +131,89 @@ theorem partial_order_pattern_execution_order_asymmetric
       (TransGen (Patterns.executionOrder net partition)) :=
   Patterns.partialOrderPattern_asymmetric net partition hpattern
 
+theorem lemma3_partial_order_projection_start_edge
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hentry : WorkflowNet.entryPoints net part place)
+    (hflow : net.placeToTrans place trans) :
+    (Patterns.partialOrderProjection net part).placeToTrans
+      Patterns.BoundaryPlace.start trans :=
+  Patterns.partialOrderProjection_start_placeToTrans
+    net hpart hentry hflow
+
+theorem lemma3_partial_order_projection_end_edge
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {place : Place}
+    (hpart : part trans)
+    (hexit : WorkflowNet.exitPoints net part place)
+    (hflow : net.transToPlace trans place) :
+    (Patterns.partialOrderProjection net part).transToPlace
+      trans Patterns.BoundaryPlace.end_ :=
+  Patterns.partialOrderProjection_transToPlace_end
+    net hpart hexit hflow
+
+theorem lemma3_partial_order_projection_internal_placeToTrans
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hnotEntry : ¬ WorkflowNet.entryPoints net part place)
+    (hnotExit : ¬ WorkflowNet.exitPoints net part place)
+    (hflow : net.placeToTrans place trans) :
+    (Patterns.partialOrderProjection net part).placeToTrans
+      (Patterns.BoundaryPlace.original place) trans :=
+  Patterns.partialOrderProjection_original_placeToTrans
+    net hpart htouching hnotEntry hnotExit hflow
+
+theorem lemma3_partial_order_projection_internal_transToPlace
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {place : Place}
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hnotEntry : ¬ WorkflowNet.entryPoints net part place)
+    (hnotExit : ¬ WorkflowNet.exitPoints net part place)
+    (hflow : net.transToPlace trans place) :
+    (Patterns.partialOrderProjection net part).transToPlace
+      trans (Patterns.BoundaryPlace.original place) :=
+  Patterns.partialOrderProjection_transToPlace_original
+    net hpart htouching hnotEntry hnotExit hflow
+
+theorem lemma3_partial_order_projection_start_to_end_path
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {entry exit : Place}
+    (hpart : part trans)
+    (hentry : WorkflowNet.entryPoints net part entry)
+    (hexit : WorkflowNet.exitPoints net part exit)
+    (hstart : net.placeToTrans entry trans)
+    (hend : net.transToPlace trans exit) :
+    PetriNet.Path
+      (Patterns.partialOrderProjection net part)
+      (PetriNet.Node.place Patterns.BoundaryPlace.start)
+      (PetriNet.Node.place Patterns.BoundaryPlace.end_) :=
+  Patterns.partialOrderProjection_start_to_end
+    net hpart hentry hexit hstart hend
+
 theorem lemma1_xor_projection_restricts_internal_paths
     {Place : Type u}
     {Trans : Type v}
@@ -669,6 +752,102 @@ theorem lemma2_loop_projection_restricted_boundary_path
           Patterns.loopProjectionPlaces_sink
             net part startPlace endPlace⟩) :=
   Patterns.loopProjectionRestricted_boundary_path net hpart hstart hend
+
+theorem lemma2_loop_projection_restricted_boundary_paths
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ trans, doPart trans ->
+        net.placeToTrans pdo trans ->
+        net.transToPlace trans predo ->
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net doPart pdo predo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source
+                  net doPart pdo predo⟩)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink
+                  net doPart pdo predo⟩)) ∧
+      (∀ trans, redoPart trans ->
+        net.placeToTrans predo trans ->
+        net.transToPlace trans pdo ->
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net redoPart predo pdo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source
+                  net redoPart predo pdo⟩)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink
+                  net redoPart predo pdo⟩)) :=
+  Patterns.loopPattern_projection_restricted_boundary_paths hpattern
+
+theorem lemma2_loop_pattern_source_ne_sink
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    net.source ≠ net.sink :=
+  Patterns.loopPattern_source_ne_sink hpattern
+
+theorem lemma2_loop_projection_source_no_in
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ trans : {trans : Trans // doPart trans},
+        ¬ (Patterns.loopProjectionRestricted net doPart pdo predo).transToPlace
+          trans
+          ⟨net.source,
+            Patterns.loopProjectionPlaces_source net doPart pdo predo⟩) ∧
+      (∀ trans : {trans : Trans // redoPart trans},
+        ¬ (Patterns.loopProjectionRestricted net redoPart predo pdo).transToPlace
+          trans
+          ⟨net.source,
+            Patterns.loopProjectionPlaces_source net redoPart predo pdo⟩) :=
+  Patterns.loopPattern_projection_source_no_in hpattern
+
+theorem lemma2_loop_projection_sink_no_out
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ trans : {trans : Trans // doPart trans},
+        ¬ (Patterns.loopProjectionRestricted net doPart pdo predo).placeToTrans
+          ⟨net.sink,
+            Patterns.loopProjectionPlaces_sink net doPart pdo predo⟩
+          trans) ∧
+      (∀ trans : {trans : Trans // redoPart trans},
+        ¬ (Patterns.loopProjectionRestricted net redoPart predo pdo).placeToTrans
+          ⟨net.sink,
+            Patterns.loopProjectionPlaces_sink net redoPart predo pdo⟩
+          trans) :=
+  Patterns.loopPattern_projection_sink_no_out hpattern
 
 theorem lemma2_loop_projection_boundary_paths
     {Place : Type u}

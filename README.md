@@ -45,6 +45,8 @@ The current proof spine is:
   Loop projections now also have a subtype-restricted representation with
   selected places and transitions, plus checked source-to-sink boundary path
   constructors for one-transition entry/exit segments.
+  Partial-order projections now have checked boundary and internal edge
+  constructors, together with a one-transition start-to-end path constructor.
 - `KouraniWfnetPowl.PaperTargets`: named Section 5 proof targets and checked
   semantic preservation theorems corresponding to the POWL-language side of
   Lemmas 4, 5, and 6, the checked base case for Theorem 1, and named checked
@@ -52,7 +54,8 @@ The current proof spine is:
   selected-sequence restriction, safeness preservation, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, and Lemma 2 loop trace
-  closure plus loop projection boundary and restricted-projection facts.
+  closure plus loop projection boundary and restricted-projection facts, and
+  Lemma 3 partial-order projection boundary/internal edge facts.
 
 Build with:
 
