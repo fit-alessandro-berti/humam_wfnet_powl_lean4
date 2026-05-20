@@ -233,9 +233,17 @@ The current proof spine is:
   languages, and local-to-global language preservation for source/sink
   certified conversions, including packaging source/sink local conversions as
   global `SemanticCertifiedConversion`s and explicit existential POWL-model
-  statements, plus no-dead-transition, accepting-run trace-membership,
-  language-word, visible-activity, and converted-POWL visible-activity
-  witnesses for semi-block requirement layers,
+  statements. A `SemiBlockCertifiedConversion` interface packages the
+  semi-block completeness hypothesis with a successful source/sink conversion
+  and exposes safe-and-soundness, pointwise language preservation, language
+  equality, existential POWL-model, and visible-activity witness consequences;
+  theorem-facing constructors now cover the single-transition base case and
+  the XOR, loop, and partial-order recursive cases from supplied local subtype
+  conversions and global language decompositions,
+  plus no-dead-transition, accepting-run trace-membership,
+  language-word, visible-activity, semi-block local-conversion language
+  equivalences, and local-conversion converted-POWL visible-activity witnesses
+  for semi-block requirement layers,
   local XOR composition for decision-branch models and local loop composition
   for source-to-sink/redo-back submodels plus local partial-order composition
   for component submodels under supplied local decompositions, and constructors
