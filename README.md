@@ -175,24 +175,30 @@ The current proof spine is:
   parent XOR, loop, and partial-order certificates from certified projected
   subcalls, including normalized partial-order components; `CertifiedConversion`
   packages the output model and certificate as the checked successful-conversion
-  interface for Theorem 1, including the paper-style `L(N) = L(ψ)` equality
-  form. Theorem 2 now has checked targets for the safe-and-sound,
+  interface for Theorem 1, with explicit global and local single-transition
+  base-case constructors and object-level successful-conversion constructors
+  for XOR, loop, ordinary partial-order, and normalized partial-order recursive
+  cases, including the paper-style `L(N) = L(ψ)` equality form. Theorem 2 now
+  has checked targets for the safe-and-sound,
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
   checked branch-subnet closure/disjointness, local branch-language transfer,
   mapped local subtype POWL transfer, a `LocalCertifiedConversion` interface
-  for source-to-sink subproblems, local XOR composition for decision-branch
-  models and local loop composition for source-to-sink/redo-back submodels
-  plus local partial-order composition for component submodels under supplied
-  local decompositions, and constructors whose certificates are supplied by
-  recursive `ConversionCertificate`s, exact
+  for source-to-sink subproblems, a `LocalSubtypeCertifiedConversion`
+  interface for transition-subset subproblems, local XOR composition for
+  decision-branch models and local loop composition for source-to-sink/redo-back
+  submodels plus local partial-order composition for component submodels under
+  supplied local decompositions, and constructors whose certificates are
+  supplied by recursive `ConversionCertificate`s, including a bridge from
+  restricted decision-branch certificates to local subtype conversions, exact
   uniqueness,
   free-choice preset-equality,
   marked-graph/no-decision equivalence, and non-boundary unique-place-flow
   consequences used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, including the
-  incidence-based full restricted loop-projection connectedness target, and
+  incidence-based full restricted loop-projection connectedness target and a
+  pattern-level do/redo loop-projection WF-net existence theorem, and
   Lemma 3
   partial-order projection boundary/internal edge and one-step path
   facts plus restricted-path lifting, generic normalization,
