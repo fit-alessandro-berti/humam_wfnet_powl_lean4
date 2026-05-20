@@ -142,7 +142,10 @@ The current proof spine is:
   partial-order projections can be normalized and packaged as `WorkflowNet`s,
   matching the projection-normalization step in Definition 14. The same API now
   includes restricted projection markings and normalized markings for retained
-  original places, boundary places, and fresh source/sink places. A more
+  original places, boundary places, and fresh source/sink places, plus an
+  original-transition enabledness bridge for normalized partial-order
+  projections under marked entry/exit boundary conditions, with checked firing
+  steps and firing witnesses for such projected original transitions. A more
   general raw-projection normalization constructor is also available when
   connectedness is supplied over the ambient raw projection.
   Partial-order pattern consequences
@@ -229,7 +232,8 @@ The current proof spine is:
   raw-`PathIn` constructor/path-lifting facts plus bidirectional
   restricted-path lifting, ordinary-path and `PathIn`-connected
   restricted projection normalization, restricted and normalized projection
-  marking facts, generic normalization,
+  marking facts, original-transition enabledness and firing witnesses in
+  normalized projections, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
   normalized-language equivalence targets, execution-order, source/sink-aware

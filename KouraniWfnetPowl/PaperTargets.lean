@@ -2999,6 +2999,70 @@ theorem lemma3_partial_order_projection_normalized_marking_original_place
   Patterns.partialOrderProjectionNormalizedMarking_original_place
     net marking hplace
 
+theorem lemma3_partial_order_projection_normalized_marking_start_of_entries_marked
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place)
+    (hmarked :
+      ∀ entry, WorkflowNet.entryPoints net part entry ->
+        marking entry > 0) :
+    lemma3_partial_order_projection_normalized_marking net part marking
+      (PetriNet.NormalizedPlace.original
+        ⟨Patterns.BoundaryPlace.start,
+          Patterns.partialOrderProjectionPlaces_start net part⟩) = 1 :=
+  Patterns.partialOrderProjectionNormalizedMarking_start_of_entries_marked
+    net part marking hmarked
+
+theorem lemma3_partial_order_projection_normalized_marking_start_of_not_entries_marked
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place)
+    (hmarked :
+      ¬ ∀ entry, WorkflowNet.entryPoints net part entry ->
+        marking entry > 0) :
+    lemma3_partial_order_projection_normalized_marking net part marking
+      (PetriNet.NormalizedPlace.original
+        ⟨Patterns.BoundaryPlace.start,
+          Patterns.partialOrderProjectionPlaces_start net part⟩) = 0 :=
+  Patterns.partialOrderProjectionNormalizedMarking_start_of_not_entries_marked
+    net part marking hmarked
+
+theorem lemma3_partial_order_projection_normalized_marking_end_of_exits_marked
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place)
+    (hmarked :
+      ∀ exit, WorkflowNet.exitPoints net part exit ->
+        marking exit > 0) :
+    lemma3_partial_order_projection_normalized_marking net part marking
+      (PetriNet.NormalizedPlace.original
+        ⟨Patterns.BoundaryPlace.end_,
+          Patterns.partialOrderProjectionPlaces_end net part⟩) = 1 :=
+  Patterns.partialOrderProjectionNormalizedMarking_end_of_exits_marked
+    net part marking hmarked
+
+theorem lemma3_partial_order_projection_normalized_marking_end_of_not_exits_marked
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (marking : Marking Place)
+    (hmarked :
+      ¬ ∀ exit, WorkflowNet.exitPoints net part exit ->
+        marking exit > 0) :
+    lemma3_partial_order_projection_normalized_marking net part marking
+      (PetriNet.NormalizedPlace.original
+        ⟨Patterns.BoundaryPlace.end_,
+          Patterns.partialOrderProjectionPlaces_end net part⟩) = 0 :=
+  Patterns.partialOrderProjectionNormalizedMarking_end_of_not_exits_marked
+    net part marking hmarked
+
 theorem lemma3_partial_order_projection_restricted_connected_of_path
     {Place : Type u}
     {Trans : Type v}
@@ -3784,6 +3848,136 @@ def lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connec
       (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
   Patterns.partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
     net part hconnected
+
+theorem lemma3_partial_order_projection_restricted_normalized_original_enabled
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩))
+    (marking : Marking Place)
+    {trans : Trans}
+    (hpart : part trans)
+    (henabled : WorkflowNet.enabled net marking trans)
+    (hentriesMarked :
+      ∀ entry, WorkflowNet.entryPoints net part entry ->
+        marking entry > 0)
+    (hexitsMarked :
+      ∀ exit, WorkflowNet.exitPoints net part exit ->
+        marking exit > 0) :
+    WorkflowNet.enabled
+      (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+        net part hconnected)
+      (lemma3_partial_order_projection_normalized_marking net part marking)
+      (PetriNet.NormalizedTrans.original ⟨trans, hpart⟩) :=
+  Patterns.partialOrderProjectionRestrictedNormalized_original_enabled_of_original_enabled
+    net hconnected marking hpart henabled hentriesMarked hexitsMarked
+
+theorem lemma3_partial_order_projection_restricted_normalized_original_fires_to_fire
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩))
+    (marking : Marking Place)
+    {trans : Trans}
+    (hpart : part trans)
+    (henabled : WorkflowNet.enabled net marking trans)
+    (hentriesMarked :
+      ∀ entry, WorkflowNet.entryPoints net part entry ->
+        marking entry > 0)
+    (hexitsMarked :
+      ∀ exit, WorkflowNet.exitPoints net part exit ->
+        marking exit > 0) :
+    WorkflowNet.fires
+      (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+        net part hconnected)
+      (lemma3_partial_order_projection_normalized_marking net part marking)
+      (PetriNet.NormalizedTrans.original ⟨trans, hpart⟩)
+      (WorkflowNet.fire
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected)
+        (lemma3_partial_order_projection_normalized_marking net part marking)
+        (PetriNet.NormalizedTrans.original ⟨trans, hpart⟩)) :=
+  Patterns.partialOrderProjectionRestrictedNormalized_original_fires_to_fire_of_original_enabled
+    net hconnected marking hpart henabled hentriesMarked hexitsMarked
+
+theorem lemma3_partial_order_projection_restricted_normalized_original_firing_witness
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩))
+    (marking : Marking Place)
+    {trans : Trans}
+    (hpart : part trans)
+    (henabled : WorkflowNet.enabled net marking trans)
+    (hentriesMarked :
+      ∀ entry, WorkflowNet.entryPoints net part entry ->
+        marking entry > 0)
+    (hexitsMarked :
+      ∀ exit, WorkflowNet.exitPoints net part exit ->
+        marking exit > 0) :
+    ∃ after,
+      WorkflowNet.fires
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected)
+        (lemma3_partial_order_projection_normalized_marking net part marking)
+        (PetriNet.NormalizedTrans.original ⟨trans, hpart⟩)
+        after :=
+  Patterns.partialOrderProjectionRestrictedNormalized_original_firing_witness_of_original_enabled
+    net hconnected marking hpart henabled hentriesMarked hexitsMarked
 
 def lemma3_partial_order_projection_restricted_normalized_workflow_net_of_pathIn
     {Place : Type u}

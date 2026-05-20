@@ -2353,10 +2353,26 @@ theorem firingSequence_snoc
   firingSequence_append sequence
     (FiringSequence.cons hfires FiringSequence.nil)
 
+theorem firingSequence_singleton
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {trans : Trans}
+    (hfires : fires net before trans after) :
+    FiringSequence net before [trans] after :=
+  FiringSequence.cons hfires FiringSequence.nil
+
 def reachable
     (net : WorkflowNet Place Trans)
     (before after : Marking Place) : Prop :=
   ∃ trace, FiringSequence net before trace after
+
+theorem reachable_of_fires
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {trans : Trans}
+    (hfires : fires net before trans after) :
+    reachable net before after :=
+  ⟨[trans], firingSequence_singleton hfires⟩
 
 noncomputable def initial [DecidableEq Place]
     (net : WorkflowNet Place Trans) : Marking Place :=
