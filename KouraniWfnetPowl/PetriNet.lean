@@ -2051,6 +2051,333 @@ theorem normalized_firingSequence_accepting_iff
   · exact normalized_firingSequence_accepting_reverse net
   · exact normalized_firingSequence_accepting net
 
+theorem normalized_reachable_of_original
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {marking : Marking Place}
+    (hreachable : reachable net (initial net) marking) :
+    reachable
+      (normalizedNet net)
+      (initial (normalizedNet net))
+      (Marking.normalize marking) := by
+  rcases hreachable with ⟨trace, sequence⟩
+  refine ⟨PetriNet.NormalizedTrans.enter ::
+    trace.map PetriNet.NormalizedTrans.original, ?_⟩
+  exact
+    FiringSequence.cons
+      (normalized_enter_fires net)
+      (normalized_firingSequence_original net sequence)
+
+theorem normalized_complete_from_original_marking
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hcomplete : optionToComplete net)
+    {marking : Marking Place}
+    (hreachable : reachable net (initial net) marking) :
+    reachable
+      (normalizedNet net)
+      (Marking.normalize marking)
+      (final (normalizedNet net)) := by
+  rcases hcomplete marking hreachable with ⟨trace, sequence⟩
+  refine
+    ⟨trace.map PetriNet.NormalizedTrans.original ++
+        [PetriNet.NormalizedTrans.exit],
+      ?_⟩
+  exact
+    firingSequence_snoc
+      (normalized_firingSequence_original net sequence)
+      (normalized_exit_fires net)
+
+theorem normalized_complete_from_initial
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hcomplete : optionToComplete net) :
+    reachable
+      (normalizedNet net)
+      (initial (normalizedNet net))
+      (final (normalizedNet net)) := by
+  have hinitialReachable :
+      reachable net (initial net) (initial net) :=
+    ⟨[], FiringSequence.nil⟩
+  rcases normalized_complete_from_original_marking
+      net hcomplete hinitialReachable with
+    ⟨trace, sequence⟩
+  refine ⟨PetriNet.NormalizedTrans.enter :: trace, ?_⟩
+  exact FiringSequence.cons (normalized_enter_fires net) sequence
+
+def normalizedReachableShape
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (marking : Marking (PetriNet.NormalizedPlace Place)) : Prop :=
+  marking = initial (normalizedNet net) ∨
+    (∃ original,
+      reachable net (initial net) original ∧
+        marking = Marking.normalize original) ∨
+    marking = final (normalizedNet net)
+
+theorem normalized_initial_original_not_enabled
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) :
+    ¬ enabled
+      (normalizedNet net)
+      (initial (normalizedNet net))
+      (PetriNet.NormalizedTrans.original trans) := by
+  intro henabled
+  rcases transition_has_input net trans with ⟨place, hflow⟩
+  have hpositive :
+      initial (normalizedNet net)
+        (PetriNet.NormalizedPlace.original place) > 0 :=
+    henabled
+      (PetriNet.NormalizedPlace.original place)
+      (by
+        simpa [normalizedNet, normalized, PetriNet.normalize] using hflow)
+  simp [normalizedNet, normalized, initial, Marking.single] at hpositive
+
+theorem normalized_initial_exit_not_enabled
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) :
+    ¬ enabled
+      (normalizedNet net)
+      (initial (normalizedNet net))
+      PetriNet.NormalizedTrans.exit := by
+  intro henabled
+  have hpositive :=
+    (normalized_exit_enabled_iff net (initial (normalizedNet net))).mp
+      henabled
+  simp [normalizedNet, normalized, initial, Marking.single] at hpositive
+
+theorem normalized_original_marking_enter_not_enabled
+    (net : WorkflowNet Place Trans)
+    (marking : Marking Place) :
+    ¬ enabled
+      (normalizedNet net)
+      (Marking.normalize marking)
+      PetriNet.NormalizedTrans.enter := by
+  intro henabled
+  have hpositive :=
+    (normalized_enter_enabled_iff net (Marking.normalize marking)).mp
+      henabled
+  simp [Marking.normalize] at hpositive
+
+theorem normalized_final_no_enabled
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (trans : PetriNet.NormalizedTrans Trans) :
+    ¬ enabled
+      (normalizedNet net)
+      (final (normalizedNet net))
+      trans := by
+  intro henabled
+  cases trans with
+  | enter =>
+      have hpositive :=
+        (normalized_enter_enabled_iff net (final (normalizedNet net))).mp
+          henabled
+      simp [normalizedNet, normalized, final, Marking.single] at hpositive
+  | original trans =>
+      rcases transition_has_input net trans with ⟨place, hflow⟩
+      have hpositive :
+          final (normalizedNet net)
+            (PetriNet.NormalizedPlace.original place) > 0 :=
+        henabled
+          (PetriNet.NormalizedPlace.original place)
+          (by
+            simpa [normalizedNet, normalized, PetriNet.normalize] using hflow)
+      simp [normalizedNet, normalized, final, Marking.single] at hpositive
+  | exit =>
+      have hpositive :=
+        (normalized_exit_enabled_iff net (final (normalizedNet net))).mp
+          henabled
+      simp [normalizedNet, normalized, final, Marking.single] at hpositive
+
+theorem normalizedReachableShape_step
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : properCompletion net)
+    {before after : Marking (PetriNet.NormalizedPlace Place)}
+    {trans : PetriNet.NormalizedTrans Trans}
+    (hshape : normalizedReachableShape net before)
+    (hfires : fires (normalizedNet net) before trans after) :
+    normalizedReachableShape net after := by
+  rcases hshape with hinitial | hrest
+  · subst hinitial
+    cases trans with
+    | enter =>
+        right
+        left
+        refine
+          ⟨initial net, ⟨[], FiringSequence.nil⟩, ?_⟩
+        exact hfires.2.trans (normalized_enter_fire_eq net)
+    | original trans =>
+        exact False.elim
+          (normalized_initial_original_not_enabled net trans hfires.1)
+    | exit =>
+        exact False.elim
+          (normalized_initial_exit_not_enabled net hfires.1)
+  · rcases hrest with horiginal | hfinal
+    · rcases horiginal with ⟨original, horiginalReachable, hbefore⟩
+      subst hbefore
+      cases trans with
+      | enter =>
+          exact False.elim
+            (normalized_original_marking_enter_not_enabled
+              net original hfires.1)
+      | original trans =>
+          have horiginalEnabled :
+              enabled net original trans :=
+            (normalized_original_enabled_iff net original trans).mp
+              hfires.1
+          let originalAfter := fire net original trans
+          have horiginalFires :
+              fires net original trans originalAfter :=
+            ⟨horiginalEnabled, rfl⟩
+          have hafter :
+              after = Marking.normalize originalAfter := by
+            rw [hfires.2, normalized_original_fire_eq]
+          right
+          left
+          refine ⟨originalAfter, ?_, hafter⟩
+          rcases horiginalReachable with ⟨trace, sequence⟩
+          exact ⟨trace ++ [trans],
+            firingSequence_snoc sequence horiginalFires⟩
+      | exit =>
+          have hsinkPositive :
+              original net.sink > 0 :=
+            (normalized_exit_enabled_iff net
+              (Marking.normalize original)).mp hfires.1
+          have horiginalFinal :
+              original = final net :=
+            hproper original horiginalReachable hsinkPositive
+          subst horiginalFinal
+          right
+          right
+          exact hfires.2.trans (normalized_exit_fires net).2.symm
+    · subst hfinal
+      exact False.elim (normalized_final_no_enabled net trans hfires.1)
+
+theorem normalizedReachableShape_of_firingSequence
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : properCompletion net)
+    {before after : Marking (PetriNet.NormalizedPlace Place)}
+    {trace : List (PetriNet.NormalizedTrans Trans)}
+    (hshape : normalizedReachableShape net before)
+    (sequence :
+      FiringSequence (normalizedNet net) before trace after) :
+    normalizedReachableShape net after := by
+  induction sequence with
+  | nil =>
+      exact hshape
+  | cons hfires _ ih =>
+      exact ih (normalizedReachableShape_step net hproper hshape hfires)
+
+theorem normalizedReachableShape_of_reachable
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : properCompletion net)
+    {marking : Marking (PetriNet.NormalizedPlace Place)}
+    (hreachable :
+      reachable
+        (normalizedNet net)
+        (initial (normalizedNet net))
+        marking) :
+    normalizedReachableShape net marking := by
+  rcases hreachable with ⟨trace, sequence⟩
+  exact
+    normalizedReachableShape_of_firingSequence
+      net hproper (Or.inl rfl) sequence
+
+theorem normalized_optionToComplete_of_original
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hcomplete : optionToComplete net)
+    (hproper : properCompletion net) :
+    optionToComplete (normalizedNet net) := by
+  intro marking hreachable
+  have hshape :=
+    normalizedReachableShape_of_reachable net hproper hreachable
+  rcases hshape with hinitial | hrest
+  · subst hinitial
+    exact normalized_complete_from_initial net hcomplete
+  · rcases hrest with horiginal | hfinal
+    · rcases horiginal with ⟨original, horiginalReachable, hmarking⟩
+      subst hmarking
+      exact normalized_complete_from_original_marking
+        net hcomplete horiginalReachable
+    · subst hfinal
+      exact ⟨[], FiringSequence.nil⟩
+
+theorem normalized_optionToComplete_of_sound
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsound : sound net) :
+    optionToComplete (normalizedNet net) :=
+  normalized_optionToComplete_of_original
+    net hsound.2.1 hsound.2.2
+
+theorem normalized_exit_enabled_at_final
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) :
+    enabled
+      (normalizedNet net)
+      (Marking.normalize (final net))
+      PetriNet.NormalizedTrans.exit := by
+  exact
+    (normalized_exit_enabled_iff net (Marking.normalize (final net))).mpr
+      (by simp [final, Marking.single, Marking.normalize])
+
+theorem normalized_noDeadTransitions_of_original
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hnoDead : noDeadTransitions net)
+    (hcomplete : optionToComplete net) :
+    noDeadTransitions (normalizedNet net) := by
+  intro trans
+  cases trans with
+  | enter =>
+      refine
+        ⟨initial (normalizedNet net),
+          ⟨[], FiringSequence.nil⟩, ?_⟩
+      exact
+        (normalized_enter_enabled_iff
+          net (initial (normalizedNet net))).mpr
+          (by
+            change
+              Marking.single
+                  (PetriNet.NormalizedPlace.source :
+                    PetriNet.NormalizedPlace Place)
+                PetriNet.NormalizedPlace.source > 0
+            simp [Marking.single])
+  | original trans =>
+      rcases hnoDead trans with ⟨marking, hreachable, henabled⟩
+      exact
+        ⟨Marking.normalize marking,
+          normalized_reachable_of_original net hreachable,
+          (normalized_original_enabled_iff net marking trans).mpr
+            henabled⟩
+  | exit =>
+      have hfinalReachable :
+          reachable
+            (normalizedNet net)
+            (initial (normalizedNet net))
+            (Marking.normalize (final net)) :=
+        normalized_reachable_of_original
+          net
+          (hcomplete (initial net) ⟨[], FiringSequence.nil⟩)
+      exact
+        ⟨Marking.normalize (final net),
+          hfinalReachable,
+          normalized_exit_enabled_at_final net⟩
+
+theorem normalized_noDeadTransitions_of_sound
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsound : sound net) :
+    noDeadTransitions (normalizedNet net) :=
+  normalized_noDeadTransitions_of_original net
+    hsound.1 hsound.2.1
+
 theorem restricted_initial_eq
     [DecidableEq Place]
     {places : Set Place}

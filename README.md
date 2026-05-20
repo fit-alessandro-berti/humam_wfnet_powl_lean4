@@ -33,7 +33,12 @@ The current proof spine is:
   equivalent to original accepting firing sequences. The fresh enter/exit
   transitions have checked enabledness characterizations, and wrapped original
   transitions, including sequences made only of wrapped original transitions,
-  preserve the fresh source/sink token counts.
+  preserve the fresh source/sink token counts. Original reachable markings lift
+  to reachable normalized markings after the fresh enter transition, embedded
+  normalized markings can complete to the normalized final marking whenever the
+  original marking can complete, and normalization preserves the
+  no-dead-transitions property when the original net has no dead transitions and
+  can complete from reachable markings.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
   for Definition 5.
@@ -84,8 +89,13 @@ The current proof spine is:
   and internal edge constructors in all boundary directions, and one-step path
   constructors for boundary and retained-original edges. Restricted
   partial-order projection paths lift to ambient partial-order projection paths.
-  Connected raw partial-order projections can now be normalized and packaged as
-  `WorkflowNet`s, matching the projection-normalization step in Definition 14.
+  Selected transitions and retained original places now have checked two-sided
+  connectivity in the restricted partial-order projection from explicit
+  entry/exit and incidence witnesses; under those same hypotheses, restricted
+  partial-order projections can be normalized and packaged as `WorkflowNet`s,
+  matching the projection-normalization step in Definition 14. A more general
+  raw-projection normalization constructor is also available when connectedness
+  is supplied over the ambient raw projection.
   Partial-order pattern consequences
   now also expose execution-order boundary construction, cycle exclusion,
   same-component entry/exit exclusion, and entry/exit place equivalence with

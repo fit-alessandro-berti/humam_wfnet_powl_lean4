@@ -571,6 +571,115 @@ theorem normalization_original_firing_sequence_iff
         WorkflowNet.FiringSequence net before trace after :=
   WorkflowNet.normalized_firingSequence_original_iff net
 
+theorem normalization_reachable_of_original
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {marking : Marking Place}
+    (hreachable :
+      WorkflowNet.reachable net (WorkflowNet.initial net) marking) :
+    WorkflowNet.reachable
+      (WorkflowNet.normalizedNet net)
+      (WorkflowNet.initial (WorkflowNet.normalizedNet net))
+      (Marking.normalize marking) :=
+  WorkflowNet.normalized_reachable_of_original net hreachable
+
+theorem normalization_complete_from_original_marking
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    {marking : Marking Place}
+    (hreachable :
+      WorkflowNet.reachable net (WorkflowNet.initial net) marking) :
+    WorkflowNet.reachable
+      (WorkflowNet.normalizedNet net)
+      (Marking.normalize marking)
+      (WorkflowNet.final (WorkflowNet.normalizedNet net)) :=
+  WorkflowNet.normalized_complete_from_original_marking
+    net hcomplete hreachable
+
+theorem normalization_complete_from_initial
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hcomplete : WorkflowNet.optionToComplete net) :
+    WorkflowNet.reachable
+      (WorkflowNet.normalizedNet net)
+      (WorkflowNet.initial (WorkflowNet.normalizedNet net))
+      (WorkflowNet.final (WorkflowNet.normalizedNet net)) :=
+  WorkflowNet.normalized_complete_from_initial net hcomplete
+
+theorem normalization_reachable_shape
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hproper : WorkflowNet.properCompletion net)
+    {marking : Marking (PetriNet.NormalizedPlace Place)}
+    (hreachable :
+      WorkflowNet.reachable
+        (WorkflowNet.normalizedNet net)
+        (WorkflowNet.initial (WorkflowNet.normalizedNet net))
+        marking) :
+    WorkflowNet.normalizedReachableShape net marking :=
+  WorkflowNet.normalizedReachableShape_of_reachable
+    net hproper hreachable
+
+theorem normalization_option_to_complete_of_original
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    (hproper : WorkflowNet.properCompletion net) :
+    WorkflowNet.optionToComplete (WorkflowNet.normalizedNet net) :=
+  WorkflowNet.normalized_optionToComplete_of_original
+    net hcomplete hproper
+
+theorem normalization_option_to_complete_of_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsound : WorkflowNet.sound net) :
+    WorkflowNet.optionToComplete (WorkflowNet.normalizedNet net) :=
+  WorkflowNet.normalized_optionToComplete_of_sound net hsound
+
+theorem normalization_exit_enabled_at_final
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) :
+    WorkflowNet.enabled
+      (WorkflowNet.normalizedNet net)
+      (Marking.normalize (WorkflowNet.final net))
+      PetriNet.NormalizedTrans.exit :=
+  WorkflowNet.normalized_exit_enabled_at_final net
+
+theorem normalization_no_dead_transitions_of_original
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (hcomplete : WorkflowNet.optionToComplete net) :
+    WorkflowNet.noDeadTransitions (WorkflowNet.normalizedNet net) :=
+  WorkflowNet.normalized_noDeadTransitions_of_original
+    net hnoDead hcomplete
+
+theorem normalization_no_dead_transitions_of_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (hsound : WorkflowNet.sound net) :
+    WorkflowNet.noDeadTransitions (WorkflowNet.normalizedNet net) :=
+  WorkflowNet.normalized_noDeadTransitions_of_sound net hsound
+
 theorem normalization_language_of_original
     {Place : Type u}
     {Trans : Type v}
