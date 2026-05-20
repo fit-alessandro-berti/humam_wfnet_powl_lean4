@@ -80,6 +80,13 @@ theorem nonempty_of_listGet?
     ∃ item, part item :=
   partition.nonempty part (mem_of_listGet? partition hpart)
 
+theorem listGet?_exists_of_mem
+    (partition : Partition alpha)
+    {part : Set alpha}
+    (hmem : part ∈ partition.parts) :
+    ∃ index, Powl.listGet? partition.parts index = some part :=
+  Powl.listGet?_exists_of_mem hmem
+
 end Partition
 
 namespace Patterns
@@ -2984,6 +2991,66 @@ theorem partitionContractionBoundaryPlaces_of_transToPlace
     partitionContractionBoundaryPlaces net partition place :=
   Or.inr ⟨index, hflow⟩
 
+theorem partitionContractionBoundaryPlaces_source_of_part_output
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {index : Nat}
+    {part : Set Trans}
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (houtput :
+      ∃ trans, part trans ∧ net.placeToTrans net.source trans) :
+    partitionContractionBoundaryPlaces net partition net.source :=
+  partitionContractionBoundaryPlaces_of_placeToTrans
+    net
+    partition
+    (index := index)
+    ⟨part,
+      hpart,
+      (WorkflowNet.entryPoints_source_iff net part).mpr houtput⟩
+
+theorem partitionContractionBoundaryPlaces_sink_of_part_input
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {index : Nat}
+    {part : Set Trans}
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hinput :
+      ∃ trans, part trans ∧ net.transToPlace trans net.sink) :
+    partitionContractionBoundaryPlaces net partition net.sink :=
+  partitionContractionBoundaryPlaces_of_transToPlace
+    net
+    partition
+    (index := index)
+    ⟨part,
+      hpart,
+      (WorkflowNet.exitPoints_sink_iff net part).mpr hinput⟩
+
+theorem partitionContractionBoundaryPlaces_source_of_placeToTrans
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {trans : Trans}
+    (hflow : net.placeToTrans net.source trans) :
+    partitionContractionBoundaryPlaces net partition net.source := by
+  rcases partition.covers trans with ⟨part, hmem, hpart⟩
+  rcases Partition.listGet?_exists_of_mem partition hmem with
+    ⟨index, hget⟩
+  exact
+    partitionContractionBoundaryPlaces_source_of_part_output
+      net partition hget ⟨trans, hpart, hflow⟩
+
+theorem partitionContractionBoundaryPlaces_sink_of_transToPlace
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {trans : Trans}
+    (hflow : net.transToPlace trans net.sink) :
+    partitionContractionBoundaryPlaces net partition net.sink := by
+  rcases partition.covers trans with ⟨part, hmem, hpart⟩
+  rcases Partition.listGet?_exists_of_mem partition hmem with
+    ⟨index, hget⟩
+  exact
+    partitionContractionBoundaryPlaces_sink_of_part_input
+      net partition hget ⟨trans, hpart, hflow⟩
+
 def partitionContractionBoundaryNet
     (net : WorkflowNet Place Trans)
     (partition : Partition Trans) :
@@ -3021,6 +3088,490 @@ theorem partitionContractionBoundaryNet_transToPlace_iff
       (partitionContraction net partition).transToPlace
         index place.val :=
   Iff.rfl
+
+theorem partitionContractionBoundaryNet_source_no_input
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hsource :
+      partitionContractionBoundaryPlaces net partition net.source)
+    (index : Nat) :
+    ¬ (partitionContractionBoundaryNet net partition).transToPlace
+      index ⟨net.source, hsource⟩ := by
+  intro hflow
+  rcases hflow with ⟨part, _hpart, hexit⟩
+  rcases hexit.1 with ⟨trans, _htrans, hinput⟩
+  exact WorkflowNet.source_no_input net trans hinput
+
+theorem partitionContractionBoundaryNet_sink_no_output
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hsink :
+      partitionContractionBoundaryPlaces net partition net.sink)
+    (index : Nat) :
+    ¬ (partitionContractionBoundaryNet net partition).placeToTrans
+      ⟨net.sink, hsink⟩ index := by
+  intro hflow
+  rcases hflow with ⟨part, _hpart, hentry⟩
+  rcases hentry.1 with ⟨trans, _htrans, houtput⟩
+  exact WorkflowNet.sink_no_output net trans houtput
+
+structure PartitionContractionBoundaryWorkflowEvidence
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) where
+  sourceBoundary :
+    partitionContractionBoundaryPlaces net partition net.source
+  sinkBoundary :
+    partitionContractionBoundaryPlaces net partition net.sink
+  connected :
+    ∀ node :
+      PetriNet.Node
+        {place : Place //
+          partitionContractionBoundaryPlaces net partition place}
+        Nat,
+      PetriNet.Path
+          (partitionContractionBoundaryNet net partition)
+          (PetriNet.Node.place ⟨net.source, sourceBoundary⟩)
+          node ∧
+        PetriNet.Path
+          (partitionContractionBoundaryNet net partition)
+          node
+          (PetriNet.Node.place ⟨net.sink, sinkBoundary⟩)
+
+def partitionContractionBoundaryWorkflowNet
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (evidence :
+      PartitionContractionBoundaryWorkflowEvidence net partition) :
+    WorkflowNet
+      {place : Place //
+        partitionContractionBoundaryPlaces net partition place}
+      Nat :=
+  WorkflowNet.ofConnectedNoBoundaryEdges
+    (partitionContractionBoundaryNet net partition)
+    ⟨net.source, evidence.sourceBoundary⟩
+    ⟨net.sink, evidence.sinkBoundary⟩
+    (partitionContractionBoundaryNet_source_no_input
+      net partition evidence.sourceBoundary)
+    (partitionContractionBoundaryNet_sink_no_output
+      net partition evidence.sinkBoundary)
+    evidence.connected
+
+theorem partitionContractionBoundaryWorkflowNet_toPetriNet
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (evidence :
+      PartitionContractionBoundaryWorkflowEvidence net partition) :
+    (partitionContractionBoundaryWorkflowNet evidence).toPetriNet =
+      partitionContractionBoundaryNet net partition :=
+  rfl
+
+def partitionContractionActiveIndices
+    (partition : Partition Trans) : Set Nat :=
+  fun index =>
+    ∃ part, Powl.listGet? partition.parts index = some part
+
+theorem partitionContractionActiveIndices_of_placeToTrans
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {place : Place}
+    {index : Nat}
+    (hflow :
+      (partitionContraction net partition).placeToTrans place index) :
+    partitionContractionActiveIndices partition index := by
+  rcases hflow with ⟨part, hpart, _hentry⟩
+  exact ⟨part, hpart⟩
+
+theorem partitionContractionActiveIndices_of_transToPlace
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {index : Nat}
+    {place : Place}
+    (hflow :
+      (partitionContraction net partition).transToPlace index place) :
+    partitionContractionActiveIndices partition index := by
+  rcases hflow with ⟨part, hpart, _hexit⟩
+  exact ⟨part, hpart⟩
+
+theorem partitionContractionActiveIndices_of_transitionFlow_left
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {left right : Nat}
+    (hflow :
+      PetriNet.transitionFlow
+        (partitionContraction net partition)
+        left
+        right) :
+    partitionContractionActiveIndices partition left := by
+  rcases hflow with ⟨place, hleft, _hright⟩
+  exact
+    partitionContractionActiveIndices_of_transToPlace
+      net partition hleft
+
+theorem partitionContractionActiveIndices_of_transitionFlow_right
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {left right : Nat}
+    (hflow :
+      PetriNet.transitionFlow
+        (partitionContraction net partition)
+        left
+        right) :
+    partitionContractionActiveIndices partition right := by
+  rcases hflow with ⟨place, _hleft, hright⟩
+  exact
+    partitionContractionActiveIndices_of_placeToTrans
+      net partition hright
+
+def partitionContractionActiveBoundaryNet
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    PetriNet
+      {place : Place //
+        partitionContractionBoundaryPlaces net partition place}
+      {index : Nat //
+        partitionContractionActiveIndices partition index} where
+  placeToTrans place index :=
+    (partitionContraction net partition).placeToTrans
+      place.val index.val
+  transToPlace index place :=
+    (partitionContraction net partition).transToPlace
+      index.val place.val
+
+theorem partitionContractionActiveBoundaryNet_placeToTrans_iff
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {place :
+      {place : Place //
+        partitionContractionBoundaryPlaces net partition place}}
+    {index :
+      {index : Nat //
+        partitionContractionActiveIndices partition index}} :
+    (partitionContractionActiveBoundaryNet net partition).placeToTrans
+        place index ↔
+      (partitionContraction net partition).placeToTrans
+        place.val index.val :=
+  Iff.rfl
+
+theorem partitionContractionActiveBoundaryNet_transToPlace_iff
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {index :
+      {index : Nat //
+        partitionContractionActiveIndices partition index}}
+    {place :
+      {place : Place //
+        partitionContractionBoundaryPlaces net partition place}} :
+    (partitionContractionActiveBoundaryNet net partition).transToPlace
+        index place ↔
+      (partitionContraction net partition).transToPlace
+        index.val place.val :=
+  Iff.rfl
+
+theorem partitionContractionActiveBoundaryNet_source_no_input
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hsource :
+      partitionContractionBoundaryPlaces net partition net.source)
+    (index :
+      {index : Nat //
+        partitionContractionActiveIndices partition index}) :
+    ¬ (partitionContractionActiveBoundaryNet
+        net partition).transToPlace
+      index ⟨net.source, hsource⟩ := by
+  intro hflow
+  exact
+    partitionContractionBoundaryNet_source_no_input
+      net partition hsource index.val hflow
+
+theorem partitionContractionActiveBoundaryNet_sink_no_output
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hsink :
+      partitionContractionBoundaryPlaces net partition net.sink)
+    (index :
+      {index : Nat //
+        partitionContractionActiveIndices partition index}) :
+    ¬ (partitionContractionActiveBoundaryNet
+        net partition).placeToTrans
+      ⟨net.sink, hsink⟩ index := by
+  intro hflow
+  exact
+    partitionContractionBoundaryNet_sink_no_output
+      net partition hsink index.val hflow
+
+structure PartitionContractionActiveBoundaryWorkflowEvidence
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) where
+  sourceBoundary :
+    partitionContractionBoundaryPlaces net partition net.source
+  sinkBoundary :
+    partitionContractionBoundaryPlaces net partition net.sink
+  connected :
+    ∀ node :
+      PetriNet.Node
+        {place : Place //
+          partitionContractionBoundaryPlaces net partition place}
+        {index : Nat //
+          partitionContractionActiveIndices partition index},
+      PetriNet.Path
+          (partitionContractionActiveBoundaryNet net partition)
+          (PetriNet.Node.place ⟨net.source, sourceBoundary⟩)
+          node ∧
+        PetriNet.Path
+          (partitionContractionActiveBoundaryNet net partition)
+          node
+          (PetriNet.Node.place ⟨net.sink, sinkBoundary⟩)
+
+def partitionContractionActiveBoundaryWorkflowNet
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (evidence :
+      PartitionContractionActiveBoundaryWorkflowEvidence
+        net partition) :
+    WorkflowNet
+      {place : Place //
+        partitionContractionBoundaryPlaces net partition place}
+      {index : Nat //
+        partitionContractionActiveIndices partition index} :=
+  WorkflowNet.ofConnectedNoBoundaryEdges
+    (partitionContractionActiveBoundaryNet net partition)
+    ⟨net.source, evidence.sourceBoundary⟩
+    ⟨net.sink, evidence.sinkBoundary⟩
+    (partitionContractionActiveBoundaryNet_source_no_input
+      net partition evidence.sourceBoundary)
+    (partitionContractionActiveBoundaryNet_sink_no_output
+      net partition evidence.sinkBoundary)
+    evidence.connected
+
+theorem partitionContractionActiveBoundaryWorkflowNet_toPetriNet
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (evidence :
+      PartitionContractionActiveBoundaryWorkflowEvidence
+        net partition) :
+    (partitionContractionActiveBoundaryWorkflowNet evidence).toPetriNet =
+      partitionContractionActiveBoundaryNet net partition :=
+  rfl
+
+theorem partitionContractionActiveBoundaryNet_transitionFlow_iff
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {left right :
+      {index : Nat //
+        partitionContractionActiveIndices partition index}} :
+    PetriNet.transitionFlow
+        (partitionContractionActiveBoundaryNet net partition)
+        left
+        right ↔
+      PetriNet.transitionFlow
+        (partitionContraction net partition)
+        left.val
+        right.val := by
+  constructor
+  · intro hflow
+    rcases hflow with ⟨place, hleft, hright⟩
+    exact ⟨place.val, hleft, hright⟩
+  · intro hflow
+    rcases hflow with ⟨place, hleft, hright⟩
+    exact
+      ⟨⟨place,
+          partitionContractionBoundaryPlaces_of_transToPlace
+            net partition hleft⟩,
+        hleft,
+        hright⟩
+
+theorem partitionContraction_transGen_of_activeBoundaryNet
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {left right :
+      {index : Nat //
+        partitionContractionActiveIndices partition index}}
+    (hpath :
+      TransGen
+        (PetriNet.transitionFlow
+          (partitionContractionActiveBoundaryNet net partition))
+        left
+        right) :
+    TransGen
+      (PetriNet.transitionFlow (partitionContraction net partition))
+      left.val
+      right.val := by
+  induction hpath with
+  | single hflow =>
+      exact
+        TransGen.single
+          ((partitionContractionActiveBoundaryNet_transitionFlow_iff
+            net partition).mp hflow)
+  | tail hflow _ ih =>
+      exact
+        TransGen.tail
+          ((partitionContractionActiveBoundaryNet_transitionFlow_iff
+            net partition).mp hflow)
+          ih
+
+theorem partitionContractionActiveBoundaryNet_transGen_of_partitionContraction
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {left right : Nat}
+    (hpath :
+      TransGen
+        (PetriNet.transitionFlow (partitionContraction net partition))
+        left
+        right)
+    (hleft :
+      partitionContractionActiveIndices partition left)
+    (hright :
+      partitionContractionActiveIndices partition right) :
+    TransGen
+      (PetriNet.transitionFlow
+        (partitionContractionActiveBoundaryNet net partition))
+      ⟨left, hleft⟩
+      ⟨right, hright⟩ := by
+  induction hpath with
+  | single hflow =>
+      exact
+        TransGen.single
+          ((partitionContractionActiveBoundaryNet_transitionFlow_iff
+            net partition).mpr hflow)
+  | tail hflow _ ih =>
+      have hmiddle :
+          partitionContractionActiveIndices partition _ :=
+        partitionContractionActiveIndices_of_transitionFlow_right
+          net partition hflow
+      exact
+        TransGen.tail
+          ((partitionContractionActiveBoundaryNet_transitionFlow_iff
+            net partition).mpr hflow)
+          (ih hmiddle hright)
+
+theorem partitionContractionActiveBoundaryNet_transitionFlowNoReturn_iff
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    PetriNet.transitionFlowNoReturn
+        (partitionContractionActiveBoundaryNet net partition) ↔
+      PetriNet.transitionFlowNoReturn
+        (partitionContraction net partition) := by
+  constructor
+  · intro hnoReturn left right hflow hreturn
+    have hleft :
+        partitionContractionActiveIndices partition left :=
+      partitionContractionActiveIndices_of_transitionFlow_left
+        net partition hflow
+    have hright :
+        partitionContractionActiveIndices partition right :=
+      partitionContractionActiveIndices_of_transitionFlow_right
+        net partition hflow
+    exact
+      hnoReturn
+        ((partitionContractionActiveBoundaryNet_transitionFlow_iff
+          net partition).mpr hflow)
+        (partitionContractionActiveBoundaryNet_transGen_of_partitionContraction
+          net partition hreturn hright hleft)
+  · intro hnoReturn left right hflow hreturn
+    exact
+      hnoReturn
+        ((partitionContractionActiveBoundaryNet_transitionFlow_iff
+          net partition).mp hflow)
+        (partitionContraction_transGen_of_activeBoundaryNet
+          net partition hreturn)
+
+theorem partitionContractionActiveBoundaryNet_transitionFlowAcyclic_iff
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    PetriNet.transitionFlowAcyclic
+        (partitionContractionActiveBoundaryNet net partition) ↔
+      PetriNet.transitionFlowAcyclic
+        (partitionContraction net partition) := by
+  constructor
+  · intro hacyclic
+    exact
+      (PetriNet.transitionFlowNoReturn_iff_acyclic
+        (partitionContraction net partition)).mp
+        ((partitionContractionActiveBoundaryNet_transitionFlowNoReturn_iff
+          net partition).mp
+          ((PetriNet.transitionFlowAcyclic_iff_noReturn
+            (partitionContractionActiveBoundaryNet net partition)).mp
+            hacyclic))
+  · intro hacyclic
+    exact
+      (PetriNet.transitionFlowNoReturn_iff_acyclic
+        (partitionContractionActiveBoundaryNet net partition)).mp
+        ((partitionContractionActiveBoundaryNet_transitionFlowNoReturn_iff
+          net partition).mpr
+          ((PetriNet.transitionFlowAcyclic_iff_noReturn
+            (partitionContraction net partition)).mp
+            hacyclic))
+
+theorem partitionContractionActiveBoundaryNet_markedGraph_of_partitionContraction_markedGraph
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hmarked :
+      PetriNet.markedGraph (partitionContraction net partition)) :
+    PetriNet.markedGraph
+      (partitionContractionActiveBoundaryNet net partition) := by
+  constructor
+  · intro place left right hleft hright
+    exact Subtype.ext
+      (hmarked.1 place.val left.val right.val hleft hright)
+  · intro place left right hleft hright
+    exact Subtype.ext
+      (hmarked.2 place.val left.val right.val hleft hright)
+
+theorem partitionContraction_markedGraph_of_activeBoundaryNet_markedGraph
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hmarked :
+      PetriNet.markedGraph
+        (partitionContractionActiveBoundaryNet net partition)) :
+    PetriNet.markedGraph (partitionContraction net partition) := by
+  constructor
+  · intro place left right hleft hright
+    have hleftActive :
+        partitionContractionActiveIndices partition left :=
+      partitionContractionActiveIndices_of_transToPlace
+        net partition hleft
+    have hrightActive :
+        partitionContractionActiveIndices partition right :=
+      partitionContractionActiveIndices_of_transToPlace
+        net partition hright
+    exact congrArg Subtype.val
+      (hmarked.1
+        ⟨place,
+          partitionContractionBoundaryPlaces_of_transToPlace
+            net partition hleft⟩
+        ⟨left, hleftActive⟩
+        ⟨right, hrightActive⟩
+        hleft
+        hright)
+  · intro place left right hleft hright
+    have hleftActive :
+        partitionContractionActiveIndices partition left :=
+      partitionContractionActiveIndices_of_placeToTrans
+        net partition hleft
+    have hrightActive :
+        partitionContractionActiveIndices partition right :=
+      partitionContractionActiveIndices_of_placeToTrans
+        net partition hright
+    exact congrArg Subtype.val
+      (hmarked.2
+        ⟨place,
+          partitionContractionBoundaryPlaces_of_placeToTrans
+            net partition hleft⟩
+        ⟨left, hleftActive⟩
+        ⟨right, hrightActive⟩
+        hleft
+        hright)
+
+theorem partitionContractionActiveBoundaryNet_markedGraph_iff
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    PetriNet.markedGraph
+        (partitionContractionActiveBoundaryNet net partition) ↔
+      PetriNet.markedGraph (partitionContraction net partition) :=
+  ⟨partitionContraction_markedGraph_of_activeBoundaryNet_markedGraph
+      net partition,
+    partitionContractionActiveBoundaryNet_markedGraph_of_partitionContraction_markedGraph
+      net partition⟩
 
 theorem partitionContractionBoundaryNet_transitionFlow_iff
     (net : WorkflowNet Place Trans)

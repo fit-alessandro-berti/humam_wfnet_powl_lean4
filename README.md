@@ -154,7 +154,10 @@ The current proof spine is:
   places incident to contracted edges, proves transition flow and acyclicity are
   equivalent to the original contraction, and derives the same Case 3
   no-return/partial-order conclusions from a sound marked-graph WF-net package
-  over that boundary-place subtype. The loop
+  over that boundary-place subtype. The boundary contraction now also has
+  source/sink membership helpers, automatic no-incoming-source and
+  no-outgoing-sink proofs, and a checked constructor that builds the boundary
+  `WorkflowNet` from source/sink boundary evidence plus connectedness. The loop
   pattern now has checked extraction theorems showing do/redo transitions lie
   on the corresponding place-to-place paths, that loop-projection boundary
   edges are created from the original entry/exit places, that loop entry/exit
@@ -351,7 +354,10 @@ The current proof spine is:
   bundled contraction certificate that builds the partial-order pattern and
   strict partial order, plus sound-contraction and boundary-sound-contraction
   certificates that derive acyclicity from marked-graph soundness before
-  feeding the same pipeline. All three Case 3 certificate forms now feed the
+  feeding the same pipeline, along with a boundary-workflow-sound certificate
+  form that constructs the boundary contraction WF-net from structural
+  connectedness evidence before applying the same bridge. All Case 3
+  certificate forms, including this boundary-workflow-sound form, now feed the
   partial-order branch into the raw algorithm-certificate layer, certified
   conversion, language-equivalence, concrete POWL-witness, and
   visible-activity-witness pipeline, including existential generated-model

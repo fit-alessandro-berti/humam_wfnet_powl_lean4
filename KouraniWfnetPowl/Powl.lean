@@ -115,6 +115,22 @@ theorem listGet?_mem
           simp [listGet?] at hget
           exact List.Mem.tail head (ih hget)
 
+theorem listGet?_exists_of_mem
+    {items : List alpha}
+    {item : alpha}
+    (hmem : item ∈ items) :
+    ∃ index, listGet? items index = some item := by
+  induction items with
+  | nil =>
+      cases hmem
+  | cons head tail ih =>
+      cases hmem with
+      | head =>
+          exact ⟨0, rfl⟩
+      | tail _ htail =>
+          rcases ih htail with ⟨index, hget⟩
+          exact ⟨index + 1, by simpa [listGet?] using hget⟩
+
 theorem listGet?_exists_mem
     {items : List alpha}
     {index : Nat}
