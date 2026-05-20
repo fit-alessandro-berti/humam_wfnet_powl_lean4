@@ -1,0 +1,6 @@
+name = "kourani_wfnet_powl"
+version = "0.1.0"
+defaultTargets = ["KouraniWfnetPowl"]
+
+[[lean_lib]]
+name = "KouraniWfnetPowl"
