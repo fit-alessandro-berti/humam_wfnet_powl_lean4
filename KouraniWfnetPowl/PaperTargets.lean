@@ -14689,6 +14689,24 @@ theorem theorem2_place_cycle_support_no_completion
   WorkflowNet.no_completion_of_placeCycleSupport
     support sequence hmarked
 
+theorem theorem2_marked_graph_prepend_transition_flow_place_cycle_support
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {source target : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet source target)
+    {places : List Place}
+    (support : WorkflowNet.PlaceCycleSupport net places)
+    (htargetPost :
+      ∃ next, next ∈ places ∧ net.transToPlace target next) :
+    ∃ place,
+      net.transToPlace source place ∧
+        net.placeToTrans place target ∧
+          WorkflowNet.PlaceCycleSupport net (place :: places) :=
+  WorkflowNet.markedGraph_prepend_transitionFlow_placeCycleSupport
+    hmarked hflow support htargetPost
+
 theorem theorem2_marked_graph_two_transition_flow_cycle_place_cycle_support
     {Place : Type u}
     {Trans : Type v}
@@ -14726,6 +14744,62 @@ theorem theorem2_marked_graph_two_transition_flow_cycle_places_marked_after_left
         WorkflowNet.placesMarked after places :=
   WorkflowNet.markedGraph_two_transitionFlow_cycle_placesMarked_after_left_firing
     hmarked hleftRight hrightLeft hfires
+
+theorem theorem2_marked_graph_three_transition_flow_cycle_places_marked_after_first_firing
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {first second third : Trans}
+    (hfirstSecond :
+      PetriNet.transitionFlow net.toPetriNet first second)
+    (hsecondThird :
+      PetriNet.transitionFlow net.toPetriNet second third)
+    (hthirdFirst :
+      PetriNet.transitionFlow net.toPetriNet third first)
+    {before after : Marking Place}
+    (hfires : WorkflowNet.fires net before first after) :
+    ∃ places,
+      WorkflowNet.PlaceCycleSupport net places ∧
+        WorkflowNet.placesMarked after places :=
+  WorkflowNet.markedGraph_three_transitionFlow_cycle_placesMarked_after_first_firing
+    hmarked hfirstSecond hsecondThird hthirdFirst hfires
+
+theorem theorem2_marked_graph_sound_no_three_transition_flow_cycle
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : WorkflowNet.sound net)
+    {first second third : Trans}
+    (hfirstSecond :
+      PetriNet.transitionFlow net.toPetriNet first second)
+    (hsecondThird :
+      PetriNet.transitionFlow net.toPetriNet second third)
+    (hthirdFirst :
+      PetriNet.transitionFlow net.toPetriNet third first) :
+    False :=
+  WorkflowNet.markedGraph_sound_no_three_transitionFlow_cycle
+    hmarked hsound hfirstSecond hsecondThird hthirdFirst
+
+theorem theorem2_marked_graph_safe_and_sound_no_three_transition_flow_cycle
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {first second third : Trans}
+    (hfirstSecond :
+      PetriNet.transitionFlow net.toPetriNet first second)
+    (hsecondThird :
+      PetriNet.transitionFlow net.toPetriNet second third)
+    (hthirdFirst :
+      PetriNet.transitionFlow net.toPetriNet third first) :
+    False :=
+  WorkflowNet.markedGraph_safeAndSound_no_three_transitionFlow_cycle
+    hmarked hsafeSound hfirstSecond hsecondThird hthirdFirst
 
 theorem theorem2_no_decision_places_free_choice
     {Place : Type u}

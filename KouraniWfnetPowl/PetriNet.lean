@@ -2748,6 +2748,13 @@ structure PlaceCycleSupport
         net.placeToTrans place trans ->
           ∃ next, next ∈ places ∧ net.transToPlace trans next
 
+def PlaceCycleFiringSupport
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) : Prop :=
+  ∃ places,
+    PlaceCycleSupport net places ∧
+      ∃ place, place ∈ places ∧ net.transToPlace trans place
+
 theorem fires_placesMarked_of_placeCycleSupport
     {net : WorkflowNet Place Trans}
     {places : List Place}
@@ -2807,6 +2814,96 @@ theorem no_completion_of_placeCycleSupport
   have hfinalZero : ¬ final net place > 0 := by
     simp [final, Marking.single, hnonSink]
   exact hfinalZero hpositive
+
+theorem no_completion_after_placeCycleFiringSupport_firing
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {trans : Trans}
+    (cycle : PlaceCycleFiringSupport net trans)
+    {before after : Marking Place}
+    {suffix : List Trans}
+    (hfires : fires net before trans after)
+    (hsuffix : FiringSequence net after suffix (final net)) :
+    False := by
+  rcases cycle with ⟨places, support, place, hplace, hpost⟩
+  exact
+    no_completion_of_placeCycleSupport
+      support
+      hsuffix
+      ⟨place,
+        hplace,
+        fires_positive_of_transToPlace hfires hpost⟩
+
+theorem markedGraph_prepend_transitionFlow_placeCycleSupport
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {source target : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet source target)
+    {places : List Place}
+    (support : PlaceCycleSupport net places)
+    (htargetPost :
+      ∃ next, next ∈ places ∧ net.transToPlace target next) :
+    ∃ place,
+      net.transToPlace source place ∧
+        net.placeToTrans place target ∧
+          PlaceCycleSupport net (place :: places) := by
+  rcases hflow with ⟨place, hsourcePost, htargetPre⟩
+  refine
+    ⟨place,
+      hsourcePost,
+      htargetPre,
+      ?_⟩
+  refine
+    { nonSink := ?_,
+      successor := ?_ }
+  · intro member hmem
+    rcases List.mem_cons.mp hmem with hhead | htail
+    · rw [hhead]
+      intro hsink
+      rw [hsink] at htargetPre
+      exact sink_no_output net target htargetPre
+    · exact support.nonSink member htail
+  · intro member trans hmem hconsumer
+    rcases List.mem_cons.mp hmem with hhead | htail
+    · rw [hhead] at hconsumer
+      have hsame : trans = target :=
+        hmarked.2 place trans target hconsumer htargetPre
+      subst hsame
+      rcases htargetPost with ⟨next, hnext, hpost⟩
+      exact
+        ⟨next,
+          List.mem_cons_of_mem place hnext,
+          hpost⟩
+    · rcases support.successor member trans htail hconsumer with
+        ⟨next, hnext, hpost⟩
+      exact
+        ⟨next,
+          List.mem_cons_of_mem place hnext,
+          hpost⟩
+
+theorem markedGraph_prepend_transitionFlow_placesMarked_after_firing
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {source target : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet source target)
+    {places : List Place}
+    (support : PlaceCycleSupport net places)
+    (htargetPost :
+      ∃ next, next ∈ places ∧ net.transToPlace target next)
+    {before after : Marking Place}
+    (hfires : fires net before source after) :
+    ∃ extendedPlaces,
+      PlaceCycleSupport net extendedPlaces ∧
+        placesMarked after extendedPlaces := by
+  rcases markedGraph_prepend_transitionFlow_placeCycleSupport
+      hmarked hflow support htargetPost with
+    ⟨place, hsourcePost, _htargetPre, extendedSupport⟩
+  exact
+    ⟨place :: places,
+      extendedSupport,
+      place,
+      by simp,
+      fires_positive_of_transToPlace hfires hsourcePost⟩
 
 theorem markedGraph_two_transitionFlow_cycle_placeCycleSupport
     {net : WorkflowNet Place Trans}
@@ -2896,6 +2993,224 @@ theorem markedGraph_two_transitionFlow_cycle_placesMarked_after_left_firing
       leftRightPlace,
       by simp,
       fires_positive_of_transToPlace hfires hleftPost⟩
+
+theorem markedGraph_two_transitionFlow_cycle_firingSupport
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {left right : Trans}
+    (hleftRight :
+      PetriNet.transitionFlow net.toPetriNet left right)
+    (hrightLeft :
+      PetriNet.transitionFlow net.toPetriNet right left) :
+    PlaceCycleFiringSupport net left := by
+  rcases hleftRight with
+    ⟨leftRightPlace, hleftPost, hrightPre⟩
+  rcases hrightLeft with
+    ⟨rightLeftPlace, hrightPost, hleftPre⟩
+  exact
+    ⟨[leftRightPlace, rightLeftPlace],
+        { nonSink := by
+            intro place hmem
+            simp at hmem
+            rcases hmem with hfirst | hsecond
+            · rw [hfirst]
+              intro hsink
+              rw [hsink] at hrightPre
+              exact sink_no_output net right hrightPre
+            · rw [hsecond]
+              intro hsink
+              rw [hsink] at hleftPre
+              exact sink_no_output net left hleftPre,
+          successor := by
+            intro place trans hmem hconsumer
+            simp at hmem
+            rcases hmem with hfirst | hsecond
+            · rw [hfirst] at hconsumer
+              have hsame : trans = right :=
+                hmarked.2 leftRightPlace trans right hconsumer hrightPre
+              subst hsame
+              exact
+                ⟨rightLeftPlace,
+                  by simp,
+                  hrightPost⟩
+            · rw [hsecond] at hconsumer
+              have hsame : trans = left :=
+                hmarked.2 rightLeftPlace trans left hconsumer hleftPre
+              subst hsame
+              exact
+                ⟨leftRightPlace,
+                  by simp,
+                  hleftPost⟩ },
+        leftRightPlace,
+        by simp,
+        hleftPost⟩
+
+theorem markedGraph_three_transitionFlow_cycle_placesMarked_after_first_firing
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {first second third : Trans}
+    (hfirstSecond :
+      PetriNet.transitionFlow net.toPetriNet first second)
+    (hsecondThird :
+      PetriNet.transitionFlow net.toPetriNet second third)
+    (hthirdFirst :
+      PetriNet.transitionFlow net.toPetriNet third first)
+    {before after : Marking Place}
+    (hfires : fires net before first after) :
+    ∃ places,
+      PlaceCycleSupport net places ∧
+        placesMarked after places := by
+  rcases hfirstSecond with
+    ⟨firstSecondPlace, hfirstPost, hsecondPre⟩
+  rcases hsecondThird with
+    ⟨secondThirdPlace, hsecondPost, hthirdPre⟩
+  rcases hthirdFirst with
+    ⟨thirdFirstPlace, hthirdPost, hfirstPre⟩
+  exact
+    ⟨[firstSecondPlace, secondThirdPlace, thirdFirstPlace],
+      { nonSink := by
+          intro place hmem
+          simp at hmem
+          rcases hmem with hfirst | hsecond | hthird
+          · rw [hfirst]
+            intro hsink
+            rw [hsink] at hsecondPre
+            exact sink_no_output net second hsecondPre
+          · rw [hsecond]
+            intro hsink
+            rw [hsink] at hthirdPre
+            exact sink_no_output net third hthirdPre
+          · rw [hthird]
+            intro hsink
+            rw [hsink] at hfirstPre
+            exact sink_no_output net first hfirstPre,
+        successor := by
+          intro place trans hmem hconsumer
+          simp at hmem
+          rcases hmem with hfirst | hsecond | hthird
+          · rw [hfirst] at hconsumer
+            have hsame : trans = second :=
+              hmarked.2 firstSecondPlace trans second
+                hconsumer hsecondPre
+            subst hsame
+            exact
+              ⟨secondThirdPlace,
+                by simp,
+                hsecondPost⟩
+          · rw [hsecond] at hconsumer
+            have hsame : trans = third :=
+              hmarked.2 secondThirdPlace trans third
+                hconsumer hthirdPre
+            subst hsame
+            exact
+              ⟨thirdFirstPlace,
+                by simp,
+                hthirdPost⟩
+          · rw [hthird] at hconsumer
+            have hsame : trans = first :=
+              hmarked.2 thirdFirstPlace trans first
+                hconsumer hfirstPre
+            subst hsame
+            exact
+              ⟨firstSecondPlace,
+                by simp,
+                hfirstPost⟩ },
+      firstSecondPlace,
+      by simp,
+      fires_positive_of_transToPlace hfires hfirstPost⟩
+
+theorem markedGraph_three_transitionFlow_cycle_firingSupport
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {first second third : Trans}
+    (hfirstSecond :
+      PetriNet.transitionFlow net.toPetriNet first second)
+    (hsecondThird :
+      PetriNet.transitionFlow net.toPetriNet second third)
+    (hthirdFirst :
+      PetriNet.transitionFlow net.toPetriNet third first) :
+    PlaceCycleFiringSupport net first := by
+  rcases hfirstSecond with
+    ⟨firstSecondPlace, hfirstPost, hsecondPre⟩
+  rcases hsecondThird with
+    ⟨secondThirdPlace, hsecondPost, hthirdPre⟩
+  rcases hthirdFirst with
+    ⟨thirdFirstPlace, hthirdPost, hfirstPre⟩
+  exact
+    ⟨[firstSecondPlace, secondThirdPlace, thirdFirstPlace],
+        { nonSink := by
+            intro place hmem
+            simp at hmem
+            rcases hmem with hfirst | hsecond | hthird
+            · rw [hfirst]
+              intro hsink
+              rw [hsink] at hsecondPre
+              exact sink_no_output net second hsecondPre
+            · rw [hsecond]
+              intro hsink
+              rw [hsink] at hthirdPre
+              exact sink_no_output net third hthirdPre
+            · rw [hthird]
+              intro hsink
+              rw [hsink] at hfirstPre
+              exact sink_no_output net first hfirstPre,
+          successor := by
+            intro place trans hmem hconsumer
+            simp at hmem
+            rcases hmem with hfirst | hsecond | hthird
+            · rw [hfirst] at hconsumer
+              have hsame : trans = second :=
+                hmarked.2 firstSecondPlace trans second
+                  hconsumer hsecondPre
+              subst hsame
+              exact
+                ⟨secondThirdPlace,
+                  by simp,
+                  hsecondPost⟩
+            · rw [hsecond] at hconsumer
+              have hsame : trans = third :=
+                hmarked.2 secondThirdPlace trans third
+                  hconsumer hthirdPre
+              subst hsame
+              exact
+                ⟨thirdFirstPlace,
+                  by simp,
+                  hthirdPost⟩
+            · rw [hthird] at hconsumer
+              have hsame : trans = first :=
+                hmarked.2 thirdFirstPlace trans first
+                  hconsumer hfirstPre
+              subst hsame
+              exact
+                ⟨firstSecondPlace,
+                  by simp,
+                  hfirstPost⟩ },
+        firstSecondPlace,
+        by simp,
+        hfirstPost⟩
+
+theorem markedGraph_no_completion_after_three_transitionFlow_cycle_firing
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {first second third : Trans}
+    (hfirstSecond :
+      PetriNet.transitionFlow net.toPetriNet first second)
+    (hsecondThird :
+      PetriNet.transitionFlow net.toPetriNet second third)
+    (hthirdFirst :
+      PetriNet.transitionFlow net.toPetriNet third first)
+    {before after : Marking Place}
+    {suffix : List Trans}
+    (hfires : fires net before first after)
+    (hsuffix : FiringSequence net after suffix (final net)) :
+    False := by
+  rcases markedGraph_three_transitionFlow_cycle_placesMarked_after_first_firing
+      hmarked hfirstSecond hsecondThird hthirdFirst hfires with
+    ⟨places, support, hplacesMarked⟩
+  exact
+    no_completion_of_placeCycleSupport
+      support hsuffix hplacesMarked
 
 theorem firingSequence_positive_of_no_consuming_transition
     {net : WorkflowNet Place Trans}
@@ -3386,6 +3701,48 @@ theorem markedGraph_safeAndSound_transitionFlow_asymmetric
     Asymmetric (PetriNet.transitionFlow net.toPetriNet) :=
   markedGraph_sound_transitionFlow_asymmetric
     hmarked hsafeSound.2
+
+theorem markedGraph_sound_no_three_transitionFlow_cycle
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : sound net)
+    {first second third : Trans}
+    (hfirstSecond :
+      PetriNet.transitionFlow net.toPetriNet first second)
+    (hsecondThird :
+      PetriNet.transitionFlow net.toPetriNet second third)
+    (hthirdFirst :
+      PetriNet.transitionFlow net.toPetriNet third first) :
+    False := by
+  rcases sound_accepting_firing_sequence hsound first with
+    ⟨_before,
+      _after,
+      _preTrace,
+      _suffix,
+      _hpre,
+      hfires,
+      hsuffix,
+      _hcombined⟩
+  exact
+    markedGraph_no_completion_after_three_transitionFlow_cycle_firing
+      hmarked hfirstSecond hsecondThird hthirdFirst hfires hsuffix
+
+theorem markedGraph_safeAndSound_no_three_transitionFlow_cycle
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : safeAndSound net)
+    {first second third : Trans}
+    (hfirstSecond :
+      PetriNet.transitionFlow net.toPetriNet first second)
+    (hsecondThird :
+      PetriNet.transitionFlow net.toPetriNet second third)
+    (hthirdFirst :
+      PetriNet.transitionFlow net.toPetriNet third first) :
+    False :=
+  markedGraph_sound_no_three_transitionFlow_cycle
+    hmarked hsafeSound.2 hfirstSecond hsecondThird hthirdFirst
 
 theorem markedGraph_sound_transitionFlow_successor_mem_completion_suffix
     [DecidableEq Place]
