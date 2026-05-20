@@ -149,6 +149,92 @@ theorem indexed_component_nonempty
     ∃ item, part item :=
   Partition.nonempty_of_listGet? partition hpart
 
+theorem lemma3_entry_point_has_part_output
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hentry : WorkflowNet.entryPoints net part place) :
+    ∃ trans, part trans ∧ net.placeToTrans place trans :=
+  WorkflowNet.entryPoints_has_part_output net hentry
+
+theorem lemma3_entry_point_source_or_external_input
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hentry : WorkflowNet.entryPoints net part place) :
+    place = net.source ∨
+      ∃ trans, ¬ part trans ∧ net.transToPlace trans place :=
+  WorkflowNet.entryPoints_source_or_external_input net hentry
+
+theorem lemma3_entry_point_of_source_part_output
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hsource : place = net.source)
+    (houtput : ∃ trans, part trans ∧ net.placeToTrans place trans) :
+    WorkflowNet.entryPoints net part place :=
+  WorkflowNet.entryPoints_of_source_part_output net hsource houtput
+
+theorem lemma3_entry_point_of_external_input
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (houtput : ∃ trans, part trans ∧ net.placeToTrans place trans)
+    (hexternal : ∃ trans, ¬ part trans ∧ net.transToPlace trans place) :
+    WorkflowNet.entryPoints net part place :=
+  WorkflowNet.entryPoints_of_external_input net houtput hexternal
+
+theorem lemma3_exit_point_has_part_input
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hexit : WorkflowNet.exitPoints net part place) :
+    ∃ trans, part trans ∧ net.transToPlace trans place :=
+  WorkflowNet.exitPoints_has_part_input net hexit
+
+theorem lemma3_exit_point_sink_or_external_output
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hexit : WorkflowNet.exitPoints net part place) :
+    place = net.sink ∨
+      ∃ trans, ¬ part trans ∧ net.placeToTrans place trans :=
+  WorkflowNet.exitPoints_sink_or_external_output net hexit
+
+theorem lemma3_exit_point_of_sink_part_input
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hsink : place = net.sink)
+    (hinput : ∃ trans, part trans ∧ net.transToPlace trans place) :
+    WorkflowNet.exitPoints net part place :=
+  WorkflowNet.exitPoints_of_sink_part_input net hsink hinput
+
+theorem lemma3_exit_point_of_external_output
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hinput : ∃ trans, part trans ∧ net.transToPlace trans place)
+    (hexternal : ∃ trans, ¬ part trans ∧ net.placeToTrans place trans) :
+    WorkflowNet.exitPoints net part place :=
+  WorkflowNet.exitPoints_of_external_output net hinput hexternal
+
 theorem lemma3_execution_order_of_boundary
     {Place : Type u}
     {Trans : Type v}
@@ -218,6 +304,30 @@ theorem lemma3_partial_order_same_part_of_common_postset_reach
   Patterns.partialOrderPattern_samePart_of_reachesFromPostset
     net partition hpattern hleft hright
 
+theorem lemma3_reaches_from_postset_of_place_to_trans
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {place : Place}
+    {trans : Trans}
+    (hflow : net.placeToTrans place trans) :
+    Patterns.reachesFromPostset net place trans :=
+  Patterns.reachesFromPostset_of_placeToTrans net hflow
+
+theorem lemma3_partial_order_same_part_of_common_preset
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {place : Place}
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    partition.samePart left right :=
+  Patterns.partialOrderPattern_samePart_of_common_preset
+    net partition hpattern hleft hright
+
 theorem lemma3_partial_order_part_eq_of_common_postset_reach
     {Place : Type u}
     {Trans : Type v}
@@ -237,6 +347,26 @@ theorem lemma3_partial_order_part_eq_of_common_postset_reach
   Patterns.partialOrderPattern_part_eq_of_common_postset_reach
     net partition hpattern hleftPartMem hrightPartMem
     hleftPart hrightPart hleftReach hrightReach
+
+theorem lemma3_partial_order_part_eq_of_common_preset
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {leftPart rightPart : Set Trans}
+    (hleftPartMem : leftPart ∈ partition.parts)
+    (hrightPartMem : rightPart ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hleftPart : leftPart left)
+    (hrightPart : rightPart right)
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    leftPart = rightPart :=
+  Patterns.partialOrderPattern_part_eq_of_common_preset
+    net partition hpattern hleftPartMem hrightPartMem
+    hleftPart hrightPart hleft hright
 
 theorem lemma3_partial_order_indexed_part_eq_of_common_postset_reach
     {Place : Type u}
@@ -258,6 +388,27 @@ theorem lemma3_partial_order_indexed_part_eq_of_common_postset_reach
   Patterns.partialOrderPattern_indexed_part_eq_of_common_postset_reach
     net partition hpattern hleftGet hrightGet
     hleftPart hrightPart hleftReach hrightReach
+
+theorem lemma3_partial_order_indexed_part_eq_of_common_preset
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {leftIndex rightIndex : Nat}
+    {leftPart rightPart : Set Trans}
+    (hleftGet : Powl.listGet? partition.parts leftIndex = some leftPart)
+    (hrightGet : Powl.listGet? partition.parts rightIndex = some rightPart)
+    {place : Place}
+    {left right : Trans}
+    (hleftPart : leftPart left)
+    (hrightPart : rightPart right)
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    leftPart = rightPart :=
+  Patterns.partialOrderPattern_indexed_part_eq_of_common_preset
+    net partition hpattern hleftGet hrightGet
+    hleftPart hrightPart hleft hright
 
 theorem lemma3_partial_order_entry_places_equivalent
     {Place : Type u}

@@ -1656,6 +1656,14 @@ def reachesFromPostset
     net.placeToTrans place first ∧
     PetriNet.transitionReachable net.toPetriNet first target
 
+theorem reachesFromPostset_of_placeToTrans
+    (net : WorkflowNet Place Trans)
+    {place : Place}
+    {trans : Trans}
+    (hflow : net.placeToTrans place trans) :
+    reachesFromPostset net place trans :=
+  ⟨trans, hflow, PetriNet.Path.refl⟩
+
 def executionOrder
     (net : WorkflowNet Place Trans)
     (partition : Partition Trans) : Rel Nat :=
@@ -1809,6 +1817,73 @@ theorem partialOrderPattern_indexed_part_eq_of_common_postset_reach
     (Partition.mem_of_listGet? partition hleftGet)
     (Partition.mem_of_listGet? partition hrightGet)
     hleftPart hrightPart hleftReach hrightReach
+
+theorem partialOrderPattern_samePart_of_common_preset
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hpattern : partialOrderPattern net partition)
+    {place : Place}
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    partition.samePart left right :=
+  partialOrderPattern_samePart_of_reachesFromPostset
+    net
+    partition
+    hpattern
+    (reachesFromPostset_of_placeToTrans net hleft)
+    (reachesFromPostset_of_placeToTrans net hright)
+
+theorem partialOrderPattern_part_eq_of_common_preset
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hpattern : partialOrderPattern net partition)
+    {leftPart rightPart : Set Trans}
+    (hleftPartMem : leftPart ∈ partition.parts)
+    (hrightPartMem : rightPart ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hleftPart : leftPart left)
+    (hrightPart : rightPart right)
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    leftPart = rightPart :=
+  partialOrderPattern_part_eq_of_common_postset_reach
+    net
+    partition
+    hpattern
+    hleftPartMem
+    hrightPartMem
+    hleftPart
+    hrightPart
+    (reachesFromPostset_of_placeToTrans net hleft)
+    (reachesFromPostset_of_placeToTrans net hright)
+
+theorem partialOrderPattern_indexed_part_eq_of_common_preset
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hpattern : partialOrderPattern net partition)
+    {leftIndex rightIndex : Nat}
+    {leftPart rightPart : Set Trans}
+    (hleftGet : Powl.listGet? partition.parts leftIndex = some leftPart)
+    (hrightGet : Powl.listGet? partition.parts rightIndex = some rightPart)
+    {place : Place}
+    {left right : Trans}
+    (hleftPart : leftPart left)
+    (hrightPart : rightPart right)
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    leftPart = rightPart :=
+  partialOrderPattern_part_eq_of_common_preset
+    net
+    partition
+    hpattern
+    (Partition.mem_of_listGet? partition hleftGet)
+    (Partition.mem_of_listGet? partition hrightGet)
+    hleftPart
+    hrightPart
+    hleft
+    hright
 
 theorem partialOrderPattern_entry_placeEquivalent
     (net : WorkflowNet Place Trans)

@@ -838,6 +838,168 @@ def exitPoints (net : WorkflowNet Place Trans) (part : Set Trans) : Set Place :=
     (∃ trans, part trans ∧ net.transToPlace trans place) ∧
     (place = net.sink ∨ ∃ trans, ¬ part trans ∧ net.placeToTrans place trans)
 
+theorem source_no_input
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) :
+    ¬ net.transToPlace trans net.source :=
+  ((net.uniqueSource net.source).2 rfl) trans
+
+theorem sink_no_output
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) :
+    ¬ net.placeToTrans net.sink trans :=
+  ((net.uniqueSink net.sink).2 rfl) trans
+
+theorem entryPoints_has_part_output
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hentry : entryPoints net part place) :
+    ∃ trans, part trans ∧ net.placeToTrans place trans :=
+  hentry.1
+
+theorem entryPoints_source_or_external_input
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hentry : entryPoints net part place) :
+    place = net.source ∨
+      ∃ trans, ¬ part trans ∧ net.transToPlace trans place :=
+  hentry.2
+
+theorem exitPoints_has_part_input
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hexit : exitPoints net part place) :
+    ∃ trans, part trans ∧ net.transToPlace trans place :=
+  hexit.1
+
+theorem exitPoints_sink_or_external_output
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hexit : exitPoints net part place) :
+    place = net.sink ∨
+      ∃ trans, ¬ part trans ∧ net.placeToTrans place trans :=
+  hexit.2
+
+theorem entryPoints_of_source_part_output
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hsource : place = net.source)
+    (houtput : ∃ trans, part trans ∧ net.placeToTrans place trans) :
+    entryPoints net part place :=
+  ⟨houtput, Or.inl hsource⟩
+
+theorem exitPoints_of_sink_part_input
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hsink : place = net.sink)
+    (hinput : ∃ trans, part trans ∧ net.transToPlace trans place) :
+    exitPoints net part place :=
+  ⟨hinput, Or.inl hsink⟩
+
+theorem entryPoints_of_external_input
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (houtput : ∃ trans, part trans ∧ net.placeToTrans place trans)
+    (hexternal : ∃ trans, ¬ part trans ∧ net.transToPlace trans place) :
+    entryPoints net part place :=
+  ⟨houtput, Or.inr hexternal⟩
+
+theorem exitPoints_of_external_output
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hinput : ∃ trans, part trans ∧ net.transToPlace trans place)
+    (hexternal : ∃ trans, ¬ part trans ∧ net.placeToTrans place trans) :
+    exitPoints net part place :=
+  ⟨hinput, Or.inr hexternal⟩
+
+theorem entryPoints_source_iff
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans) :
+    entryPoints net part net.source ↔
+      ∃ trans, part trans ∧ net.placeToTrans net.source trans := by
+  constructor
+  · intro hentry
+    exact hentry.1
+  · intro houtput
+    exact ⟨houtput, Or.inl rfl⟩
+
+theorem exitPoints_sink_iff
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans) :
+    exitPoints net part net.sink ↔
+      ∃ trans, part trans ∧ net.transToPlace trans net.sink := by
+  constructor
+  · intro hexit
+    exact hexit.1
+  · intro hinput
+    exact ⟨hinput, Or.inl rfl⟩
+
+theorem entryPoints_external_input_of_ne_source
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hentry : entryPoints net part place)
+    (hplace : place ≠ net.source) :
+    ∃ trans, ¬ part trans ∧ net.transToPlace trans place := by
+  rcases hentry.2 with hsource | hexternal
+  · exact False.elim (hplace hsource)
+  · exact hexternal
+
+theorem exitPoints_external_output_of_ne_sink
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hexit : exitPoints net part place)
+    (hplace : place ≠ net.sink) :
+    ∃ trans, ¬ part trans ∧ net.placeToTrans place trans := by
+  rcases hexit.2 with hsink | hexternal
+  · exact False.elim (hplace hsink)
+  · exact hexternal
+
+theorem entryPoints_ne_sink
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hentry : entryPoints net part place) :
+    place ≠ net.sink := by
+  intro hsink
+  rcases hentry.1 with ⟨trans, _hpart, hflow⟩
+  rw [hsink] at hflow
+  exact sink_no_output net trans hflow
+
+theorem exitPoints_ne_source
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hexit : exitPoints net part place) :
+    place ≠ net.source := by
+  intro hsource
+  rcases hexit.1 with ⟨trans, _hpart, hflow⟩
+  rw [hsource] at hflow
+  exact source_no_input net trans hflow
+
+theorem not_entryPoints_sink
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans) :
+    ¬ entryPoints net part net.sink := by
+  intro hentry
+  exact entryPoints_ne_sink net hentry rfl
+
+theorem not_exitPoints_source
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans) :
+    ¬ exitPoints net part net.source := by
+  intro hexit
+  exact exitPoints_ne_source net hexit rfl
+
 def enabled
     (net : WorkflowNet Place Trans)
     (marking : Marking Place)

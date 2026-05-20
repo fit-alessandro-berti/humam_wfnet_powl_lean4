@@ -52,7 +52,10 @@ The current proof spine is:
   to ambient partial-order projection paths. Partial-order pattern consequences
   now also expose execution-order boundary construction, cycle exclusion,
   same-component entry/exit exclusion, and entry/exit place equivalence with
-  respect to a component's transitions.
+  respect to a component's transitions. Entry/exit point predicates now have
+  checked constructor and destructor lemmas. Indexed partition components now
+  carry checked membership/nonemptiness facts, and common-postset reachability
+  is checked to force transitions into the same partition component.
 - `KouraniWfnetPowl.PaperTargets`: named Section 5 proof targets and checked
   semantic preservation theorems corresponding to the POWL-language side of
   Lemmas 4, 5, and 6, the checked base case for Theorem 1, and named checked
@@ -62,7 +65,8 @@ The current proof spine is:
   language equivalence with typed original subtraces, and Lemma 2 loop trace
   closure plus loop projection boundary and restricted-projection facts, and
   Lemma 3 partial-order projection boundary/internal edge facts plus
-  restricted-path lifting, execution-order, and boundary-equivalence
+  restricted-path lifting, execution-order, entry/exit point API, and
+  boundary-equivalence consequences, plus common-postset same-component
   consequences.
 
 Build with:
