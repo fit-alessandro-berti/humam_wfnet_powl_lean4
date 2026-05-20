@@ -232,7 +232,10 @@ The current proof spine is:
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
   checked branch-subnet closure/disjointness, local branch-language transfer,
-  mapped local subtype POWL transfer, a `LocalCertifiedConversion` interface
+  mapped local subtype POWL transfer, local XOR/loop/partial-order
+  branch-family and certified-branch language-equality forms, direct
+  branch-family constructors from restricted recursive branch certificates, a
+  `LocalCertifiedConversion` interface
   for source-to-sink subproblems, a `LocalSubtypeCertifiedConversion`
   interface for transition-subset subproblems with pointwise and equality forms,
   a checked full-transition-subset equivalence back to ordinary local
@@ -254,7 +257,8 @@ The current proof spine is:
   through to the semi-block certified conversion and combined safe/equivalent
   POWL-model consequence, plus explicit language-equality and visible-activity
   witness theorems for the concrete atom, XOR, loop, and partial-order POWL
-  models, and a
+  models, bundled into a `ConcretePowlWitness` case/certificate eliminator
+  with reusable preservation and safe+existence consequences, and a
   `SemiBlockCompletenessCase`/`SemiBlockCompletenessCertificate` layer packages
   that case split into one algorithm-certificate object; the raw case evidence
   and bundled algorithm certificates both expose language preservation/equality,
