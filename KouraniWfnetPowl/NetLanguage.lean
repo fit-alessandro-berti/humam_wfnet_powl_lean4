@@ -65,6 +65,21 @@ theorem traceWord_map_subtype
   | cons trans rest ih =>
       simp [traceWord, Powl.transitionWord, ih]
 
+theorem map_subtype_val_univ
+    {Trans : Type v}
+    (trace : List Trans) :
+    (trace.map
+        (fun trans =>
+          (⟨trans, trivial⟩ :
+            {trans : Trans // Set.univ trans}))).map
+        Subtype.val =
+      trace := by
+  induction trace with
+  | nil =>
+      rfl
+  | cons trans rest ih =>
+      simp [ih]
+
 def normalizedLabel
     {Activity : Type u}
     {Trans : Type v}
@@ -276,6 +291,39 @@ theorem localLanguage_intro
     localLanguage net label source sink word :=
   ⟨trace, sequence, hword⟩
 
+theorem localSubtypeTraceLanguage_univ_iff_localLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {source sink : Place}
+    (word : List Activity) :
+    localSubtypeTraceLanguage net label Set.univ source sink word ↔
+      localLanguage net label source sink word := by
+  constructor
+  · intro htyped
+    rcases htyped with ⟨trace, sequence, hword⟩
+    exact ⟨trace.map Subtype.val, sequence, hword⟩
+  · intro hlocal
+    rcases hlocal with ⟨trace, sequence, hword⟩
+    have hmap :
+        (trace.map
+            (fun trans =>
+              (⟨trans, trivial⟩ :
+                {trans : Trans // Set.univ trans}))).map
+            Subtype.val =
+          trace :=
+      map_subtype_val_univ trace
+    refine
+      ⟨trace.map
+          (fun trans =>
+            (⟨trans, trivial⟩ :
+              {trans : Trans // Set.univ trans})),
+        ?_, ?_⟩
+    · simpa [hmap] using sequence
+    · simpa [hmap] using hword
+
 theorem language_iff_localLanguage_source_sink
     {Place : Type u}
     {Trans : Type v}
@@ -313,6 +361,39 @@ theorem language_of_subtypeTraceLanguage
     language net label word := by
   rcases hlanguage with ⟨trace, sequence, hword⟩
   exact language_intro sequence hword
+
+theorem subtypeTraceLanguage_univ_iff_language
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (word : List Activity) :
+    subtypeTraceLanguage net label Set.univ word ↔
+      language net label word := by
+  constructor
+  · intro htyped
+    rcases htyped with ⟨trace, sequence, hword⟩
+    exact ⟨trace.map Subtype.val, sequence, hword⟩
+  · intro hlanguage
+    rcases hlanguage with ⟨trace, sequence, hword⟩
+    have hmap :
+        (trace.map
+            (fun trans =>
+              (⟨trans, trivial⟩ :
+                {trans : Trans // Set.univ trans}))).map
+            Subtype.val =
+          trace :=
+      map_subtype_val_univ trace
+    refine
+      ⟨trace.map
+          (fun trans =>
+            (⟨trans, trivial⟩ :
+              {trans : Trans // Set.univ trans})),
+        ?_, ?_⟩
+    · simpa [hmap] using sequence
+    · simpa [hmap] using hword
 
 theorem restricted_local_language_iff_localSubtypeTraceLanguage
     {Place : Type u}

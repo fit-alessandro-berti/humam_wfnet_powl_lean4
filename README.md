@@ -178,19 +178,27 @@ The current proof spine is:
   interface for Theorem 1, with explicit global and local single-transition
   base-case constructors and object-level successful-conversion constructors
   for XOR, loop, ordinary partial-order, and normalized partial-order recursive
-  cases, including the paper-style `L(N) = L(ψ)` equality form. Theorem 2 now
-  has checked targets for the safe-and-sound,
+  cases, plus a global `SubtypeCertifiedConversion` interface with mapped
+  language preservation/equality and XOR, loop, and partial-order composition
+  wrappers over subtype trace decompositions, including the paper-style
+  `L(N) = L(ψ)` equality form. Theorem 2 now has checked targets for the
+  safe-and-sound,
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
   checked branch-subnet closure/disjointness, local branch-language transfer,
   mapped local subtype POWL transfer, a `LocalCertifiedConversion` interface
   for source-to-sink subproblems, a `LocalSubtypeCertifiedConversion`
-  interface for transition-subset subproblems, local XOR composition for
-  decision-branch models and local loop composition for source-to-sink/redo-back
-  submodels plus local partial-order composition for component submodels under
-  supplied local decompositions, and constructors whose certificates are
-  supplied by recursive `ConversionCertificate`s, including a bridge from
-  restricted decision-branch certificates to local subtype conversions, exact
+  interface for transition-subset subproblems with pointwise and equality forms,
+  a checked full-transition-subset equivalence back to ordinary local
+  languages, and local-to-global language preservation for source/sink
+  certified conversions,
+  local XOR composition for decision-branch models and local loop composition
+  for source-to-sink/redo-back submodels plus local partial-order composition
+  for component submodels under supplied local decompositions, and constructors
+  whose certificates are supplied by recursive `ConversionCertificate`s,
+  including a bridge from restricted decision-branch certificates to local
+  subtype conversions and object-level branch-family XOR/partial-order
+  constructors from local subtype conversions, exact
   uniqueness,
   free-choice preset-equality,
   marked-graph/no-decision equivalence, and non-boundary unique-place-flow
