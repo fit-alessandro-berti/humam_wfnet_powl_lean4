@@ -564,6 +564,54 @@ theorem path_transition_to_place_last
   · cases hsame
   · exact hlast
 
+theorem uniqueSource_of_connected_no_in
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (hsourceNoIn : ∀ trans, ¬ net.transToPlace trans source)
+    (hconnected :
+      ∀ node : Node Place Trans,
+        Path net (Node.place source) node ∧
+        Path net node (Node.place sink)) :
+    ∀ place,
+      (∀ trans, ¬ net.transToPlace trans place) ↔ place = source := by
+  intro place
+  constructor
+  · intro hnoIn
+    have hpath : Path net (Node.place source) (Node.place place) :=
+      (hconnected (Node.place place)).1
+    rcases path_to_place_last_transition net hpath with hsame | hlast
+    · cases hsame
+      rfl
+    · rcases hlast with ⟨last, _path, hlastFlow⟩
+      exact False.elim (hnoIn last hlastFlow)
+  · intro hplace trans hflow
+    rw [hplace] at hflow
+    exact hsourceNoIn trans hflow
+
+theorem uniqueSink_of_connected_no_out
+    (net : PetriNet Place Trans)
+    (source sink : Place)
+    (hsinkNoOut : ∀ trans, ¬ net.placeToTrans sink trans)
+    (hconnected :
+      ∀ node : Node Place Trans,
+        Path net (Node.place source) node ∧
+        Path net node (Node.place sink)) :
+    ∀ place,
+      (∀ trans, ¬ net.placeToTrans place trans) ↔ place = sink := by
+  intro place
+  constructor
+  · intro hnoOut
+    have hpath : Path net (Node.place place) (Node.place sink) :=
+      (hconnected (Node.place place)).2
+    rcases path_from_place_first_transition net hpath with hsame | hfirst
+    · cases hsame
+      rfl
+    · rcases hfirst with ⟨first, hfirstFlow, _path⟩
+      exact False.elim (hnoOut first hfirstFlow)
+  · intro hplace trans hflow
+    rw [hplace] at hflow
+    exact hsinkNoOut trans hflow
+
 inductive PlacePathTo
     (net : PetriNet Place Trans)
     (target : Place) :
@@ -679,6 +727,74 @@ noncomputable def single (marked : Place) : Marking Place := by
   classical
   exact fun place => if place = marked then 1 else 0
 
+def restrict
+    {places : Set Place}
+    (marking : Marking Place) :
+    Marking {place : Place // places place} :=
+  fun place => marking place.val
+
+noncomputable def extend
+    {places : Set Place}
+    (marking : Marking {place : Place // places place}) :
+    Marking Place := by
+  classical
+  exact fun place => if hplace : places place then marking ⟨place, hplace⟩ else 0
+
+@[simp] theorem restrict_apply
+    {places : Set Place}
+    (marking : Marking Place)
+    (place : {place : Place // places place}) :
+    restrict marking place = marking place.val :=
+  rfl
+
+theorem extend_apply_mem
+    {places : Set Place}
+    (marking : Marking {place : Place // places place})
+    (place : Place)
+    (hplace : places place) :
+    extend marking place = marking ⟨place, hplace⟩ := by
+  simp [extend, hplace]
+
+@[simp] theorem extend_apply_subtype
+    {places : Set Place}
+    (marking : Marking {place : Place // places place})
+    (place : {place : Place // places place}) :
+    extend marking place.val = marking place := by
+  cases place with
+  | mk place hplace =>
+      exact extend_apply_mem marking place hplace
+
+theorem extend_apply_of_not_mem
+    {places : Set Place}
+    (marking : Marking {place : Place // places place})
+    (place : Place)
+    (hplace : ¬ places place) :
+    extend marking place = 0 := by
+  simp [extend, hplace]
+
+theorem extend_single
+    {places : Set Place}
+    (marked : {place : Place // places place}) :
+    extend (single marked) = single marked.val := by
+  cases marked with
+  | mk marked hmarked =>
+      funext place
+      by_cases hplace : places place
+      · by_cases hsame : place = marked
+        · subst hsame
+          simp [extend, single, hmarked]
+        · have hsubne :
+              (⟨place, hplace⟩ : {place : Place // places place}) ≠
+                ⟨marked, hmarked⟩ := by
+            intro h
+            exact hsame (congrArg Subtype.val h)
+          simp [extend, single, hplace, hsame, hsubne]
+      · have hne : place ≠ marked := by
+          intro hsame
+          subst hsame
+          exact hplace hmarked
+        simp [extend, single, hplace, hne]
+
 end Marking
 
 structure WorkflowNet (Place : Type u) (Trans : Type v) extends
@@ -780,6 +896,406 @@ def sound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
 
 def safeAndSound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
   safe net ∧ sound net
+
+theorem restricted_enabled_lift
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (marking : Marking {place : Place // places place})
+    (trans : {trans : Trans // transitions trans})
+    (henabled : enabled restricted marking trans) :
+    enabled original (Marking.extend marking) trans.val := by
+  intro place hflow
+  have hplace : places place := hpreset place trans.val trans.property hflow
+  rw [Marking.extend_apply_mem marking place hplace]
+  exact henabled ⟨place, hplace⟩
+    ((hplaceToTrans ⟨place, hplace⟩ trans).mpr hflow)
+
+theorem restricted_consumed_apply_subtype
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (place : {place : Place // places place})
+    (trans : {trans : Trans // transitions trans}) :
+    consumed restricted trans place = consumed original trans.val place.val := by
+  by_cases hflow : restricted.placeToTrans place trans
+  · have horiginal : original.placeToTrans place.val trans.val :=
+      (hplaceToTrans place trans).mp hflow
+    simp [consumed, hflow, horiginal]
+  · have horiginal : ¬ original.placeToTrans place.val trans.val := by
+      intro horiginal
+      exact hflow ((hplaceToTrans place trans).mpr horiginal)
+    simp [consumed, hflow, horiginal]
+
+theorem restricted_produced_apply_subtype
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (place : {place : Place // places place})
+    (trans : {trans : Trans // transitions trans}) :
+    produced restricted trans place = produced original trans.val place.val := by
+  by_cases hflow : restricted.transToPlace trans place
+  · have horiginal : original.transToPlace trans.val place.val :=
+      (htransToPlace trans place).mp hflow
+    simp [produced, hflow, horiginal]
+  · have horiginal : ¬ original.transToPlace trans.val place.val := by
+      intro horiginal
+      exact hflow ((htransToPlace trans place).mpr horiginal)
+    simp [produced, hflow, horiginal]
+
+theorem restricted_consumed_apply_not_mem
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (place : Place)
+    (hplace : ¬ places place)
+    (trans : {trans : Trans // transitions trans}) :
+    consumed original trans.val place = 0 := by
+  have hnoFlow : ¬ original.placeToTrans place trans.val := by
+    intro hflow
+    exact hplace (hpreset place trans.val trans.property hflow)
+  simp [consumed, hnoFlow]
+
+theorem restricted_produced_apply_not_mem
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    (place : Place)
+    (hplace : ¬ places place)
+    (trans : {trans : Trans // transitions trans}) :
+    produced original trans.val place = 0 := by
+  have hnoFlow : ¬ original.transToPlace trans.val place := by
+    intro hflow
+    exact hplace (hpostset trans.val place trans.property hflow)
+  simp [produced, hnoFlow]
+
+theorem restricted_fire_lift
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    (marking : Marking {place : Place // places place})
+    (trans : {trans : Trans // transitions trans}) :
+    fire original (Marking.extend marking) trans.val =
+      Marking.extend (fire restricted marking trans) := by
+  funext place
+  by_cases hplace : places place
+  · simp [fire, Marking.extend_apply_mem, hplace,
+      ← restricted_consumed_apply_subtype
+        original restricted hplaceToTrans ⟨place, hplace⟩ trans,
+      ← restricted_produced_apply_subtype
+        original restricted htransToPlace ⟨place, hplace⟩ trans]
+  · simp [fire, Marking.extend_apply_of_not_mem, hplace,
+      restricted_consumed_apply_not_mem original hpreset place hplace trans,
+      restricted_produced_apply_not_mem original hpostset place hplace trans]
+
+theorem restricted_fires_lift
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    {before after : Marking {place : Place // places place}}
+    {trans : {trans : Trans // transitions trans}}
+    (hfires : fires restricted before trans after) :
+    fires original (Marking.extend before) trans.val (Marking.extend after) := by
+  constructor
+  · exact restricted_enabled_lift
+      original restricted hplaceToTrans hpreset before trans hfires.1
+  · rw [hfires.2]
+    exact (restricted_fire_lift
+      original restricted hplaceToTrans htransToPlace
+      hpreset hpostset before trans).symm
+
+theorem restricted_firingSequence_lift
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    {before after : Marking {place : Place // places place}}
+    {trace : List {trans : Trans // transitions trans}}
+    (sequence : FiringSequence restricted before trace after) :
+    FiringSequence
+      original
+      (Marking.extend before)
+      (trace.map Subtype.val)
+      (Marking.extend after) := by
+  induction sequence with
+  | nil =>
+      exact FiringSequence.nil
+  | cons hfires _ ih =>
+      exact FiringSequence.cons
+        (restricted_fires_lift
+          original restricted hplaceToTrans htransToPlace
+          hpreset hpostset hfires)
+        ih
+
+theorem restricted_enabled_restrict
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (marking : Marking Place)
+    (trans : {trans : Trans // transitions trans})
+    (henabled : enabled original marking trans.val) :
+    enabled restricted (Marking.restrict marking) trans := by
+  intro place hflow
+  exact henabled place.val ((hplaceToTrans place trans).mp hflow)
+
+theorem restricted_fire_restrict
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (marking : Marking Place)
+    (trans : {trans : Trans // transitions trans}) :
+    Marking.restrict (fire original marking trans.val) =
+      fire restricted (Marking.restrict marking) trans := by
+  funext place
+  simp [fire, Marking.restrict,
+    restricted_consumed_apply_subtype original restricted hplaceToTrans place trans,
+    restricted_produced_apply_subtype original restricted htransToPlace place trans]
+
+theorem restricted_fires_restrict
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    {before after : Marking Place}
+    {trans : {trans : Trans // transitions trans}}
+    (hfires : fires original before trans.val after) :
+    fires restricted
+      (Marking.restrict before)
+      trans
+      (Marking.restrict after) := by
+  constructor
+  · exact restricted_enabled_restrict
+      original restricted hplaceToTrans before trans hfires.1
+  · rw [hfires.2]
+    exact restricted_fire_restrict
+      original restricted hplaceToTrans htransToPlace before trans
+
+theorem restricted_firingSequence_restrict
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    {before after : Marking Place}
+    {trace : List {trans : Trans // transitions trans}}
+    (sequence :
+      FiringSequence original before (trace.map Subtype.val) after) :
+    FiringSequence
+      restricted
+      (Marking.restrict before)
+      trace
+      (Marking.restrict after) := by
+  induction trace generalizing before with
+  | nil =>
+      cases sequence with
+      | nil =>
+          exact FiringSequence.nil
+  | cons trans rest ih =>
+      cases sequence with
+      | cons hfires tail =>
+          exact FiringSequence.cons
+            (restricted_fires_restrict
+              original restricted hplaceToTrans htransToPlace hfires)
+            (ih tail)
+
+theorem restricted_reachable_lift
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source)
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    {marking : Marking {place : Place // places place}}
+    (hreachable : reachable restricted (initial restricted) marking) :
+    reachable original (initial original) (Marking.extend marking) := by
+  rcases hreachable with ⟨trace, sequence⟩
+  refine ⟨trace.map Subtype.val, ?_⟩
+  have lifted :=
+    restricted_firingSequence_lift
+      original restricted hplaceToTrans htransToPlace
+      hpreset hpostset sequence
+  simpa [initial, Marking.extend_single, hsource] using lifted
+
+theorem restricted_safe_of_original_safe
+    [DecidableEq Place]
+    {places : Set Place}
+    {transitions : Set Trans}
+    (original : WorkflowNet Place Trans)
+    (restricted :
+      WorkflowNet {place : Place // places place} {trans : Trans // transitions trans})
+    (hsource : restricted.source.val = original.source)
+    (hplaceToTrans :
+      ∀ place trans,
+        restricted.placeToTrans place trans ↔
+          original.placeToTrans place.val trans.val)
+    (htransToPlace :
+      ∀ trans place,
+        restricted.transToPlace trans place ↔
+          original.transToPlace trans.val place.val)
+    (hpreset :
+      ∀ place trans,
+        transitions trans ->
+          original.placeToTrans place trans ->
+            places place)
+    (hpostset :
+      ∀ trans place,
+        transitions trans ->
+          original.transToPlace trans place ->
+            places place)
+    (horiginalSafe : safe original) :
+    safe restricted := by
+  intro marking hreachable place
+  have liftedReachable :
+      reachable original (initial original) (Marking.extend marking) :=
+    restricted_reachable_lift
+      original restricted hsource hplaceToTrans htransToPlace
+      hpreset hpostset hreachable
+  have hsafe := horiginalSafe (Marking.extend marking) liftedReachable place.val
+  simpa using hsafe
 
 end WorkflowNet
 

@@ -234,6 +234,104 @@ theorem lemma1_xor_projection_restricted_transition_connected
   Patterns.xorPattern_restricted_transition_connected
     hpattern hpart transition
 
+theorem lemma1_xor_projection_restricted_connected
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (node :
+      PetriNet.Node
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans}) :
+    PetriNet.Path
+        (Patterns.xorProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨net.source,
+            Patterns.xorPattern_part_source_touching hpattern hpart⟩)
+        node ∧
+      PetriNet.Path
+        (Patterns.xorProjectionRestricted net part)
+        node
+        (PetriNet.Node.place
+          ⟨net.sink,
+            Patterns.xorPattern_part_sink_touching hpattern hpart⟩) :=
+  Patterns.xorPattern_restricted_connected hpattern hpart node
+
+def lemma1_xor_projection_workflow_net
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts) :
+    WorkflowNet
+      {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+      {trans : Trans // part trans} :=
+  Patterns.xorProjectionWorkflowNet hpattern hpart
+
+theorem lemma1_xor_projection_reachable_lifts
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {marking :
+      Marking
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}}
+    (hreachable :
+      WorkflowNet.reachable
+        (Patterns.xorProjectionWorkflowNet hpattern hpart)
+        (WorkflowNet.initial
+          (Patterns.xorProjectionWorkflowNet hpattern hpart))
+        marking) :
+    WorkflowNet.reachable net (WorkflowNet.initial net) (Marking.extend marking) :=
+  Patterns.xorProjectionWorkflowNet_reachable_lift
+    hpattern hpart hreachable
+
+theorem lemma1_xor_projection_safe
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafe : WorkflowNet.safe net) :
+    WorkflowNet.safe (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  Patterns.xorProjectionWorkflowNet_safe hpattern hpart hsafe
+
+theorem lemma1_xor_projection_selected_sequence_restricts
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {before after : Marking Place}
+    {trace : List {trans : Trans // part trans}}
+    (sequence :
+      WorkflowNet.FiringSequence
+        net
+        before
+        (trace.map Subtype.val)
+        after) :
+    WorkflowNet.FiringSequence
+      (Patterns.xorProjectionWorkflowNet hpattern hpart)
+      (Marking.restrict before)
+      trace
+      (Marking.restrict after) :=
+  Patterns.xorProjectionWorkflowNet_firingSequence_restrict
+    hpattern hpart sequence
+
 theorem lemma2_loop_pattern_trace_closure
     {Place : Type u}
     {Trans : Type v}

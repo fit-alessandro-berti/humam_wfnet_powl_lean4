@@ -643,7 +643,12 @@ theorem xorPattern_pathIn_touching_place_connected
           (PetriNet.Node.place place) :=
       xorPattern_pathIn_prefix_to_part_transition
         hpattern hpart htransPart hsourcePath
-        (PetriNet.Path.step hflow PetriNet.Path.refl)
+        (@PetriNet.Path.step Place Trans net.toPetriNet
+          (PetriNet.Node.place place)
+          (PetriNet.Node.trans trans)
+          (PetriNet.Node.trans trans)
+          hflow
+          PetriNet.Path.refl)
     have hplaceIn :
         PetriNet.nodeIn
           (PetriNet.placesTouching net.toPetriNet part)
@@ -695,9 +700,176 @@ theorem xorPattern_pathIn_touching_place_connected
           (PetriNet.Node.place net.sink) :=
       xorPattern_pathIn_from_part_transition
         hpattern hpart htransPart
-        (PetriNet.Path.step hflow PetriNet.Path.refl)
+        (@PetriNet.Path.step Place Trans net.toPetriNet
+          (PetriNet.Node.trans trans)
+          (PetriNet.Node.place place)
+          (PetriNet.Node.place place)
+          hflow
+          PetriNet.Path.refl)
         hsinkPath
     exact ⟨hsourceToPlace, hplaceToSink⟩
+
+theorem xorPattern_restricted_place_connected
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (place :
+      {place : Place // PetriNet.placesTouching net.toPetriNet part place}) :
+    PetriNet.Path
+        (xorProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨net.source, xorPattern_part_source_touching hpattern hpart⟩)
+        (PetriNet.Node.place place) ∧
+      PetriNet.Path
+        (xorProjectionRestricted net part)
+        (PetriNet.Node.place place)
+        (PetriNet.Node.place
+          ⟨net.sink, xorPattern_part_sink_touching hpattern hpart⟩) := by
+  have hconnected :=
+    xorPattern_pathIn_touching_place_connected
+      hpattern hpart place.property
+  constructor
+  · have hpath :=
+      xorProjectionRestricted_path_of_pathIn net part hconnected.1
+    simpa [PetriNet.restrictNode] using hpath
+  · have hpath :=
+      xorProjectionRestricted_path_of_pathIn net part hconnected.2
+    simpa [PetriNet.restrictNode] using hpath
+
+theorem xorPattern_restricted_connected
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (node :
+      PetriNet.Node
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans}) :
+    PetriNet.Path
+        (xorProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨net.source, xorPattern_part_source_touching hpattern hpart⟩)
+        node ∧
+      PetriNet.Path
+        (xorProjectionRestricted net part)
+        node
+        (PetriNet.Node.place
+          ⟨net.sink, xorPattern_part_sink_touching hpattern hpart⟩) := by
+  cases node with
+  | place place =>
+      exact xorPattern_restricted_place_connected hpattern hpart place
+  | trans trans =>
+      exact xorPattern_restricted_transition_connected hpattern hpart trans
+
+def xorProjectionWorkflowNet
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts) :
+    WorkflowNet
+      {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+      {trans : Trans // part trans} where
+  toPetriNet := xorProjectionRestricted net part
+  source := ⟨net.source, xorPattern_part_source_touching hpattern hpart⟩
+  sink := ⟨net.sink, xorPattern_part_sink_touching hpattern hpart⟩
+  uniqueSource := by
+    apply PetriNet.uniqueSource_of_connected_no_in
+    · intro trans hflow
+      exact ((net.uniqueSource net.source).2 rfl trans.val) hflow
+    · exact xorPattern_restricted_connected hpattern hpart
+  uniqueSink := by
+    apply PetriNet.uniqueSink_of_connected_no_out
+    · intro trans hflow
+      exact ((net.uniqueSink net.sink).2 rfl trans.val) hflow
+    · exact xorPattern_restricted_connected hpattern hpart
+  connected := xorPattern_restricted_connected hpattern hpart
+
+theorem xorProjectionWorkflowNet_reachable_lift
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {marking :
+      Marking
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}}
+    (hreachable :
+      WorkflowNet.reachable
+        (xorProjectionWorkflowNet hpattern hpart)
+        (WorkflowNet.initial (xorProjectionWorkflowNet hpattern hpart))
+        marking) :
+    WorkflowNet.reachable net (WorkflowNet.initial net) (Marking.extend marking) :=
+  WorkflowNet.restricted_reachable_lift
+    net
+    (xorProjectionWorkflowNet hpattern hpart)
+    (by rfl)
+    (by intro place trans; rfl)
+    (by intro trans place; rfl)
+    (by
+      intro place trans htrans hflow
+      exact PetriNet.placesTouching_of_placeToTrans
+        net.toPetriNet htrans hflow)
+    (by
+      intro trans place htrans hflow
+      exact PetriNet.placesTouching_of_transToPlace
+        net.toPetriNet htrans hflow)
+    hreachable
+
+theorem xorProjectionWorkflowNet_safe
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafe : WorkflowNet.safe net) :
+    WorkflowNet.safe (xorProjectionWorkflowNet hpattern hpart) :=
+  WorkflowNet.restricted_safe_of_original_safe
+    net
+    (xorProjectionWorkflowNet hpattern hpart)
+    (by rfl)
+    (by intro place trans; rfl)
+    (by intro trans place; rfl)
+    (by
+      intro place trans htrans hflow
+      exact PetriNet.placesTouching_of_placeToTrans
+        net.toPetriNet htrans hflow)
+    (by
+      intro trans place htrans hflow
+      exact PetriNet.placesTouching_of_transToPlace
+        net.toPetriNet htrans hflow)
+    hsafe
+
+theorem xorProjectionWorkflowNet_firingSequence_restrict
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {before after : Marking Place}
+    {trace : List {trans : Trans // part trans}}
+    (sequence :
+      WorkflowNet.FiringSequence
+        net
+        before
+        (trace.map Subtype.val)
+        after) :
+    WorkflowNet.FiringSequence
+      (xorProjectionWorkflowNet hpattern hpart)
+      (Marking.restrict before)
+      trace
+      (Marking.restrict after) :=
+  WorkflowNet.restricted_firingSequence_restrict
+    net
+    (xorProjectionWorkflowNet hpattern hpart)
+    (by intro place trans; rfl)
+    (by intro trans place; rfl)
+    sequence
 
 def loopPattern
     {Activity : Type w}
