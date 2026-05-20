@@ -131,6 +131,171 @@ theorem partial_order_pattern_execution_order_asymmetric
       (TransGen (Patterns.executionOrder net partition)) :=
   Patterns.partialOrderPattern_asymmetric net partition hpattern
 
+theorem lemma3_execution_order_of_boundary
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    {left right : Nat}
+    {leftPart rightPart : Set Trans}
+    {place : Place}
+    (hleft : Powl.listGet? partition.parts left = some leftPart)
+    (hright : Powl.listGet? partition.parts right = some rightPart)
+    (hexit : WorkflowNet.exitPoints net leftPart place)
+    (hentry : WorkflowNet.entryPoints net rightPart place) :
+    Patterns.executionOrder net partition left right :=
+  Patterns.executionOrder_of_boundary
+    net partition hleft hright hexit hentry
+
+theorem lemma3_partial_order_pattern_no_self_execution_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (index : Nat) :
+    ¬ Patterns.executionOrder net partition index index :=
+  Patterns.partialOrderPattern_no_self_executionOrder
+    net partition hpattern index
+
+theorem lemma3_partial_order_pattern_no_execution_order_cycle
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {left right : Nat}
+    (hleftRight : Patterns.executionOrder net partition left right) :
+    ¬ Patterns.executionOrder net partition right left :=
+  Patterns.partialOrderPattern_no_executionOrder_cycle
+    net partition hpattern hleftRight
+
+theorem lemma3_partial_order_pattern_no_same_part_entry_exit
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    {place : Place}
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hexit : WorkflowNet.exitPoints net part place)
+    (hentry : WorkflowNet.entryPoints net part place) :
+    False :=
+  Patterns.partialOrderPattern_no_same_part_entry_exit
+    net partition hpattern hpart hexit hentry
+
+theorem lemma3_partial_order_entry_places_equivalent
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    {leftPlace rightPlace : Place}
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hleft : WorkflowNet.entryPoints net part leftPlace)
+    (hright : WorkflowNet.entryPoints net part rightPlace) :
+    PetriNet.placeEquivalentWrt
+      net.toPetriNet part leftPlace rightPlace :=
+  Patterns.partialOrderPattern_entry_placeEquivalent
+    net partition hpattern hpart hleft hright
+
+theorem lemma3_partial_order_exit_places_equivalent
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    {leftPlace rightPlace : Place}
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hleft : WorkflowNet.exitPoints net part leftPlace)
+    (hright : WorkflowNet.exitPoints net part rightPlace) :
+    PetriNet.placeEquivalentWrt
+      net.toPetriNet part leftPlace rightPlace :=
+  Patterns.partialOrderPattern_exit_placeEquivalent
+    net partition hpattern hpart hleft hright
+
+theorem lemma3_partial_order_entry_placeToTrans_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    {leftPlace rightPlace : Place}
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hleft : WorkflowNet.entryPoints net part leftPlace)
+    (hright : WorkflowNet.entryPoints net part rightPlace)
+    {trans : Trans}
+    (htrans : part trans) :
+    net.placeToTrans leftPlace trans ↔
+      net.placeToTrans rightPlace trans :=
+  Patterns.partialOrderPattern_entry_placeToTrans_iff
+    net partition hpattern hpart hleft hright htrans
+
+theorem lemma3_partial_order_entry_transToPlace_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    {leftPlace rightPlace : Place}
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hleft : WorkflowNet.entryPoints net part leftPlace)
+    (hright : WorkflowNet.entryPoints net part rightPlace)
+    {trans : Trans}
+    (htrans : part trans) :
+    net.transToPlace trans leftPlace ↔
+      net.transToPlace trans rightPlace :=
+  Patterns.partialOrderPattern_entry_transToPlace_iff
+    net partition hpattern hpart hleft hright htrans
+
+theorem lemma3_partial_order_exit_placeToTrans_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    {leftPlace rightPlace : Place}
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hleft : WorkflowNet.exitPoints net part leftPlace)
+    (hright : WorkflowNet.exitPoints net part rightPlace)
+    {trans : Trans}
+    (htrans : part trans) :
+    net.placeToTrans leftPlace trans ↔
+      net.placeToTrans rightPlace trans :=
+  Patterns.partialOrderPattern_exit_placeToTrans_iff
+    net partition hpattern hpart hleft hright htrans
+
+theorem lemma3_partial_order_exit_transToPlace_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    {leftPlace rightPlace : Place}
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hleft : WorkflowNet.exitPoints net part leftPlace)
+    (hright : WorkflowNet.exitPoints net part rightPlace)
+    {trans : Trans}
+    (htrans : part trans) :
+    net.transToPlace trans leftPlace ↔
+      net.transToPlace trans rightPlace :=
+  Patterns.partialOrderPattern_exit_transToPlace_iff
+    net partition hpattern hpart hleft hright htrans
+
 theorem lemma3_partial_order_projection_start_edge
     {Place : Type u}
     {Trans : Type v}
@@ -221,6 +386,22 @@ theorem lemma3_partial_order_projection_restricted_start_edge
   Patterns.partialOrderProjectionRestricted_start_placeToTrans
     net hpart hentry hflow
 
+theorem lemma3_partial_order_projection_restricted_start_edge_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (trans : {trans : Trans // part trans}) :
+    (Patterns.partialOrderProjectionRestricted net part).placeToTrans
+      ⟨Patterns.BoundaryPlace.start,
+        Patterns.partialOrderProjectionPlaces_start net part⟩
+      trans ↔
+        ∃ original,
+          WorkflowNet.entryPoints net part original ∧
+          net.placeToTrans original trans.val :=
+  Patterns.partialOrderProjectionRestricted_start_placeToTrans_iff'
+    net trans
+
 theorem lemma3_partial_order_projection_restricted_end_edge
     {Place : Type u}
     {Trans : Type v}
@@ -237,6 +418,22 @@ theorem lemma3_partial_order_projection_restricted_end_edge
         Patterns.partialOrderProjectionPlaces_end net part⟩ :=
   Patterns.partialOrderProjectionRestricted_transToPlace_end
     net hpart hexit hflow
+
+theorem lemma3_partial_order_projection_restricted_end_edge_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (trans : {trans : Trans // part trans}) :
+    (Patterns.partialOrderProjectionRestricted net part).transToPlace
+      trans
+      ⟨Patterns.BoundaryPlace.end_,
+        Patterns.partialOrderProjectionPlaces_end net part⟩ ↔
+        ∃ original,
+          WorkflowNet.exitPoints net part original ∧
+          net.transToPlace trans.val original :=
+  Patterns.partialOrderProjectionRestricted_transToPlace_end_iff'
+    net trans
 
 theorem lemma3_partial_order_projection_internal_placeToTrans
     {Place : Type u}
@@ -275,6 +472,23 @@ theorem lemma3_partial_order_projection_restricted_internal_placeToTrans
   Patterns.partialOrderProjectionRestricted_original_placeToTrans
     net hpart htouching hnotEntry hnotExit hflow
 
+theorem lemma3_partial_order_projection_restricted_internal_placeToTrans_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hplace :
+      Patterns.partialOrderProjectionPlaces
+        net part (Patterns.BoundaryPlace.original place))
+    (trans : {trans : Trans // part trans}) :
+    (Patterns.partialOrderProjectionRestricted net part).placeToTrans
+      ⟨Patterns.BoundaryPlace.original place, hplace⟩
+      trans ↔
+        net.placeToTrans place trans.val :=
+  Patterns.partialOrderProjectionRestricted_original_placeToTrans_iff'
+    net hplace trans
+
 theorem lemma3_partial_order_projection_internal_transToPlace
     {Place : Type u}
     {Trans : Type v}
@@ -311,6 +525,23 @@ theorem lemma3_partial_order_projection_restricted_internal_transToPlace
           net htouching hnotEntry hnotExit⟩ :=
   Patterns.partialOrderProjectionRestricted_transToPlace_original
     net hpart htouching hnotEntry hnotExit hflow
+
+theorem lemma3_partial_order_projection_restricted_internal_transToPlace_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (trans : {trans : Trans // part trans})
+    {place : Place}
+    (hplace :
+      Patterns.partialOrderProjectionPlaces
+        net part (Patterns.BoundaryPlace.original place)) :
+    (Patterns.partialOrderProjectionRestricted net part).transToPlace
+      trans
+      ⟨Patterns.BoundaryPlace.original place, hplace⟩ ↔
+        net.transToPlace trans.val place :=
+  Patterns.partialOrderProjectionRestricted_transToPlace_original_iff'
+    net trans hplace
 
 theorem lemma3_partial_order_projection_restricted_original_to_transition
     {Place : Type u}
