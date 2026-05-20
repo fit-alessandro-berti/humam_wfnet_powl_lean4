@@ -1464,6 +1464,26 @@ theorem firingSequence_append
   | cons hfires _ ih =>
       exact FiringSequence.cons hfires (ih rightSequence)
 
+theorem firingSequence_split_append
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    (left right : List Trans)
+    (sequence : FiringSequence net before (left ++ right) after) :
+    ∃ middle,
+      FiringSequence net before left middle ∧
+      FiringSequence net middle right after := by
+  induction left generalizing before with
+  | nil =>
+      exact ⟨before, FiringSequence.nil, sequence⟩
+  | cons trans rest ih =>
+      cases sequence with
+      | cons hfires tail =>
+          rcases ih tail with ⟨middle, leftSequence, rightSequence⟩
+          exact
+            ⟨middle,
+              FiringSequence.cons hfires leftSequence,
+              rightSequence⟩
+
 theorem firingSequence_snoc
     {net : WorkflowNet Place Trans}
     {before middle after : Marking Place}
@@ -1535,6 +1555,16 @@ theorem normalized_enter_fires
     | sink =>
         simp [fire, consumed, produced, normalizedNet, normalized,
           PetriNet.normalize, initial, Marking.single, Marking.normalize]
+
+theorem normalized_enter_fire_eq
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) :
+    fire
+      (normalizedNet net)
+      (initial (normalizedNet net))
+      PetriNet.NormalizedTrans.enter =
+        Marking.normalize (initial net) :=
+  (normalized_enter_fires net).2.symm
 
 theorem normalized_original_fires
     (net : WorkflowNet Place Trans)
@@ -1657,6 +1687,37 @@ theorem normalized_firingSequence_original
         (normalized_original_fires net hfires)
         ih
 
+theorem normalized_firingSequence_original_reverse_aux
+    (net : WorkflowNet Place Trans)
+    {before : Marking Place}
+    {normalizedAfter : Marking (PetriNet.NormalizedPlace Place)}
+    {trace : List Trans}
+    (sequence :
+      FiringSequence
+        (normalizedNet net)
+        (Marking.normalize before)
+        (trace.map PetriNet.NormalizedTrans.original)
+        normalizedAfter) :
+    ∃ after,
+      normalizedAfter = Marking.normalize after ∧
+      FiringSequence net before trace after := by
+  induction trace generalizing before normalizedAfter with
+  | nil =>
+    cases sequence with
+    | nil =>
+        exact ⟨before, rfl, FiringSequence.nil⟩
+  | cons trans rest ih =>
+    cases sequence with
+    | cons hfires tail =>
+        rw [hfires.2, normalized_original_fire_eq] at tail
+        rcases ih tail with ⟨after, hafter, restSequence⟩
+        exact
+          ⟨after, hafter,
+            FiringSequence.cons
+              ⟨(normalized_original_enabled_iff net before trans).mp hfires.1,
+                rfl⟩
+              restSequence⟩
+
 theorem normalized_firingSequence_original_reverse
     (net : WorkflowNet Place Trans)
     {before after : Marking Place}
@@ -1668,39 +1729,12 @@ theorem normalized_firingSequence_original_reverse
         (trace.map PetriNet.NormalizedTrans.original)
         (Marking.normalize after)) :
     FiringSequence net before trace after := by
-  induction trace generalizing before with
-  | nil =>
-      cases sequence with
-      | nil =>
-          have hmarking :
-              before = after :=
-            Marking.normalize_injective rfl
-          subst hmarking
-          exact FiringSequence.nil
-      | cons hfires tail =>
-          cases tail
-  | cons trans rest ih =>
-      cases sequence with
-      | nil =>
-          contradiction
-      | cons hfires tail =>
-          rw [List.map_cons] at tail
-          have horiginalFires :
-              fires net before trans
-                (fire net before trans) := by
-            exact
-              (normalized_original_fires_iff
-                net before (fire net before trans) trans).mp
-                ⟨hfires.1,
-                  by
-                    rw [hfires.2]
-                    exact normalized_original_fire_eq net before trans⟩
-          have hmiddle :
-              tail = FiringSequence.cast (by rfl) tail := rfl
-          exact
-            FiringSequence.cons
-              horiginalFires
-              (ih tail)
+  rcases normalized_firingSequence_original_reverse_aux net sequence with
+    ⟨actualAfter, hactual, actualSequence⟩
+  have hafter : actualAfter = after :=
+    Marking.normalize_injective hactual.symm
+  subst hafter
+  exact actualSequence
 
 theorem normalized_firingSequence_original_iff
     (net : WorkflowNet Place Trans)
@@ -1752,6 +1786,53 @@ theorem normalized_exit_fires
         simp [fire, consumed, produced, normalizedNet, normalized,
           PetriNet.normalize, final, Marking.single, Marking.normalize]
 
+theorem normalized_exit_fires_iff
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (marking : Marking Place) :
+    fires
+      (normalizedNet net)
+      (Marking.normalize marking)
+      PetriNet.NormalizedTrans.exit
+      (final (normalizedNet net)) ↔
+        marking = final net := by
+  constructor
+  · intro hfires
+    funext place
+    by_cases hsink : place = net.sink
+    · subst hsink
+      have hpositive :
+          marking net.sink > 0 :=
+        hfires.1
+          (PetriNet.NormalizedPlace.original net.sink)
+          (by
+            simp [normalizedNet, normalized, PetriNet.normalize])
+      have heq :=
+        congrFun hfires.2
+          (PetriNet.NormalizedPlace.original net.sink)
+      simp [fire, consumed, produced, normalizedNet, normalized,
+        PetriNet.normalize, final, Marking.single, Marking.normalize] at heq
+      cases hmark : marking net.sink with
+      | zero =>
+          rw [hmark] at hpositive
+          exact False.elim (Nat.not_succ_le_zero 0 hpositive)
+      | succ count =>
+          rw [hmark] at heq
+          simp at heq
+          rw [← heq]
+          simp [final, Marking.single]
+    · have heq :=
+        congrFun hfires.2 (PetriNet.NormalizedPlace.original place)
+      simp [fire, consumed, produced, normalizedNet, normalized,
+        PetriNet.normalize, final, Marking.single, Marking.normalize,
+        hsink] at heq
+      rw [final, Marking.single]
+      simp [hsink]
+      exact heq.symm
+  · intro hmarking
+    subst hmarking
+    exact normalized_exit_fires net
+
 theorem normalized_firingSequence_accepting
     [DecidableEq Place]
     (net : WorkflowNet Place Trans)
@@ -1769,6 +1850,56 @@ theorem normalized_firingSequence_accepting
     (firingSequence_snoc
       (normalized_firingSequence_original net sequence)
       (normalized_exit_fires net))
+
+theorem normalized_firingSequence_accepting_reverse
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {trace : List Trans}
+    (sequence :
+      FiringSequence
+        (normalizedNet net)
+        (initial (normalizedNet net))
+        (PetriNet.NormalizedTrans.enter ::
+          (trace.map PetriNet.NormalizedTrans.original ++
+            [PetriNet.NormalizedTrans.exit]))
+        (final (normalizedNet net))) :
+    FiringSequence net (initial net) trace (final net) := by
+  cases sequence with
+  | cons hfires tail =>
+      rw [hfires.2, normalized_enter_fire_eq] at tail
+      rcases firingSequence_split_append
+          (trace.map PetriNet.NormalizedTrans.original)
+          [PetriNet.NormalizedTrans.exit]
+          tail with
+        ⟨middle, originalTail, exitTail⟩
+      rcases normalized_firingSequence_original_reverse_aux
+          net originalTail with
+        ⟨after, hmiddle, originalSequence⟩
+      rw [hmiddle] at exitTail
+      cases exitTail with
+      | cons hexit exitDone =>
+          cases exitDone with
+          | nil =>
+              have hafter : after = final net :=
+                (normalized_exit_fires_iff net after).mp hexit
+              subst hafter
+              exact originalSequence
+
+theorem normalized_firingSequence_accepting_iff
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {trace : List Trans} :
+    FiringSequence
+      (normalizedNet net)
+      (initial (normalizedNet net))
+      (PetriNet.NormalizedTrans.enter ::
+        (trace.map PetriNet.NormalizedTrans.original ++
+          [PetriNet.NormalizedTrans.exit]))
+      (final (normalizedNet net)) ↔
+        FiringSequence net (initial net) trace (final net) := by
+  constructor
+  · exact normalized_firingSequence_accepting_reverse net
+  · exact normalized_firingSequence_accepting net
 
 theorem restricted_initial_eq
     [DecidableEq Place]

@@ -382,6 +382,40 @@ theorem normalization_accepting_firing_sequence
       (WorkflowNet.final (WorkflowNet.normalizedNet net)) :=
   WorkflowNet.normalized_firingSequence_accepting net sequence
 
+theorem normalization_boundary_accepting_firing_sequence_iff
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {trace : List Trans} :
+    WorkflowNet.FiringSequence
+      (WorkflowNet.normalizedNet net)
+      (WorkflowNet.initial (WorkflowNet.normalizedNet net))
+      (PetriNet.NormalizedTrans.enter ::
+        (trace.map PetriNet.NormalizedTrans.original ++
+          [PetriNet.NormalizedTrans.exit]))
+      (WorkflowNet.final (WorkflowNet.normalizedNet net)) ↔
+        WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) :=
+  WorkflowNet.normalized_firingSequence_accepting_iff net
+
+theorem normalization_exit_fires_iff
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (marking : Marking Place) :
+    WorkflowNet.fires
+      (WorkflowNet.normalizedNet net)
+      (Marking.normalize marking)
+      PetriNet.NormalizedTrans.exit
+      (WorkflowNet.final (WorkflowNet.normalizedNet net)) ↔
+        marking = WorkflowNet.final net :=
+  WorkflowNet.normalized_exit_fires_iff net marking
+
 theorem normalization_original_transition_enabled_iff
     {Place : Type u}
     {Trans : Type v}
@@ -421,6 +455,20 @@ theorem normalization_original_transition_fires_iff
       (Marking.normalize after) ↔
         WorkflowNet.fires net before trans after :=
   WorkflowNet.normalized_original_fires_iff net before after trans
+
+theorem normalization_original_firing_sequence_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {before after : Marking Place}
+    {trace : List Trans} :
+    WorkflowNet.FiringSequence
+      (WorkflowNet.normalizedNet net)
+      (Marking.normalize before)
+      (trace.map PetriNet.NormalizedTrans.original)
+      (Marking.normalize after) ↔
+        WorkflowNet.FiringSequence net before trace after :=
+  WorkflowNet.normalized_firingSequence_original_iff net
 
 theorem normalization_language_of_original
     {Place : Type u}

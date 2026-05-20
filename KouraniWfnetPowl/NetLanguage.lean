@@ -158,7 +158,7 @@ def language
     (label : Trans -> TransitionLabel Activity) :
     Language Activity :=
   fun word =>
-    ∃ trace,
+    ∃ trace : List Trans,
       FiringSequence net (initial net) trace (final net) ∧
       traceWord label trace = word
 
@@ -223,6 +223,73 @@ theorem normalized_language_of_original
     (normalized_firingSequence_accepting net sequence)
     ?_
   rw [traceWord_normalized_with_boundary, hword]
+
+def normalizedBoundaryLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity) :
+    Language Activity :=
+  fun word =>
+    ∃ trace : List Trans,
+      FiringSequence
+        (normalizedNet net)
+        (initial (normalizedNet net))
+        (PetriNet.NormalizedTrans.enter ::
+          (trace.map PetriNet.NormalizedTrans.original ++
+            [PetriNet.NormalizedTrans.exit]))
+        (final (normalizedNet net)) ∧
+      traceWord (normalizedLabel label)
+        (PetriNet.NormalizedTrans.enter ::
+          (trace.map PetriNet.NormalizedTrans.original ++
+            [PetriNet.NormalizedTrans.exit])) = word
+
+theorem normalizedBoundaryLanguage_of_original
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {word : List Activity}
+    (hlanguage : language net label word) :
+    normalizedBoundaryLanguage net label word := by
+  rcases hlanguage with ⟨trace, sequence, hword⟩
+  refine ⟨trace, normalized_firingSequence_accepting net sequence, ?_⟩
+  rw [traceWord_normalized_with_boundary, hword]
+
+theorem original_language_of_normalizedBoundaryLanguage
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {word : List Activity}
+    (hlanguage : normalizedBoundaryLanguage net label word) :
+    language net label word := by
+  rcases hlanguage with ⟨trace, sequence, hword⟩
+  refine language_intro
+    ((normalized_firingSequence_accepting_iff net).mp sequence)
+    ?_
+  rw [← hword]
+  exact (traceWord_normalized_with_boundary label trace).symm
+
+theorem normalizedBoundaryLanguage_iff_original
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity)
+    (word : List Activity) :
+    normalizedBoundaryLanguage net label word ↔
+      language net label word := by
+  constructor
+  · exact original_language_of_normalizedBoundaryLanguage
+  · exact normalizedBoundaryLanguage_of_original
 
 theorem restricted_language_of_typed_original_sequence
     {Place : Type u}

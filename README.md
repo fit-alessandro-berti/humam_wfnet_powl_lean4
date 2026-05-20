@@ -24,7 +24,11 @@ The current proof spine is:
   `WorkflowNet` construction. Accepting firing sequences lift into normalized
   WF-nets by wrapping the original trace with silent enter/exit transitions.
   Original-transition enabledness, firing, and fire-result equations are
-  equivalent between an original marking and its normalized embedding.
+  equivalent between an original marking and its normalized embedding, and
+  firing sequences made only of wrapped original transitions are equivalent to
+  original firing sequences between embedded markings. Boundary-shaped
+  normalized accepting sequences, with enter/original/exit trace shape, are now
+  equivalent to original accepting firing sequences.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
   for Definition 5.
@@ -80,10 +84,10 @@ The current proof spine is:
   closure plus loop projection boundary and restricted-projection facts, and
   Lemma 3 partial-order projection boundary/internal edge and one-step path
   facts plus restricted-path lifting, generic normalization,
-  normalized-firing forward/reverse local invariants, and normalized-language
-  targets, execution-order, source/sink-aware entry/exit point API, and
-  boundary-equivalence consequences, plus common-postset same-component
-  consequences.
+  normalized-firing forward/reverse local, sequence, and boundary-acceptance
+  invariants, and normalized-language targets, execution-order,
+  source/sink-aware entry/exit point API, and boundary-equivalence
+  consequences, plus common-postset same-component consequences.
 
 Build with:
 
