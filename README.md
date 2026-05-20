@@ -252,7 +252,9 @@ The current proof spine is:
   conversions and global language decompositions, with an additional
   partial-order-pattern package that carries the induced strict partial order
   through to the semi-block certified conversion and combined safe/equivalent
-  POWL-model consequence, and a
+  POWL-model consequence, plus explicit language-equality and visible-activity
+  witness theorems for the concrete atom, XOR, loop, and partial-order POWL
+  models, and a
   `SemiBlockCompletenessCase`/`SemiBlockCompletenessCertificate` layer packages
   that case split into one algorithm-certificate object; the raw case evidence
   and bundled algorithm certificates both expose language preservation/equality,

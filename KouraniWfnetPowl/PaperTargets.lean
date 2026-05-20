@@ -10161,6 +10161,120 @@ theorem theorem2_completeness_partial_order_pattern_strict_order_safe_and_exists
       theorem2_completeness_safe_and_exists_powl_model_language_eq_of_semi_block_certified_conversion
         packagedConversion.val⟩
 
+theorem theorem2_completeness_partial_order_pattern_strict_order_safe_and_explicit_language_eq_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) ∧
+        WorkflowNet.safeAndSound net ∧
+          WorkflowNet.language net label =
+            Powl.language label
+              (Powl.partialOrder order.rel
+                (branches.map
+                  (fun branch =>
+                    Powl.map Subtype.val branch.2.model))) := by
+  let order :=
+    Patterns.partialOrderPattern_strictPartialOrder
+      net partition hpattern
+  refine
+    ⟨order,
+      rfl,
+      WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+        hrequirements,
+      ?_⟩
+  exact
+    (lemma6_partial_order_pattern_language_eq_of_local_subtype_conversions
+      hpattern branches hdecompose).symm
+
+theorem theorem2_completeness_partial_order_pattern_strict_order_explicit_visible_activity_language_witness_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) ∧
+        ∃ word,
+          Powl.language label
+              (Powl.partialOrder order.rel
+                (branches.map
+                  (fun branch =>
+                    Powl.map Subtype.val branch.2.model)))
+              word ∧
+            activity ∈ word ∧
+              WorkflowNet.language net label word := by
+  let order :=
+    Patterns.partialOrderPattern_strictPartialOrder
+      net partition hpattern
+  have hsafeSound : WorkflowNet.safeAndSound net :=
+    WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements
+  rcases
+    WorkflowNet.safeAndSound_visible_activity_language_witness
+      hsafeSound hlabel with
+    ⟨word, hnet, hactivity, _htrace⟩
+  have hpowl :
+      Powl.language label
+          (Powl.partialOrder order.rel
+            (branches.map
+              (fun branch =>
+                Powl.map Subtype.val branch.2.model)))
+          word := by
+    exact
+      ((lemma6_partial_order_pattern_language_preservation_of_local_subtype_conversions
+        hpattern branches hdecompose).2 word).mpr hnet
+  exact
+    ⟨order,
+      rfl,
+      word,
+      hpowl,
+      hactivity,
+      hnet⟩
+
 inductive SemiBlockCompletenessCase
     {Place : Type u}
     {Trans : Type v}
@@ -11460,6 +11574,82 @@ theorem theorem2_completeness_base_case_exists_powl_model_visible_activity_langu
       hrequirements hall hfire)
     hlabel
 
+theorem theorem2_completeness_base_case_safe_and_explicit_language_eq_single_transition
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {trans : Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hall :
+      ∀ trace,
+        WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) ->
+          trace = [trans])
+    (hfire :
+      WorkflowNet.FiringSequence
+        net
+        (WorkflowNet.initial net)
+        [trans]
+        (WorkflowNet.final net)) :
+    WorkflowNet.safeAndSound net ∧
+      WorkflowNet.language net label =
+        Powl.language label (Powl.atom trans) :=
+  ⟨WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements,
+    Language.ext (theorem1_base_case_single_transition hall hfire)⟩
+
+theorem theorem2_completeness_base_case_explicit_visible_activity_language_witness_single_transition
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {baseTrans visibleTrans : Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hall :
+      ∀ trace,
+        WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          trace
+          (WorkflowNet.final net) ->
+          trace = [baseTrans])
+    (hfire :
+      WorkflowNet.FiringSequence
+        net
+        (WorkflowNet.initial net)
+        [baseTrans]
+        (WorkflowNet.final net))
+    {activity : Activity}
+    (hlabel : label visibleTrans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language label (Powl.atom baseTrans) word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word := by
+  rcases
+    WorkflowNet.safeAndSound_visible_activity_language_witness
+      (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+        hrequirements)
+      hlabel with
+    ⟨word, hnet, hactivity, _htrace⟩
+  have heq :=
+    (theorem2_completeness_base_case_safe_and_explicit_language_eq_single_transition
+      (label := label)
+      hrequirements hall hfire).2
+  have hpowl :
+      Powl.language label (Powl.atom baseTrans) word := by
+    simpa [heq] using hnet
+  exact ⟨word, hpowl, hactivity, hnet⟩
+
 theorem theorem2_completeness_xor_pattern_exists_powl_model_of_subtype_conversions
     {Place : Type u}
     {Trans : Type v}
@@ -11599,6 +11789,116 @@ theorem theorem2_completeness_xor_pattern_exists_powl_model_visible_activity_lan
     (theorem2_completeness_xor_pattern_certificate_of_subtype_conversions
       hrequirements hpattern branches hdecompose)
     hlabel
+
+theorem theorem2_completeness_xor_pattern_safe_and_explicit_language_eq_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hpattern : Patterns.xorPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    WorkflowNet.safeAndSound net ∧
+      WorkflowNet.language net label =
+        Powl.language label
+          (Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2.model))) := by
+  have _hpatternParts : partition.hasAtLeastTwoParts := hpattern.1
+  let conversion : LocalCertifiedConversion net label net.source net.sink :=
+    theorem2_local_certified_conversion_xor_of_subtype_conversions
+      (branches.map
+        (fun branch =>
+          Sigma.mk branch.1.val branch.2))
+      (by
+        intro word
+        exact
+          Iff.trans
+            (Iff.symm
+              (WorkflowNet.language_iff_localLanguage_source_sink
+                net label word))
+            (by
+              simpa [List.map_map] using hdecompose word))
+  refine
+    ⟨WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+        hrequirements,
+      ?_⟩
+  simpa [
+    conversion,
+    theorem2_local_certified_conversion_xor_of_subtype_conversions,
+    local_certified_conversion_xor_of_subtype_conversions,
+    List.map_map] using
+    theorem2_global_language_eq_of_local_certified_conversion
+      conversion
+
+theorem theorem2_completeness_xor_pattern_explicit_visible_activity_language_witness_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hpattern : Patterns.xorPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language label
+          (Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2.model)))
+          word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word := by
+  rcases
+    WorkflowNet.safeAndSound_visible_activity_language_witness
+      (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+        hrequirements)
+      hlabel with
+    ⟨word, hnet, hactivity, _htrace⟩
+  have heq :=
+    (theorem2_completeness_xor_pattern_safe_and_explicit_language_eq_of_subtype_conversions
+      hrequirements hpattern branches hdecompose).2
+  have hpowl :
+      Powl.language label
+          (Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2.model)))
+          word := by
+    simpa [heq] using hnet
+  exact ⟨word, hpowl, hactivity, hnet⟩
 
 theorem theorem2_completeness_loop_pattern_exists_powl_model_of_subtype_conversions
     {Place : Type u}
@@ -11768,6 +12068,134 @@ theorem theorem2_completeness_loop_pattern_exists_powl_model_visible_activity_la
       hrequirements hpattern body redo hdecompose)
     hlabel
 
+theorem theorem2_completeness_loop_pattern_safe_and_explicit_language_eq_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    {bodyPart redoPart : Set Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hpattern : Patterns.loopPattern label net partition)
+    (body :
+      LocalSubtypeCertifiedConversion
+        net label bodyPart net.source net.sink)
+    (redo :
+      LocalSubtypeCertifiedConversion
+        net label redoPart net.sink net.source)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.concat
+            (WorkflowNet.localSubtypeTraceLanguage
+              net label bodyPart net.source net.sink)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label redoPart net.sink net.source)
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label bodyPart net.source net.sink)))
+            word) :
+    WorkflowNet.safeAndSound net ∧
+      WorkflowNet.language net label =
+        Powl.language label
+          (Powl.loop
+            (Powl.map Subtype.val body.model)
+            (Powl.map Subtype.val redo.model)) := by
+  have _hpatternParts :
+      ∃ doPart redoPart silentPart,
+        doPart ∈ partition.parts ∧
+          redoPart ∈ partition.parts ∧
+            silentPart ∈ partition.parts := by
+    rcases hpattern with
+      ⟨doPart, redoPart, silentPart, hdo, hredo, hsilent, _⟩
+    exact ⟨doPart, redoPart, silentPart, hdo, hredo, hsilent⟩
+  let conversion : LocalCertifiedConversion net label net.source net.sink :=
+    theorem2_local_certified_conversion_loop_of_subtype_conversions
+      body
+      redo
+      (by
+        intro word
+        exact
+          Iff.trans
+            (Iff.symm
+              (WorkflowNet.language_iff_localLanguage_source_sink
+                net label word))
+            (hdecompose word))
+  refine
+    ⟨WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+        hrequirements,
+      ?_⟩
+  simpa [
+    conversion,
+    theorem2_local_certified_conversion_loop_of_subtype_conversions,
+    local_certified_conversion_loop_of_subtype_conversions] using
+    theorem2_global_language_eq_of_local_certified_conversion
+      conversion
+
+theorem theorem2_completeness_loop_pattern_explicit_visible_activity_language_witness_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {partition : Partition Trans}
+    {bodyPart redoPart : Set Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (hpattern : Patterns.loopPattern label net partition)
+    (body :
+      LocalSubtypeCertifiedConversion
+        net label bodyPart net.source net.sink)
+    (redo :
+      LocalSubtypeCertifiedConversion
+        net label redoPart net.sink net.source)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.concat
+            (WorkflowNet.localSubtypeTraceLanguage
+              net label bodyPart net.source net.sink)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label redoPart net.sink net.source)
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label bodyPart net.source net.sink)))
+            word)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language label
+          (Powl.loop
+            (Powl.map Subtype.val body.model)
+            (Powl.map Subtype.val redo.model))
+          word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word := by
+  rcases
+    WorkflowNet.safeAndSound_visible_activity_language_witness
+      (WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+        hrequirements)
+      hlabel with
+    ⟨word, hnet, hactivity, _htrace⟩
+  have heq :=
+    (theorem2_completeness_loop_pattern_safe_and_explicit_language_eq_of_subtype_conversions
+      hrequirements hpattern body redo hdecompose).2
+  have hpowl :
+      Powl.language label
+          (Powl.loop
+            (Powl.map Subtype.val body.model)
+            (Powl.map Subtype.val redo.model))
+          word := by
+    simpa [heq] using hnet
+  exact ⟨word, hpowl, hactivity, hnet⟩
+
 theorem theorem2_completeness_partial_order_pattern_exists_powl_model_of_subtype_conversions
     {Place : Type u}
     {Trans : Type v}
@@ -11911,6 +12339,152 @@ theorem theorem2_completeness_partial_order_pattern_exists_powl_model_visible_ac
     (theorem2_completeness_partial_order_pattern_certificate_of_subtype_conversions
       hrequirements hpattern branches hdecompose)
     hlabel
+
+structure ConcretePowlWitness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity) where
+  OutTrans : Type v
+  outLabel : OutTrans -> TransitionLabel Activity
+  model : Powl OutTrans
+  safeAndSound : WorkflowNet.safeAndSound net
+  languageEq :
+    WorkflowNet.language net label =
+      Powl.language outLabel model
+  visibleActivityWitness :
+    ∀ {trans : Trans} {activity : Activity},
+      label trans = TransitionLabel.visible activity ->
+        ∃ word,
+          Powl.language outLabel model word ∧
+            activity ∈ word ∧
+              WorkflowNet.language net label word
+
+def theorem2_completeness_concrete_powl_witness_of_pattern_case
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (caseEvidence : SemiBlockPatternCompletenessCase net label) :
+    ConcretePowlWitness net label :=
+  match caseEvidence with
+  | SemiBlockPatternCompletenessCase.singleTransition
+      (trans := trans) hall hfire =>
+      { OutTrans := Trans
+        outLabel := label
+        model := Powl.atom trans
+        safeAndSound :=
+          (theorem2_completeness_base_case_safe_and_explicit_language_eq_single_transition
+            (label := label)
+            hrequirements hall hfire).1
+        languageEq :=
+          (theorem2_completeness_base_case_safe_and_explicit_language_eq_single_transition
+            (label := label)
+            hrequirements hall hfire).2
+        visibleActivityWitness := by
+          intro visibleTrans activity hlabel
+          exact
+            theorem2_completeness_base_case_explicit_visible_activity_language_witness_single_transition
+              (label := label)
+              (baseTrans := trans)
+              (visibleTrans := visibleTrans)
+              hrequirements hall hfire hlabel }
+  | SemiBlockPatternCompletenessCase.xor hpattern branches hdecompose =>
+      { OutTrans := Trans
+        outLabel := label
+        model :=
+          Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2.model))
+        safeAndSound :=
+          (theorem2_completeness_xor_pattern_safe_and_explicit_language_eq_of_subtype_conversions
+            hrequirements hpattern branches hdecompose).1
+        languageEq :=
+          (theorem2_completeness_xor_pattern_safe_and_explicit_language_eq_of_subtype_conversions
+            hrequirements hpattern branches hdecompose).2
+        visibleActivityWitness := by
+          intro trans activity hlabel
+          exact
+            theorem2_completeness_xor_pattern_explicit_visible_activity_language_witness_of_subtype_conversions
+              hrequirements hpattern branches hdecompose hlabel }
+  | SemiBlockPatternCompletenessCase.loop hpattern body redo hdecompose =>
+      { OutTrans := Trans
+        outLabel := label
+        model :=
+          Powl.loop
+            (Powl.map Subtype.val body.model)
+            (Powl.map Subtype.val redo.model)
+        safeAndSound :=
+          (theorem2_completeness_loop_pattern_safe_and_explicit_language_eq_of_subtype_conversions
+            hrequirements hpattern body redo hdecompose).1
+        languageEq :=
+          (theorem2_completeness_loop_pattern_safe_and_explicit_language_eq_of_subtype_conversions
+            hrequirements hpattern body redo hdecompose).2
+        visibleActivityWitness := by
+          intro trans activity hlabel
+          exact
+            theorem2_completeness_loop_pattern_explicit_visible_activity_language_witness_of_subtype_conversions
+              hrequirements hpattern body redo hdecompose hlabel }
+  | SemiBlockPatternCompletenessCase.partialOrder
+      (partition := partition) hpattern branches hdecompose =>
+      { OutTrans := Trans
+        outLabel := label
+        model :=
+          Powl.partialOrder
+            (Patterns.partialOrderPattern_strictPartialOrder
+              net partition hpattern).rel
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2.model))
+        safeAndSound :=
+          WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+            hrequirements
+        languageEq := by
+          simpa [Patterns.partialOrderPattern_strictPartialOrder] using
+            (lemma6_partial_order_pattern_language_eq_of_local_subtype_conversions
+              hpattern branches hdecompose).symm
+        visibleActivityWitness := by
+          intro trans activity hlabel
+          have hsafeSound :
+              WorkflowNet.safeAndSound net :=
+            WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+              hrequirements
+          rcases
+            WorkflowNet.safeAndSound_visible_activity_language_witness
+              hsafeSound hlabel with
+            ⟨word, hnet, hactivity, _htrace⟩
+          have hpowl :
+              Powl.language label
+                  (Powl.partialOrder
+                    (Patterns.partialOrderPattern_strictPartialOrder
+                      net partition hpattern).rel
+                    (branches.map
+                      (fun branch =>
+                        Powl.map Subtype.val branch.2.model)))
+                  word := by
+            simpa [Patterns.partialOrderPattern_strictPartialOrder] using
+              ((lemma6_partial_order_pattern_language_preservation_of_local_subtype_conversions
+                hpattern branches hdecompose).2 word).mpr hnet
+          exact ⟨word, hpowl, hactivity, hnet⟩ }
+
+def theorem2_completeness_concrete_powl_witness_of_pattern_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (certificate :
+      SemiBlockPatternCompletenessCertificate net label) :
+    ConcretePowlWitness net label :=
+  theorem2_completeness_concrete_powl_witness_of_pattern_case
+    certificate.requirements
+    certificate.caseEvidence
 
 theorem theorem2_semi_block_base_safe_and_sound
     {Place : Type u}
