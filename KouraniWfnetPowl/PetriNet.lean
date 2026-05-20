@@ -1369,6 +1369,50 @@ theorem uniquePostsetOfTransition_transToPlace_iff
     rw [hother]
     exact hflow
 
+theorem uniquePresetOfTransition_eq_of_placeToTrans
+    {net : WorkflowNet Place Trans}
+    {left right : Place}
+    {trans : Trans}
+    (hunique : uniquePresetOfTransition net trans)
+    (hleft : net.placeToTrans left trans)
+    (hright : net.placeToTrans right trans) :
+    left = right :=
+  (uniquePresetOfTransition_placeToTrans_iff
+    hunique hright left).mp hleft
+
+theorem uniquePostsetOfPlace_eq_of_placeToTrans
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    {left right : Trans}
+    (hunique : uniquePostsetOfPlace net place)
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    left = right :=
+  (uniquePostsetOfPlace_placeToTrans_iff
+    hunique hright left).mp hleft
+
+theorem uniquePresetOfPlace_eq_of_transToPlace
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    {left right : Trans}
+    (hunique : uniquePresetOfPlace net place)
+    (hleft : net.transToPlace left place)
+    (hright : net.transToPlace right place) :
+    left = right :=
+  (uniquePresetOfPlace_transToPlace_iff
+    hunique hright left).mp hleft
+
+theorem uniquePostsetOfTransition_eq_of_transToPlace
+    {net : WorkflowNet Place Trans}
+    {trans : Trans}
+    {left right : Place}
+    (hunique : uniquePostsetOfTransition net trans)
+    (hleft : net.transToPlace trans left)
+    (hright : net.transToPlace trans right) :
+    left = right :=
+  (uniquePostsetOfTransition_transToPlace_iff
+    hunique hright left).mp hleft
+
 def explicitDecisionPoints
     (net : WorkflowNet Place Trans) : Prop :=
   (∀ place trans,
@@ -1844,6 +1888,69 @@ theorem markedGraph_uniquePostsetOfPlace_of_ne_sink
       fun other hother =>
         hmarked.2 place other trans hother hflow⟩
 
+theorem markedGraph_uniquePlaceFlow_of_nonboundary
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {place : Place}
+    (hsource : place ≠ net.source)
+    (hsink : place ≠ net.sink) :
+    uniquePresetOfPlace net place ∧
+      uniquePostsetOfPlace net place :=
+  ⟨markedGraph_uniquePresetOfPlace_of_ne_source hmarked hsource,
+    markedGraph_uniquePostsetOfPlace_of_ne_sink hmarked hsink⟩
+
+theorem markedGraph_transToPlace_iff_of_ne_source
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {place : Place}
+    (hplace : place ≠ net.source)
+    {trans : Trans}
+    (hflow : net.transToPlace trans place)
+    (other : Trans) :
+    net.transToPlace other place ↔ other = trans :=
+  uniquePresetOfPlace_transToPlace_iff
+    (markedGraph_uniquePresetOfPlace_of_ne_source hmarked hplace)
+    hflow other
+
+theorem markedGraph_placeToTrans_iff_of_ne_sink
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {place : Place}
+    (hplace : place ≠ net.sink)
+    {trans : Trans}
+    (hflow : net.placeToTrans place trans)
+    (other : Trans) :
+    net.placeToTrans place other ↔ other = trans :=
+  uniquePostsetOfPlace_placeToTrans_iff
+    (markedGraph_uniquePostsetOfPlace_of_ne_sink hmarked hplace)
+    hflow other
+
+theorem markedGraph_transToPlace_eq_of_ne_source
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {place : Place}
+    (hplace : place ≠ net.source)
+    {left right : Trans}
+    (hleft : net.transToPlace left place)
+    (hright : net.transToPlace right place) :
+    left = right :=
+  uniquePresetOfPlace_eq_of_transToPlace
+    (markedGraph_uniquePresetOfPlace_of_ne_source hmarked hplace)
+    hleft hright
+
+theorem markedGraph_placeToTrans_eq_of_ne_sink
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {place : Place}
+    (hplace : place ≠ net.sink)
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    left = right :=
+  uniquePostsetOfPlace_eq_of_placeToTrans
+    (markedGraph_uniquePostsetOfPlace_of_ne_sink hmarked hplace)
+    hleft hright
+
 theorem noDecisionPlaces_uniquePresetOfPlace_of_ne_source
     {net : WorkflowNet Place Trans}
     (hnoDecision : noDecisionPlaces net)
@@ -1863,6 +1970,18 @@ theorem noDecisionPlaces_uniquePostsetOfPlace_of_ne_sink
   markedGraph_uniquePostsetOfPlace_of_ne_sink
     (noDecisionPlaces_markedGraph hnoDecision)
     hplace
+
+theorem noDecisionPlaces_uniquePlaceFlow_of_nonboundary
+    {net : WorkflowNet Place Trans}
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hsource : place ≠ net.source)
+    (hsink : place ≠ net.sink) :
+    uniquePresetOfPlace net place ∧
+      uniquePostsetOfPlace net place :=
+  markedGraph_uniquePlaceFlow_of_nonboundary
+    (noDecisionPlaces_markedGraph hnoDecision)
+    hsource hsink
 
 theorem noDecisionPlaces_transToPlace_iff_of_ne_source
     {net : WorkflowNet Place Trans}
@@ -1891,6 +2010,32 @@ theorem noDecisionPlaces_placeToTrans_iff_of_ne_sink
     (noDecisionPlaces_uniquePostsetOfPlace_of_ne_sink
       hnoDecision hplace)
     hflow other
+
+theorem noDecisionPlaces_transToPlace_eq_of_ne_source
+    {net : WorkflowNet Place Trans}
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source)
+    {left right : Trans}
+    (hleft : net.transToPlace left place)
+    (hright : net.transToPlace right place) :
+    left = right :=
+  markedGraph_transToPlace_eq_of_ne_source
+    (noDecisionPlaces_markedGraph hnoDecision)
+    hplace hleft hright
+
+theorem noDecisionPlaces_placeToTrans_eq_of_ne_sink
+    {net : WorkflowNet Place Trans}
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink)
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    left = right :=
+  markedGraph_placeToTrans_eq_of_ne_sink
+    (noDecisionPlaces_markedGraph hnoDecision)
+    hplace hleft hright
 
 def normalized
     (net : PetriNet Place Trans)
@@ -2365,6 +2510,19 @@ theorem semiBlockStructuredBaseRequirements_noDecision_uniquePostsetOfPlace_of_n
   noDecisionPlaces_uniquePostsetOfPlace_of_ne_sink
     hnoDecision hplace
 
+theorem semiBlockStructuredBaseRequirements_noDecision_uniquePlaceFlow_of_nonboundary
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (_hrequirements : semiBlockStructuredBaseRequirements net)
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hsource : place ≠ net.source)
+    (hsink : place ≠ net.sink) :
+    uniquePresetOfPlace net place ∧
+      uniquePostsetOfPlace net place :=
+  noDecisionPlaces_uniquePlaceFlow_of_nonboundary
+    hnoDecision hsource hsink
+
 theorem semiBlockStructuredBaseRequirements_noDecision_transToPlace_iff_of_ne_source
     [DecidableEq Place]
     {net : WorkflowNet Place Trans}
@@ -2392,6 +2550,34 @@ theorem semiBlockStructuredBaseRequirements_noDecision_placeToTrans_iff_of_ne_si
     net.placeToTrans place other ↔ other = trans :=
   noDecisionPlaces_placeToTrans_iff_of_ne_sink
     hnoDecision hplace hflow other
+
+theorem semiBlockStructuredBaseRequirements_noDecision_transToPlace_eq_of_ne_source
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (_hrequirements : semiBlockStructuredBaseRequirements net)
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source)
+    {left right : Trans}
+    (hleft : net.transToPlace left place)
+    (hright : net.transToPlace right place) :
+    left = right :=
+  noDecisionPlaces_transToPlace_eq_of_ne_source
+    hnoDecision hplace hleft hright
+
+theorem semiBlockStructuredBaseRequirements_noDecision_placeToTrans_eq_of_ne_sink
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (_hrequirements : semiBlockStructuredBaseRequirements net)
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink)
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    left = right :=
+  noDecisionPlaces_placeToTrans_eq_of_ne_sink
+    hnoDecision hplace hleft hright
 
 theorem semiBlockStructuredDecisionRequirements_base
     [DecidableEq Place]
@@ -2508,6 +2694,20 @@ theorem semiBlockStructuredDecisionRequirements_noDecision_uniquePostsetOfPlace_
     (semiBlockStructuredDecisionRequirements_base hrequirements)
     hnoDecision hplace
 
+theorem semiBlockStructuredDecisionRequirements_noDecision_uniquePlaceFlow_of_nonboundary
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net)
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hsource : place ≠ net.source)
+    (hsink : place ≠ net.sink) :
+    uniquePresetOfPlace net place ∧
+      uniquePostsetOfPlace net place :=
+  semiBlockStructuredBaseRequirements_noDecision_uniquePlaceFlow_of_nonboundary
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+    hnoDecision hsource hsink
+
 theorem semiBlockStructuredDecisionRequirements_noDecision_transToPlace_iff_of_ne_source
     [DecidableEq Place]
     {net : WorkflowNet Place Trans}
@@ -2537,6 +2737,36 @@ theorem semiBlockStructuredDecisionRequirements_noDecision_placeToTrans_iff_of_n
   semiBlockStructuredBaseRequirements_noDecision_placeToTrans_iff_of_ne_sink
     (semiBlockStructuredDecisionRequirements_base hrequirements)
     hnoDecision hplace hflow other
+
+theorem semiBlockStructuredDecisionRequirements_noDecision_transToPlace_eq_of_ne_source
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net)
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source)
+    {left right : Trans}
+    (hleft : net.transToPlace left place)
+    (hright : net.transToPlace right place) :
+    left = right :=
+  semiBlockStructuredBaseRequirements_noDecision_transToPlace_eq_of_ne_source
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+    hnoDecision hplace hleft hright
+
+theorem semiBlockStructuredDecisionRequirements_noDecision_placeToTrans_eq_of_ne_sink
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net)
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink)
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    left = right :=
+  semiBlockStructuredBaseRequirements_noDecision_placeToTrans_eq_of_ne_sink
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+    hnoDecision hplace hleft hright
 
 theorem semiBlockStructuredSubnetRequirements_base
     [DecidableEq Place]
@@ -2653,6 +2883,20 @@ theorem semiBlockStructuredSubnetRequirements_noDecision_uniquePostsetOfPlace_of
     (semiBlockStructuredSubnetRequirements_base hrequirements)
     hnoDecision hplace
 
+theorem semiBlockStructuredSubnetRequirements_noDecision_uniquePlaceFlow_of_nonboundary
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hsource : place ≠ net.source)
+    (hsink : place ≠ net.sink) :
+    uniquePresetOfPlace net place ∧
+      uniquePostsetOfPlace net place :=
+  semiBlockStructuredBaseRequirements_noDecision_uniquePlaceFlow_of_nonboundary
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+    hnoDecision hsource hsink
+
 theorem semiBlockStructuredSubnetRequirements_noDecision_transToPlace_iff_of_ne_source
     [DecidableEq Place]
     {net : WorkflowNet Place Trans}
@@ -2682,6 +2926,36 @@ theorem semiBlockStructuredSubnetRequirements_noDecision_placeToTrans_iff_of_ne_
   semiBlockStructuredBaseRequirements_noDecision_placeToTrans_iff_of_ne_sink
     (semiBlockStructuredSubnetRequirements_base hrequirements)
     hnoDecision hplace hflow other
+
+theorem semiBlockStructuredSubnetRequirements_noDecision_transToPlace_eq_of_ne_source
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source)
+    {left right : Trans}
+    (hleft : net.transToPlace left place)
+    (hright : net.transToPlace right place) :
+    left = right :=
+  semiBlockStructuredBaseRequirements_noDecision_transToPlace_eq_of_ne_source
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+    hnoDecision hplace hleft hright
+
+theorem semiBlockStructuredSubnetRequirements_noDecision_placeToTrans_eq_of_ne_sink
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net)
+    (hnoDecision : noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink)
+    {left right : Trans}
+    (hleft : net.placeToTrans place left)
+    (hright : net.placeToTrans place right) :
+    left = right :=
+  semiBlockStructuredBaseRequirements_noDecision_placeToTrans_eq_of_ne_sink
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+    hnoDecision hplace hleft hright
 
 theorem decisionPairingWithBranchEquiv_pairing
     {net : WorkflowNet Place Trans}

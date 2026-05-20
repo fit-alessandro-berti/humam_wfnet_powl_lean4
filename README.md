@@ -210,9 +210,10 @@ The current proof spine is:
   uniqueness,
   free-choice preset-equality,
   marked-graph/no-decision equivalence, semi-block no-decision
-  safe-and-sound marked-graph consequences, and no-decision semi-block
-  non-boundary unique-place-flow wrappers with exact `↔` rewrite forms used
-  by the completeness argument, and Lemma 2 loop trace
+  safe-and-sound marked-graph consequences, bundled marked-graph and
+  direct no-decision non-boundary unique-place-flow wrappers with exact `↔`
+  rewrite forms and transition-equality corollaries, plus semi-block
+  specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, including the
   incidence-based full restricted loop-projection connectedness target and a
