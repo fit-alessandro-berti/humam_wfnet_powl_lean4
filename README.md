@@ -15,7 +15,10 @@ The current proof spine is:
   restriction/extension lemmas lift firing sequences from subtype-restricted
   nets back to the original WF-net when the selected transition preset and
   postset are closed inside the selected places, and restrict original firing
-  sequences whose trace is already typed by the selected transitions.
+  sequences whose trace is already typed by the selected transitions. The path
+  layer now includes dual first/last place-transition facts, yielding checked
+  WF-net consequences that every transition has at least one input and one
+  output place.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
   for Definition 5.
@@ -47,15 +50,17 @@ The current proof spine is:
   constructors for one-transition entry/exit segments.
   Partial-order projections now have a subtype-restricted representation with
   selected transitions and retained boundary/original places, checked boundary
-  and internal edge constructors, and one-step path constructors for boundary
-  and retained-original edges. Restricted partial-order projection paths lift
-  to ambient partial-order projection paths. Partial-order pattern consequences
+  and internal edge constructors in all boundary directions, and one-step path
+  constructors for boundary and retained-original edges. Restricted
+  partial-order projection paths lift to ambient partial-order projection paths.
+  Partial-order pattern consequences
   now also expose execution-order boundary construction, cycle exclusion,
   same-component entry/exit exclusion, and entry/exit place equivalence with
   respect to a component's transitions. Entry/exit point predicates now have
-  checked constructor and destructor lemmas. Indexed partition components now
-  carry checked membership/nonemptiness facts, and common-postset reachability
-  is checked to force transitions into the same partition component.
+  checked constructor/destructor lemmas and source/sink exclusion consequences.
+  Indexed partition components now carry checked membership/nonemptiness facts,
+  and common-postset reachability is checked to force transitions into the same
+  partition component.
 - `KouraniWfnetPowl.PaperTargets`: named Section 5 proof targets and checked
   semantic preservation theorems corresponding to the POWL-language side of
   Lemmas 4, 5, and 6, the checked base case for Theorem 1, and named checked
@@ -64,10 +69,10 @@ The current proof spine is:
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, and Lemma 2 loop trace
   closure plus loop projection boundary and restricted-projection facts, and
-  Lemma 3 partial-order projection boundary/internal edge facts plus
-  restricted-path lifting, execution-order, entry/exit point API, and
-  boundary-equivalence consequences, plus common-postset same-component
-  consequences.
+  Lemma 3 partial-order projection boundary/internal edge and one-step path
+  facts plus restricted-path lifting, execution-order, source/sink-aware
+  entry/exit point API, and boundary-equivalence consequences, plus
+  common-postset same-component consequences.
 
 Build with:
 

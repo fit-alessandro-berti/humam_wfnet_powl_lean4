@@ -514,6 +514,102 @@ theorem path_place_to_transition_first
   · cases hsame
   · exact hfirst
 
+theorem path_from_transition_first_place_aux
+    (net : PetriNet Place Trans)
+    {sourceNode target : Node Place Trans}
+    {source : Trans}
+    (path : Path net sourceNode target)
+    (hsource : sourceNode = Node.trans source) :
+    target = Node.trans source ∨
+      ∃ first,
+        net.transToPlace source first ∧
+        Path net (Node.place first) target := by
+  cases path with
+  | refl =>
+      exact Or.inl hsource
+  | step hflow rest =>
+      right
+      subst hsource
+      rename_i second
+      cases second with
+      | place place =>
+          exact ⟨place, hflow, rest⟩
+      | trans trans =>
+          exact False.elim hflow
+
+theorem path_from_transition_first_place
+    (net : PetriNet Place Trans)
+    {source : Trans}
+    {target : Node Place Trans}
+    (path : Path net (Node.trans source) target) :
+    target = Node.trans source ∨
+      ∃ first,
+        net.transToPlace source first ∧
+        Path net (Node.place first) target :=
+  path_from_transition_first_place_aux net path rfl
+
+theorem path_transition_to_place_first
+    (net : PetriNet Place Trans)
+    {source : Trans}
+    {target : Place}
+    (path : Path net (Node.trans source) (Node.place target)) :
+    ∃ first,
+      net.transToPlace source first ∧
+      Path net (Node.place first) (Node.place target) := by
+  rcases path_from_transition_first_place net path with hsame | hfirst
+  · cases hsame
+  · exact hfirst
+
+theorem reversePath_to_transition_last_place
+    (net : PetriNet Place Trans)
+    {source : Node Place Trans}
+    {target : Trans}
+    (path : ReversePath net source (Node.trans target)) :
+    source = Node.trans target ∨
+      ∃ last,
+        ReversePath net source (Node.place last) ∧
+        net.placeToTrans last target := by
+  cases path with
+  | refl =>
+      exact Or.inl rfl
+  | snoc path hflow =>
+      right
+      rename_i second
+      cases second with
+      | place place =>
+          exact ⟨place, path, hflow⟩
+      | trans trans =>
+          exact False.elim hflow
+
+theorem path_to_transition_last_place
+    (net : PetriNet Place Trans)
+    {source : Node Place Trans}
+    {target : Trans}
+    (path : Path net source (Node.trans target)) :
+    source = Node.trans target ∨
+      ∃ last,
+        Path net source (Node.place last) ∧
+        net.placeToTrans last target := by
+  rcases reversePath_to_transition_last_place
+      net
+      (ReversePath.of_path path) with hsame | hlast
+  · exact Or.inl hsame
+  · right
+    rcases hlast with ⟨last, rpath, hflow⟩
+    exact ⟨last, ReversePath.to_path rpath, hflow⟩
+
+theorem path_place_to_transition_last
+    (net : PetriNet Place Trans)
+    {source : Place}
+    {target : Trans}
+    (path : Path net (Node.place source) (Node.trans target)) :
+    ∃ last,
+      Path net (Node.place source) (Node.place last) ∧
+      net.placeToTrans last target := by
+  rcases path_to_transition_last_place net path with hsame | hlast
+  · cases hsame
+  · exact hlast
+
 theorem reversePath_to_place_last_transition
     (net : PetriNet Place Trans)
     {source : Node Place Trans}
@@ -849,6 +945,34 @@ theorem sink_no_output
     (trans : Trans) :
     ¬ net.placeToTrans net.sink trans :=
   ((net.uniqueSink net.sink).2 rfl) trans
+
+theorem transition_has_input
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) :
+    ∃ place, net.placeToTrans place trans := by
+  have hpath :
+      PetriNet.Path
+        net.toPetriNet
+        (PetriNet.Node.place net.source)
+        (PetriNet.Node.trans trans) :=
+    (net.connected (PetriNet.Node.trans trans)).1
+  rcases PetriNet.path_place_to_transition_last net.toPetriNet hpath with
+    ⟨place, _path, hflow⟩
+  exact ⟨place, hflow⟩
+
+theorem transition_has_output
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) :
+    ∃ place, net.transToPlace trans place := by
+  have hpath :
+      PetriNet.Path
+        net.toPetriNet
+        (PetriNet.Node.trans trans)
+        (PetriNet.Node.place net.sink) :=
+    (net.connected (PetriNet.Node.trans trans)).2
+  rcases PetriNet.path_transition_to_place_first net.toPetriNet hpath with
+    ⟨place, hflow, _path⟩
+  exact ⟨place, hflow⟩
 
 theorem entryPoints_has_part_output
     (net : WorkflowNet Place Trans)

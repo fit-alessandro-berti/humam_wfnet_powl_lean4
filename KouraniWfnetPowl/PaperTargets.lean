@@ -235,6 +235,114 @@ theorem lemma3_exit_point_of_external_output
     WorkflowNet.exitPoints net part place :=
   WorkflowNet.exitPoints_of_external_output net hinput hexternal
 
+theorem lemma3_source_no_input
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) :
+    ¬ net.transToPlace trans net.source :=
+  WorkflowNet.source_no_input net trans
+
+theorem lemma3_sink_no_output
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) :
+    ¬ net.placeToTrans net.sink trans :=
+  WorkflowNet.sink_no_output net trans
+
+theorem wfnet_transition_has_input
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) :
+    ∃ place, net.placeToTrans place trans :=
+  WorkflowNet.transition_has_input net trans
+
+theorem wfnet_transition_has_output
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (trans : Trans) :
+    ∃ place, net.transToPlace trans place :=
+  WorkflowNet.transition_has_output net trans
+
+theorem lemma3_entry_point_source_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans) :
+    WorkflowNet.entryPoints net part net.source ↔
+      ∃ trans, part trans ∧ net.placeToTrans net.source trans :=
+  WorkflowNet.entryPoints_source_iff net part
+
+theorem lemma3_exit_point_sink_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans) :
+    WorkflowNet.exitPoints net part net.sink ↔
+      ∃ trans, part trans ∧ net.transToPlace trans net.sink :=
+  WorkflowNet.exitPoints_sink_iff net part
+
+theorem lemma3_entry_point_external_input_of_ne_source
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hentry : WorkflowNet.entryPoints net part place)
+    (hplace : place ≠ net.source) :
+    ∃ trans, ¬ part trans ∧ net.transToPlace trans place :=
+  WorkflowNet.entryPoints_external_input_of_ne_source net hentry hplace
+
+theorem lemma3_exit_point_external_output_of_ne_sink
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hexit : WorkflowNet.exitPoints net part place)
+    (hplace : place ≠ net.sink) :
+    ∃ trans, ¬ part trans ∧ net.placeToTrans place trans :=
+  WorkflowNet.exitPoints_external_output_of_ne_sink net hexit hplace
+
+theorem lemma3_entry_point_not_sink
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hentry : WorkflowNet.entryPoints net part place) :
+    place ≠ net.sink :=
+  WorkflowNet.entryPoints_ne_sink net hentry
+
+theorem lemma3_exit_point_not_source
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hexit : WorkflowNet.exitPoints net part place) :
+    place ≠ net.source :=
+  WorkflowNet.exitPoints_ne_source net hexit
+
+theorem lemma3_sink_not_entry_point
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans) :
+    ¬ WorkflowNet.entryPoints net part net.sink :=
+  WorkflowNet.not_entryPoints_sink net part
+
+theorem lemma3_source_not_exit_point
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans) :
+    ¬ WorkflowNet.exitPoints net part net.source :=
+  WorkflowNet.not_exitPoints_source net part
+
 theorem lemma3_execution_order_of_boundary
     {Place : Type u}
     {Trans : Type v}
@@ -535,6 +643,36 @@ theorem lemma3_partial_order_projection_start_edge
   Patterns.partialOrderProjection_start_placeToTrans
     net hpart hentry hflow
 
+theorem lemma3_partial_order_projection_start_incoming_edge
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {place : Place}
+    (hpart : part trans)
+    (hentry : WorkflowNet.entryPoints net part place)
+    (hflow : net.transToPlace trans place) :
+    (Patterns.partialOrderProjection net part).transToPlace
+      trans Patterns.BoundaryPlace.start :=
+  Patterns.partialOrderProjection_transToPlace_start
+    net hpart hentry hflow
+
+theorem lemma3_partial_order_projection_end_outgoing_edge
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hexit : WorkflowNet.exitPoints net part place)
+    (hflow : net.placeToTrans place trans) :
+    (Patterns.partialOrderProjection net part).placeToTrans
+      Patterns.BoundaryPlace.end_ trans :=
+  Patterns.partialOrderProjection_end_placeToTrans
+    net hpart hexit hflow
+
 def lemma3_partial_order_projection_restricted
     {Place : Type u}
     {Trans : Type v}
@@ -669,6 +807,55 @@ theorem lemma3_partial_order_projection_restricted_start_edge_iff
   Patterns.partialOrderProjectionRestricted_start_placeToTrans_iff'
     net trans
 
+theorem lemma3_partial_order_projection_restricted_start_incoming_edge_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (trans : {trans : Trans // part trans}) :
+    (Patterns.partialOrderProjectionRestricted net part).transToPlace
+      trans
+      ⟨Patterns.BoundaryPlace.start,
+        Patterns.partialOrderProjectionPlaces_start net part⟩ ↔
+        ∃ original,
+          WorkflowNet.entryPoints net part original ∧
+          net.transToPlace trans.val original :=
+  Patterns.partialOrderProjectionRestricted_transToPlace_start_iff'
+    net trans
+
+theorem lemma3_partial_order_projection_restricted_end_outgoing_edge
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hexit : WorkflowNet.exitPoints net part place)
+    (hflow : net.placeToTrans place trans) :
+    (Patterns.partialOrderProjectionRestricted net part).placeToTrans
+      ⟨Patterns.BoundaryPlace.end_,
+        Patterns.partialOrderProjectionPlaces_end net part⟩
+      ⟨trans, hpart⟩ :=
+  Patterns.partialOrderProjectionRestricted_end_placeToTrans
+    net hpart hexit hflow
+
+theorem lemma3_partial_order_projection_restricted_end_outgoing_edge_iff
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (trans : {trans : Trans // part trans}) :
+    (Patterns.partialOrderProjectionRestricted net part).placeToTrans
+      ⟨Patterns.BoundaryPlace.end_,
+        Patterns.partialOrderProjectionPlaces_end net part⟩
+      trans ↔
+        ∃ original,
+          WorkflowNet.exitPoints net part original ∧
+          net.placeToTrans original trans.val :=
+  Patterns.partialOrderProjectionRestricted_end_placeToTrans_iff'
+    net trans
+
 theorem lemma3_partial_order_projection_restricted_end_edge
     {Place : Type u}
     {Trans : Type v}
@@ -701,6 +888,23 @@ theorem lemma3_partial_order_projection_restricted_end_edge_iff
           net.transToPlace trans.val original :=
   Patterns.partialOrderProjectionRestricted_transToPlace_end_iff'
     net trans
+
+theorem lemma3_partial_order_projection_restricted_start_incoming_edge
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {place : Place}
+    (hpart : part trans)
+    (hentry : WorkflowNet.entryPoints net part place)
+    (hflow : net.transToPlace trans place) :
+    (Patterns.partialOrderProjectionRestricted net part).transToPlace
+      ⟨trans, hpart⟩
+      ⟨Patterns.BoundaryPlace.start,
+        Patterns.partialOrderProjectionPlaces_start net part⟩ :=
+  Patterns.partialOrderProjectionRestricted_transToPlace_start
+    net hpart hentry hflow
 
 theorem lemma3_partial_order_projection_internal_placeToTrans
     {Place : Type u}
@@ -873,6 +1077,40 @@ theorem lemma3_partial_order_projection_start_to_end_path
   Patterns.partialOrderProjection_start_to_end
     net hpart hentry hexit hstart hend
 
+theorem lemma3_partial_order_projection_transition_to_start
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {place : Place}
+    (hpart : part trans)
+    (hentry : WorkflowNet.entryPoints net part place)
+    (hflow : net.transToPlace trans place) :
+    PetriNet.Path
+      (Patterns.partialOrderProjection net part)
+      (PetriNet.Node.trans trans)
+      (PetriNet.Node.place Patterns.BoundaryPlace.start) :=
+  Patterns.partialOrderProjection_transition_to_start
+    net hpart hentry hflow
+
+theorem lemma3_partial_order_projection_end_to_transition
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hexit : WorkflowNet.exitPoints net part place)
+    (hflow : net.placeToTrans place trans) :
+    PetriNet.Path
+      (Patterns.partialOrderProjection net part)
+      (PetriNet.Node.place Patterns.BoundaryPlace.end_)
+      (PetriNet.Node.trans trans) :=
+  Patterns.partialOrderProjection_end_to_transition
+    net hpart hexit hflow
+
 theorem lemma3_partial_order_projection_restricted_start_to_transition
     {Place : Type u}
     {Trans : Type v}
@@ -891,6 +1129,44 @@ theorem lemma3_partial_order_projection_restricted_start_to_transition
       (PetriNet.Node.trans ⟨trans, hpart⟩) :=
   Patterns.partialOrderProjectionRestricted_start_to_transition
     net hpart hentry hflow
+
+theorem lemma3_partial_order_projection_restricted_transition_to_start
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {trans : Trans}
+    {place : Place}
+    (hpart : part trans)
+    (hentry : WorkflowNet.entryPoints net part place)
+    (hflow : net.transToPlace trans place) :
+    PetriNet.Path
+      (Patterns.partialOrderProjectionRestricted net part)
+      (PetriNet.Node.trans ⟨trans, hpart⟩)
+      (PetriNet.Node.place
+        ⟨Patterns.BoundaryPlace.start,
+          Patterns.partialOrderProjectionPlaces_start net part⟩) :=
+  Patterns.partialOrderProjectionRestricted_transition_to_start
+    net hpart hentry hflow
+
+theorem lemma3_partial_order_projection_restricted_end_to_transition
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    {trans : Trans}
+    (hpart : part trans)
+    (hexit : WorkflowNet.exitPoints net part place)
+    (hflow : net.placeToTrans place trans) :
+    PetriNet.Path
+      (Patterns.partialOrderProjectionRestricted net part)
+      (PetriNet.Node.place
+        ⟨Patterns.BoundaryPlace.end_,
+          Patterns.partialOrderProjectionPlaces_end net part⟩)
+      (PetriNet.Node.trans ⟨trans, hpart⟩) :=
+  Patterns.partialOrderProjectionRestricted_end_to_transition
+    net hpart hexit hflow
 
 theorem lemma3_partial_order_projection_restricted_transition_to_end
     {Place : Type u}
