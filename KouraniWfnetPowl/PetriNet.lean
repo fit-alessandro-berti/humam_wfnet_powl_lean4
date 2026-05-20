@@ -494,6 +494,26 @@ theorem to_path
   | step _ _ hflow _ ih =>
       exact Path.step hflow ih
 
+theorem of_path
+    {net : PetriNet Place Trans}
+    {places : Set Place}
+    {transitions : Set Trans}
+    {source target : Node Place Trans}
+    (path : Path net source target)
+    (hsource : nodeIn places transitions source)
+    (hclosed :
+      ∀ {first second : Node Place Trans},
+        flow net first second ->
+          nodeIn places transitions first ->
+            nodeIn places transitions second) :
+    PathIn net places transitions source target := by
+  induction path with
+  | refl =>
+      exact PathIn.refl hsource
+  | step hflow _ ih =>
+      have hsecond := hclosed hflow hsource
+      exact PathIn.step hsource hsecond hflow (ih hsecond)
+
 theorem to_restrict_path
     {net : PetriNet Place Trans}
     {places : Set Place}

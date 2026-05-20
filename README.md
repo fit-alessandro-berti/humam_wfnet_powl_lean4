@@ -132,6 +132,9 @@ The current proof spine is:
   and internal edge constructors in all boundary directions, and one-step path
   constructors for boundary and retained-original edges. Restricted
   partial-order projection paths lift to ambient partial-order projection paths.
+  Raw projection edges are checked to stay inside the retained node set, so
+  ordinary raw projection paths can be lifted to `PathIn` paths from any
+  retained source.
   Selected transitions and retained original places now have checked two-sided
   connectivity in the restricted partial-order projection from explicit
   entry/exit and incidence witnesses; under those same hypotheses, restricted
@@ -219,8 +222,9 @@ The current proof spine is:
   incidence-based full restricted loop-projection connectedness target and a
   pattern-level do/redo loop-projection WF-net existence theorem, and
   Lemma 3
-  partial-order projection boundary/internal edge and one-step path
-  facts plus bidirectional restricted-path lifting, `PathIn`-connected
+  partial-order projection boundary/internal edge, one-step path, and
+  raw-`PathIn` constructor/path-lifting facts plus bidirectional
+  restricted-path lifting, `PathIn`-connected
   restricted projection normalization, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
