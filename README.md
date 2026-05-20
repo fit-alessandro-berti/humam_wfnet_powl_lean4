@@ -133,15 +133,18 @@ The current proof spine is:
   indexed Lemma 4 and Lemma 6 component-list forms. The target map now also
   includes mapped-component variants of the XOR, loop, and partial-order
   preservation wrappers, so recursive submodel equivalences can be transported
-  through transition embeddings before applying the top-level pattern
-  semantics, plus named checked
+  through transition embeddings before applying the top-level pattern semantics;
+  the loop wrappers also support separate mapped transition subtypes for do and
+  redo models, plus named checked
   dependencies for Lemma 1 path restriction, reachable-marking lifting,
   selected-sequence restriction, safeness preservation, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, a mapped recursive
   XOR-branch model-to-typed-subtrace equivalence, and a mapped branch-list
   theorem that combines recursive XOR branch models with a top-level XOR model
-  under a supplied language decomposition, and Lemma 2 loop trace
+  under a supplied language decomposition, plus mapped partial-order
+  branch-list theorems for subtype components and heterogeneous component
+  transition universes, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, including the
   incidence-based full restricted loop-projection connectedness target, and

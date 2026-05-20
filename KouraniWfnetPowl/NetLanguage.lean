@@ -101,6 +101,34 @@ theorem normalizedLabel_original
       label trans :=
   rfl
 
+def normalizedSubtypeTransMap
+    {Trans : Type u}
+    {transitions : Set Trans} :
+    PetriNet.NormalizedTrans {trans : Trans // transitions trans} ->
+      PetriNet.NormalizedTrans Trans
+  | PetriNet.NormalizedTrans.enter => PetriNet.NormalizedTrans.enter
+  | PetriNet.NormalizedTrans.original trans =>
+      PetriNet.NormalizedTrans.original trans.val
+  | PetriNet.NormalizedTrans.exit => PetriNet.NormalizedTrans.exit
+
+theorem normalizedLabel_normalizedSubtypeTransMap
+    {Activity : Type u}
+    {Trans : Type v}
+    {transitions : Set Trans}
+    (label : Trans -> TransitionLabel Activity)
+    (trans : PetriNet.NormalizedTrans {trans : Trans // transitions trans}) :
+    normalizedLabel label (normalizedSubtypeTransMap trans) =
+      normalizedLabel
+        (fun trans : {trans : Trans // transitions trans} => label trans.val)
+        trans := by
+  cases trans with
+  | enter =>
+      rfl
+  | original trans =>
+      rfl
+  | exit =>
+      rfl
+
 theorem traceWord_normalized_original
     {Activity : Type u}
     {Trans : Type v}

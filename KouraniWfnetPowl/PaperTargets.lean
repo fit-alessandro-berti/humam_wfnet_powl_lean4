@@ -58,6 +58,46 @@ theorem subtype_powl_language_lift
       Powl.language (fun trans => label trans.val) model word :=
   Powl.language_map Subtype.val label model word
 
+theorem normalized_subtype_powl_language_lift
+    {Trans : Type u}
+    {Activity : Type v}
+    {transitions : Set Trans}
+    (label : Trans -> TransitionLabel Activity)
+    (model :
+      Powl
+        (PetriNet.NormalizedTrans
+          {trans : Trans // transitions trans}))
+    (word : List Activity) :
+    Powl.language
+        (WorkflowNet.normalizedLabel label)
+        (Powl.map WorkflowNet.normalizedSubtypeTransMap model)
+        word ↔
+      Powl.language
+        (WorkflowNet.normalizedLabel
+          (fun trans : {trans : Trans // transitions trans} =>
+            label trans.val))
+        model
+        word := by
+  have hlabel :
+      (fun trans :
+          PetriNet.NormalizedTrans
+            {trans : Trans // transitions trans} =>
+        WorkflowNet.normalizedLabel label
+          (WorkflowNet.normalizedSubtypeTransMap trans)) =
+        WorkflowNet.normalizedLabel
+          (fun trans : {trans : Trans // transitions trans} =>
+            label trans.val) := by
+    funext trans
+    exact WorkflowNet.normalizedLabel_normalizedSubtypeTransMap
+      label trans
+  exact Iff.trans
+    (Powl.language_map
+      WorkflowNet.normalizedSubtypeTransMap
+      (WorkflowNet.normalizedLabel label)
+      model
+      word)
+    (by rw [hlabel])
+
 theorem mapped_subtype_model_language_iff_subtype_trace_language
     {Place : Type u}
     {Trans : Type v}
@@ -336,6 +376,99 @@ theorem loop_pattern_language_preservation_of_mapped_components
       Iff.trans (Powl.language_map f label redo word) (hredo word))
     hnet
 
+theorem loop_pattern_language_preservation_of_heterogeneous_mapped_components
+    {Activity : Type u}
+    {BodyTrans : Type v}
+    {RedoTrans : Type w}
+    {Trans : Type x}
+    (bodyMap : BodyTrans -> Trans)
+    (redoMap : RedoTrans -> Trans)
+    {label : Trans -> TransitionLabel Activity}
+    {body : Powl BodyTrans}
+    {redo : Powl RedoTrans}
+    {bodyLanguage redoLanguage netLanguage : Language Activity}
+    (hbody :
+      ∀ word,
+        Powl.language (fun trans => label (bodyMap trans)) body word ↔
+          bodyLanguage word)
+    (hredo :
+      ∀ word,
+        Powl.language (fun trans => label (redoMap trans)) redo word ↔
+          redoLanguage word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Language.concat bodyLanguage
+            (Language.Star
+              (Language.concat redoLanguage bodyLanguage)) word) :
+    ∀ word,
+      Powl.language label
+          (Powl.loop (Powl.map bodyMap body) (Powl.map redoMap redo))
+          word ↔
+        netLanguage word :=
+  loop_pattern_language_preservation_of_component_equiv
+    (label := label)
+    (body := Powl.map bodyMap body)
+    (redo := Powl.map redoMap redo)
+    (bodyLanguage := bodyLanguage)
+    (redoLanguage := redoLanguage)
+    (netLanguage := netLanguage)
+    (fun word =>
+      Iff.trans (Powl.language_map bodyMap label body word)
+        (hbody word))
+    (fun word =>
+      Iff.trans (Powl.language_map redoMap label redo word)
+        (hredo word))
+    hnet
+
+theorem loop_pattern_language_preservation_of_mapped_subtype_components
+    {Activity : Type u}
+    {Trans : Type v}
+    {label : Trans -> TransitionLabel Activity}
+    {bodyPart redoPart : Set Trans}
+    {body : Powl {trans : Trans // bodyPart trans}}
+    {redo : Powl {trans : Trans // redoPart trans}}
+    {bodyLanguage redoLanguage netLanguage : Language Activity}
+    (hbody :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // bodyPart trans} =>
+              label trans.val)
+            body
+            word ↔
+          bodyLanguage word)
+    (hredo :
+      ∀ word,
+        Powl.language
+            (fun trans : {trans : Trans // redoPart trans} =>
+              label trans.val)
+            redo
+            word ↔
+          redoLanguage word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Language.concat bodyLanguage
+            (Language.Star
+              (Language.concat redoLanguage bodyLanguage)) word) :
+    ∀ word,
+      Powl.language label
+          (Powl.loop
+            (Powl.map Subtype.val body)
+            (Powl.map Subtype.val redo))
+          word ↔
+        netLanguage word :=
+  loop_pattern_language_preservation_of_heterogeneous_mapped_components
+    (bodyMap := Subtype.val)
+    (redoMap := Subtype.val)
+    (label := label)
+    (body := body)
+    (redo := redo)
+    (bodyLanguage := bodyLanguage)
+    (redoLanguage := redoLanguage)
+    (netLanguage := netLanguage)
+    hbody hredo hnet
+
 theorem partial_order_pattern_language_preservation
     {Activity : Type u}
     {Trans : Type v}
@@ -481,6 +614,196 @@ theorem partial_order_pattern_language_preservation_of_mapped_indexed_components
           (hcomponent index model componentLanguage
             hmodel hcomponentLanguage word))
       hnet
+
+theorem partial_order_pattern_language_preservation_of_heterogeneous_mapped_components
+    {Activity : Type u}
+    {Trans : Type v}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    {netLanguage : Language Activity}
+    (components :
+      List
+        (Σ SubTrans : Type w,
+          (SubTrans -> Trans) × Powl SubTrans × Language Activity))
+    (hcomponent :
+      ∀ (component :
+          Σ SubTrans : Type w,
+            (SubTrans -> Trans) × Powl SubTrans × Language Activity)
+        word,
+        Powl.language
+            (fun trans : component.1 => label (component.2.1 trans))
+            component.2.2.1
+            word ↔
+          component.2.2.2 word)
+    (hnet :
+      ∀ word,
+        netLanguage word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (components.map (fun component => component.2.2.2))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.partialOrder order
+            (components.map
+              (fun component =>
+                Powl.map component.2.1 component.2.2.1)))
+          word ↔
+        netLanguage word := by
+  intro word
+  rw [Powl.partial_order_language_iff_componentLanguage]
+  exact Iff.trans
+    (by
+      simpa [List.map_map] using
+        Powl.partialOrderComponentLanguage_map_congr
+          order
+          components
+          (fun component =>
+            Powl.language label
+              (Powl.map component.2.1 component.2.2.1))
+          (fun component => component.2.2.2)
+          (fun component word =>
+            Iff.trans
+              (Powl.language_map
+                component.2.1 label component.2.2.1 word)
+              (hcomponent component word))
+          word)
+    (Iff.symm (hnet word))
+
+theorem partial_order_pattern_language_preservation_of_mapped_subtype_components
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl {trans : Trans // part.val trans}))
+    (hmodels :
+      ∀ (branch :
+          Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl {trans : Trans // part.val trans})
+        word,
+        Powl.language
+            (fun trans : {trans : Trans // branch.1.val trans} =>
+              label trans.val)
+            branch.2
+            word ↔
+          WorkflowNet.subtypeTraceLanguage net label branch.1.val word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.subtypeTraceLanguage net label branch.1.val))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.partialOrder order
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2)))
+          word ↔
+        WorkflowNet.language net label word := by
+  intro word
+  rw [Powl.partial_order_language_iff_componentLanguage]
+  exact Iff.trans
+    (by
+      simpa [List.map_map] using
+        Powl.partialOrderComponentLanguage_map_congr
+          order
+          branches
+          (fun branch =>
+            Powl.language label (Powl.map Subtype.val branch.2))
+          (fun branch =>
+            WorkflowNet.subtypeTraceLanguage net label branch.1.val)
+          (fun branch word =>
+            Iff.trans
+              (Powl.language_map Subtype.val label branch.2 word)
+              (hmodels branch word))
+          word)
+    (Iff.symm (hdecompose word))
+
+theorem partial_order_pattern_language_preservation_of_normalized_mapped_subtype_components
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches :
+      List
+        (Σ part : {part : Set Trans // part ∈ partition.parts},
+          Powl
+            (PetriNet.NormalizedTrans
+              {trans : Trans // part.val trans})))
+    (componentLanguage :
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        Powl
+          (PetriNet.NormalizedTrans
+            {trans : Trans // part.val trans})) ->
+        Language Activity)
+    (hmodels :
+      ∀ (branch :
+          Σ part : {part : Set Trans // part ∈ partition.parts},
+            Powl
+              (PetriNet.NormalizedTrans
+                {trans : Trans // part.val trans}))
+        word,
+        Powl.language
+            (WorkflowNet.normalizedLabel
+              (fun trans : {trans : Trans // branch.1.val trans} =>
+                label trans.val))
+            branch.2
+            word ↔
+          componentLanguage branch word)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map componentLanguage)
+            word) :
+    ∀ word,
+      Powl.language
+          (WorkflowNet.normalizedLabel label)
+          (Powl.partialOrder order
+            (branches.map
+              (fun branch =>
+                Powl.map
+                  WorkflowNet.normalizedSubtypeTransMap
+                  branch.2)))
+          word ↔
+        WorkflowNet.language net label word := by
+  intro word
+  rw [Powl.partial_order_language_iff_componentLanguage]
+  exact Iff.trans
+    (by
+      simpa [List.map_map] using
+        Powl.partialOrderComponentLanguage_map_congr
+          order
+          branches
+          (fun branch =>
+            Powl.language
+              (WorkflowNet.normalizedLabel label)
+              (Powl.map
+                WorkflowNet.normalizedSubtypeTransMap
+                branch.2))
+          componentLanguage
+          (fun branch word =>
+            Iff.trans
+              (normalized_subtype_powl_language_lift
+                label branch.2 word)
+              (hmodels branch word))
+          word)
+    (Iff.symm (hdecompose word))
 
 theorem theorem1_base_case_single_transition
     {Place : Type u}
