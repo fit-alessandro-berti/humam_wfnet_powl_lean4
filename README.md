@@ -51,7 +51,9 @@ The current proof spine is:
   completion itself, preserves safeness under original safeness plus proper
   completion, and preserves the full `sound` and `safeAndSound` predicates. It
   also preserves the no-dead-transitions property when the original net has no
-  dead transitions and can complete from reachable markings. Definition 6 work
+  dead transitions and can complete from reachable markings. The Petri-net
+  layer now exposes transition-to-transition flow, flow-path reachability, and
+  transition-flow acyclicity/no-return equivalence. Definition 6 work
   has started with checked explicit-decision-point predicates, split/join
   decision-place predicates, a checked split-to-join pairing skeleton with
   branch-count equivalence, a disjoint branch-subnet family specification, and
@@ -117,7 +119,12 @@ The current proof spine is:
   safeness preservation for restricted XOR projections; original firing
   sequences over a selected XOR branch also restrict to the corresponding
   branch projection.
-  A partial-order pattern's execution order is asymmetric. The loop
+  A partial-order pattern's execution order is asymmetric, and a no-return
+  criterion for execution-order edges is checked equivalent to irreflexivity of
+  the transitive closure. Partition contraction is now represented as a
+  Petri-net over part indices, with execution order checked equivalent to
+  transition flow in that contracted net; contracted-flow acyclicity builds the
+  partial-order pattern required in Case 3 of the completeness proof. The loop
   pattern now has checked extraction theorems showing do/redo transitions lie
   on the corresponding place-to-place paths, that loop-projection boundary
   edges are created from the original entry/exit places, that loop entry/exit
@@ -306,7 +313,9 @@ The current proof spine is:
   free-choice consequences, a bundled semi-block no-decision
   structural package that carries free-choiceness, bundled marked-graph and
   direct no-decision non-boundary unique-place-flow wrappers with exact `↔`
-  rewrite forms and transition-equality corollaries, plus semi-block
+  rewrite forms and transition-equality corollaries, Case 3 contraction,
+  no-return, and acyclicity wrappers that build the partial-order pattern and
+  strict partial order, plus semi-block
   specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, no-dead-transition,

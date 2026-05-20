@@ -591,6 +591,62 @@ def transitionReachable
     (source target : Trans) : Prop :=
   Path net (Node.trans source) (Node.trans target)
 
+def transitionFlow
+    (net : PetriNet Place Trans) : Rel Trans :=
+  fun left right =>
+    ∃ place, net.transToPlace left place ∧ net.placeToTrans place right
+
+def transitionFlowAcyclic
+    (net : PetriNet Place Trans) : Prop :=
+  Irreflexive (TransGen (transitionFlow net))
+
+def transitionFlowNoReturn
+    (net : PetriNet Place Trans) : Prop :=
+  ∀ {left right},
+    transitionFlow net left right ->
+      ¬ TransGen (transitionFlow net) right left
+
+theorem transitionFlow_path
+    {net : PetriNet Place Trans}
+    {left right : Trans}
+    (hflow : transitionFlow net left right) :
+    transitionReachable net left right := by
+  rcases hflow with ⟨place, hleft, hright⟩
+  exact
+    @Path.step Place Trans net
+      (Node.trans left)
+      (Node.place place)
+      (Node.trans right)
+      hleft
+      (@Path.step Place Trans net
+        (Node.place place)
+        (Node.trans right)
+        (Node.trans right)
+        hright
+        Path.refl)
+
+theorem transitionFlow_transGen_path
+    {net : PetriNet Place Trans}
+    {left right : Trans}
+    (hflow : TransGen (transitionFlow net) left right) :
+    transitionReachable net left right := by
+  induction hflow with
+  | single h =>
+      exact transitionFlow_path h
+  | tail h _ ih =>
+      exact Path.trans (transitionFlow_path h) ih
+
+theorem transitionFlowAcyclic_iff_noReturn
+    (net : PetriNet Place Trans) :
+    transitionFlowAcyclic net ↔ transitionFlowNoReturn net := by
+  rw [transitionFlowAcyclic, transitionFlowNoReturn]
+  exact TransGen.irrefl_iff_no_return
+
+theorem transitionFlowNoReturn_iff_acyclic
+    (net : PetriNet Place Trans) :
+    transitionFlowNoReturn net ↔ transitionFlowAcyclic net :=
+  (transitionFlowAcyclic_iff_noReturn net).symm
+
 theorem path_from_place_first_transition_aux
     (net : PetriNet Place Trans)
     {sourceNode target : Node Place Trans}

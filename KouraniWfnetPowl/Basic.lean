@@ -74,6 +74,50 @@ theorem trans {r : Rel alpha} : Transitive (TransGen r) := by
   | tail h _ ih =>
       exact TransGen.tail h (ih hyz)
 
+theorem mono
+    {r s : Rel alpha}
+    (hrel : ∀ {x y}, r x y -> s x y) :
+    ∀ {x y}, TransGen r x y -> TransGen s x y := by
+  intro x y hpath
+  induction hpath with
+  | single h =>
+      exact TransGen.single (hrel h)
+  | tail h _ ih =>
+      exact TransGen.tail (hrel h) ih
+
+theorem congr
+    {r s : Rel alpha}
+    (hrel : ∀ x y, r x y ↔ s x y)
+    {x y : alpha} :
+    TransGen r x y ↔ TransGen s x y := by
+  constructor
+  · exact mono (fun {x y} h => (hrel x y).mp h)
+  · exact mono (fun {x y} h => (hrel x y).mpr h)
+
+theorem irrefl_of_no_return
+    {r : Rel alpha}
+    (hnoReturn : ∀ {x y}, r x y -> ¬ TransGen r y x) :
+    Irreflexive (TransGen r) := by
+  intro x hcycle
+  cases hcycle with
+  | single h =>
+      exact hnoReturn h (TransGen.single h)
+  | tail hxy hyx =>
+      exact hnoReturn hxy hyx
+
+theorem no_return_of_irrefl
+    {r : Rel alpha}
+    (hirrefl : Irreflexive (TransGen r)) :
+    ∀ {x y}, r x y -> ¬ TransGen r y x := by
+  intro x y hxy hyx
+  exact hirrefl x (TransGen.tail hxy hyx)
+
+theorem irrefl_iff_no_return
+    {r : Rel alpha} :
+    Irreflexive (TransGen r) ↔
+      ∀ {x y}, r x y -> ¬ TransGen r y x :=
+  ⟨no_return_of_irrefl, irrefl_of_no_return⟩
+
 end TransGen
 
 end KouraniWfnetPowl
