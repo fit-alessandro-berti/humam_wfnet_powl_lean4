@@ -180,9 +180,13 @@ The current proof spine is:
   for XOR, loop, ordinary partial-order, and normalized partial-order recursive
   cases, plus a global `SubtypeCertifiedConversion` interface with mapped
   language preservation/equality and XOR, loop, and partial-order composition
-  wrappers over subtype trace decompositions, including the paper-style
-  `L(N) = L(ψ)` equality form. Theorem 2 now has checked targets for the
-  safe-and-sound,
+  wrappers over subtype trace decompositions. A `SemanticCertifiedConversion`
+  interface now packages direct global language-equivalence certificates and
+  can be built from structural `CertifiedConversion`s, full-transition subtype
+  conversions, and subtype-composed XOR/loop/partial-order models, with
+  theorem-facing aliases for the Theorem 1 semantic conversion statement,
+  including the paper-style `L(N) = L(ψ)` equality form. Theorem 2 now has checked targets
+  for the safe-and-sound,
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
   checked branch-subnet closure/disjointness, local branch-language transfer,
@@ -198,7 +202,11 @@ The current proof spine is:
   whose certificates are supplied by recursive `ConversionCertificate`s,
   including a bridge from restricted decision-branch certificates to local
   subtype conversions and object-level branch-family XOR/partial-order
-  constructors from local subtype conversions, exact
+  constructors from local subtype conversions, a checked bridge from the
+  stronger disjoint branch-subnet requirement to the weaker decision-pairing
+  requirement plus per-split branch-family witnesses, direct safe-and-sound,
+  explicit-decision, and free-choice consequences for the semi-block
+  requirement layers, exact
   uniqueness,
   free-choice preset-equality,
   marked-graph/no-decision equivalence, and non-boundary unique-place-flow

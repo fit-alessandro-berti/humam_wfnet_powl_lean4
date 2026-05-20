@@ -2141,6 +2141,62 @@ def sound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
 def safeAndSound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
   safe net ∧ sound net
 
+theorem sound_noDeadTransitions
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net) :
+    noDeadTransitions net :=
+  hsound.1
+
+theorem sound_optionToComplete
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net) :
+    optionToComplete net :=
+  hsound.2.1
+
+theorem sound_properCompletion
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsound : sound net) :
+    properCompletion net :=
+  hsound.2.2
+
+theorem safeAndSound_safe
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net) :
+    safe net :=
+  hsafeSound.1
+
+theorem safeAndSound_sound
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net) :
+    sound net :=
+  hsafeSound.2
+
+theorem safeAndSound_noDeadTransitions
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net) :
+    noDeadTransitions net :=
+  sound_noDeadTransitions (safeAndSound_sound hsafeSound)
+
+theorem safeAndSound_optionToComplete
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net) :
+    optionToComplete net :=
+  sound_optionToComplete (safeAndSound_sound hsafeSound)
+
+theorem safeAndSound_properCompletion
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafeSound : safeAndSound net) :
+    properCompletion net :=
+  sound_properCompletion (safeAndSound_sound hsafeSound)
+
 def semiBlockStructuredBaseRequirements
     [DecidableEq Place]
     (net : WorkflowNet Place Trans) : Prop :=
@@ -2157,6 +2213,272 @@ def semiBlockStructuredSubnetRequirements
     (net : WorkflowNet Place Trans) : Prop :=
   semiBlockStructuredBaseRequirements net ∧
     ∃ pair, decisionPairingWithBranchSubnets net pair
+
+theorem semiBlockStructuredBaseRequirements_safeAndSound
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredBaseRequirements net) :
+    safeAndSound net :=
+  hrequirements.1
+
+theorem semiBlockStructuredBaseRequirements_safe
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredBaseRequirements net) :
+    safe net :=
+  safeAndSound_safe
+    (semiBlockStructuredBaseRequirements_safeAndSound hrequirements)
+
+theorem semiBlockStructuredBaseRequirements_sound
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredBaseRequirements net) :
+    sound net :=
+  safeAndSound_sound
+    (semiBlockStructuredBaseRequirements_safeAndSound hrequirements)
+
+theorem semiBlockStructuredBaseRequirements_noDeadTransitions
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredBaseRequirements net) :
+    noDeadTransitions net :=
+  safeAndSound_noDeadTransitions
+    (semiBlockStructuredBaseRequirements_safeAndSound hrequirements)
+
+theorem semiBlockStructuredBaseRequirements_optionToComplete
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredBaseRequirements net) :
+    optionToComplete net :=
+  safeAndSound_optionToComplete
+    (semiBlockStructuredBaseRequirements_safeAndSound hrequirements)
+
+theorem semiBlockStructuredBaseRequirements_properCompletion
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredBaseRequirements net) :
+    properCompletion net :=
+  safeAndSound_properCompletion
+    (semiBlockStructuredBaseRequirements_safeAndSound hrequirements)
+
+theorem semiBlockStructuredBaseRequirements_explicitDecisionPoints
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredBaseRequirements net) :
+    explicitDecisionPoints net :=
+  hrequirements.2
+
+theorem semiBlockStructuredBaseRequirements_freeChoice
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredBaseRequirements net) :
+    PetriNet.freeChoice net.toPetriNet :=
+  explicitDecisionPoints_freeChoice
+    (semiBlockStructuredBaseRequirements_explicitDecisionPoints
+      hrequirements)
+
+theorem semiBlockStructuredDecisionRequirements_base
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net) :
+    semiBlockStructuredBaseRequirements net :=
+  hrequirements.1
+
+theorem semiBlockStructuredDecisionRequirements_safeAndSound
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net) :
+    safeAndSound net :=
+  semiBlockStructuredBaseRequirements_safeAndSound
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+
+theorem semiBlockStructuredDecisionRequirements_safe
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net) :
+    safe net :=
+  semiBlockStructuredBaseRequirements_safe
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+
+theorem semiBlockStructuredDecisionRequirements_sound
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net) :
+    sound net :=
+  semiBlockStructuredBaseRequirements_sound
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+
+theorem semiBlockStructuredDecisionRequirements_noDeadTransitions
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net) :
+    noDeadTransitions net :=
+  semiBlockStructuredBaseRequirements_noDeadTransitions
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+
+theorem semiBlockStructuredDecisionRequirements_optionToComplete
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net) :
+    optionToComplete net :=
+  semiBlockStructuredBaseRequirements_optionToComplete
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+
+theorem semiBlockStructuredDecisionRequirements_properCompletion
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net) :
+    properCompletion net :=
+  semiBlockStructuredBaseRequirements_properCompletion
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+
+theorem semiBlockStructuredDecisionRequirements_explicitDecisionPoints
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net) :
+    explicitDecisionPoints net :=
+  semiBlockStructuredBaseRequirements_explicitDecisionPoints
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+
+theorem semiBlockStructuredDecisionRequirements_freeChoice
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredDecisionRequirements net) :
+    PetriNet.freeChoice net.toPetriNet :=
+  semiBlockStructuredBaseRequirements_freeChoice
+    (semiBlockStructuredDecisionRequirements_base hrequirements)
+
+theorem semiBlockStructuredSubnetRequirements_base
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    semiBlockStructuredBaseRequirements net :=
+  hrequirements.1
+
+theorem semiBlockStructuredSubnetRequirements_safeAndSound
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    safeAndSound net :=
+  semiBlockStructuredBaseRequirements_safeAndSound
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+
+theorem semiBlockStructuredSubnetRequirements_safe
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    safe net :=
+  semiBlockStructuredBaseRequirements_safe
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+
+theorem semiBlockStructuredSubnetRequirements_sound
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    sound net :=
+  semiBlockStructuredBaseRequirements_sound
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+
+theorem semiBlockStructuredSubnetRequirements_noDeadTransitions
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    noDeadTransitions net :=
+  semiBlockStructuredBaseRequirements_noDeadTransitions
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+
+theorem semiBlockStructuredSubnetRequirements_optionToComplete
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    optionToComplete net :=
+  semiBlockStructuredBaseRequirements_optionToComplete
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+
+theorem semiBlockStructuredSubnetRequirements_properCompletion
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    properCompletion net :=
+  semiBlockStructuredBaseRequirements_properCompletion
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+
+theorem semiBlockStructuredSubnetRequirements_explicitDecisionPoints
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    explicitDecisionPoints net :=
+  semiBlockStructuredBaseRequirements_explicitDecisionPoints
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+
+theorem semiBlockStructuredSubnetRequirements_freeChoice
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    PetriNet.freeChoice net.toPetriNet :=
+  semiBlockStructuredBaseRequirements_freeChoice
+    (semiBlockStructuredSubnetRequirements_base hrequirements)
+
+theorem decisionPairingWithBranchEquiv_pairing
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : decisionPairingWithBranchEquiv net pair) :
+    decisionPairing net pair :=
+  hpair.1
+
+theorem decisionPairingWithBranchSubnets_pairingEquiv
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : decisionPairingWithBranchSubnets net pair) :
+    decisionPairingWithBranchEquiv net pair :=
+  hpair.1
+
+theorem decisionPairingWithBranchSubnets_branchFamily
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : decisionPairingWithBranchSubnets net pair)
+    {split : Place}
+    (hsplit : splitDecisionPlace net split) :
+    ∃ branches,
+      decisionBranchFamily net split (pair split) branches :=
+  hpair.2 split hsplit
+
+theorem semiBlockStructuredSubnetRequirements_decisionRequirements
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    semiBlockStructuredDecisionRequirements net := by
+  rcases hrequirements.2 with ⟨pair, hpair⟩
+  exact
+    ⟨hrequirements.1,
+      ⟨pair, decisionPairingWithBranchSubnets_pairingEquiv hpair⟩⟩
+
+theorem semiBlockStructuredSubnetRequirements_branchEquiv
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net) :
+    ∃ pair, decisionPairingWithBranchEquiv net pair := by
+  rcases hrequirements.2 with ⟨pair, hpair⟩
+  exact ⟨pair, decisionPairingWithBranchSubnets_pairingEquiv hpair⟩
+
+theorem semiBlockStructuredSubnetRequirements_branchFamily
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements : semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : splitDecisionPlace net split) :
+    ∃ (pair : Place -> Place)
+      (branches : transitionPostsetOfPlace net split -> Set Trans),
+      decisionPairingWithBranchEquiv net pair ∧
+        decisionBranchFamily net split (pair split) branches := by
+  rcases hrequirements.2 with ⟨pair, hpair⟩
+  rcases
+    decisionPairingWithBranchSubnets_branchFamily hpair hsplit with
+    ⟨branches, hbranches⟩
+  exact
+    ⟨pair, branches,
+      decisionPairingWithBranchSubnets_pairingEquiv hpair,
+      hbranches⟩
 
 theorem normalized_enter_enabled_iff
     (net : WorkflowNet Place Trans)

@@ -5198,6 +5198,305 @@ theorem partial_order_language_eq_of_subtype_conversions
     (partial_order_language_preservation_of_subtype_conversions
       branches hdecompose)
 
+structure SemanticCertifiedConversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (label : Trans -> TransitionLabel Activity) where
+  OutTrans : Type v
+  outLabel : OutTrans -> TransitionLabel Activity
+  model : Powl OutTrans
+  certificate :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language outLabel model word
+
+theorem semantic_certified_conversion_language_preservation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language conversion.outLabel conversion.model word :=
+  conversion.certificate
+
+theorem semantic_certified_conversion_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label) :
+    WorkflowNet.language net label =
+      Powl.language conversion.outLabel conversion.model :=
+  Language.ext
+    (semantic_certified_conversion_language_preservation conversion)
+
+def semantic_certified_conversion_of_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label) :
+    SemanticCertifiedConversion net label where
+  OutTrans := conversion.OutTrans
+  outLabel := conversion.outLabel
+  model := conversion.model
+  certificate :=
+    certified_conversion_language_preservation conversion
+
+def semantic_certified_conversion_of_univ_subtype_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      SubtypeCertifiedConversion net label Set.univ) :
+    SemanticCertifiedConversion net label where
+  OutTrans := Trans
+  outLabel := label
+  model := Powl.map Subtype.val conversion.model
+  certificate :=
+    subtype_certified_conversion_univ_global_language_preservation
+      conversion
+
+def semantic_certified_conversion_xor_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (branches : List
+      (Σ part : Set Trans,
+        SubtypeCertifiedConversion net label part))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.subtypeTraceLanguage
+                  net label branch.1))
+            word) :
+    SemanticCertifiedConversion net label where
+  OutTrans := Trans
+  outLabel := label
+  model :=
+    Powl.xor
+      (branches.map
+        (fun branch => Powl.map Subtype.val branch.2.model))
+  certificate := fun word =>
+    Iff.symm
+      (xor_language_preservation_of_subtype_conversions
+        branches hdecompose word)
+
+def semantic_certified_conversion_loop_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {bodyPart redoPart : Set Trans}
+    (body :
+      SubtypeCertifiedConversion net label bodyPart)
+    (redo :
+      SubtypeCertifiedConversion net label redoPart)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.concat
+            (WorkflowNet.subtypeTraceLanguage
+              net label bodyPart)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.subtypeTraceLanguage
+                  net label redoPart)
+                (WorkflowNet.subtypeTraceLanguage
+                  net label bodyPart)))
+            word) :
+    SemanticCertifiedConversion net label where
+  OutTrans := Trans
+  outLabel := label
+  model :=
+    Powl.loop
+      (Powl.map Subtype.val body.model)
+      (Powl.map Subtype.val redo.model)
+  certificate := fun word =>
+    Iff.symm
+      (loop_language_preservation_of_subtype_conversions
+        body redo hdecompose word)
+
+def semantic_certified_conversion_partial_order_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches : List
+      (Σ part : Set Trans,
+        SubtypeCertifiedConversion net label part))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.subtypeTraceLanguage
+                  net label branch.1))
+            word) :
+    SemanticCertifiedConversion net label where
+  OutTrans := Trans
+  outLabel := label
+  model :=
+    Powl.partialOrder order
+      (branches.map
+        (fun branch => Powl.map Subtype.val branch.2.model))
+  certificate := fun word =>
+    Iff.symm
+      (partial_order_language_preservation_of_subtype_conversions
+        branches hdecompose word)
+
+theorem theorem1_semantic_conversion_language_preservation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label) :
+    ∀ word,
+      WorkflowNet.language net label word ↔
+        Powl.language conversion.outLabel conversion.model word :=
+  semantic_certified_conversion_language_preservation conversion
+
+theorem theorem1_semantic_conversion_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label) :
+    WorkflowNet.language net label =
+      Powl.language conversion.outLabel conversion.model :=
+  semantic_certified_conversion_language_eq conversion
+
+def theorem1_semantic_conversion_of_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label) :
+    SemanticCertifiedConversion net label :=
+  semantic_certified_conversion_of_certified_conversion conversion
+
+def theorem1_semantic_conversion_of_univ_subtype_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      SubtypeCertifiedConversion net label Set.univ) :
+    SemanticCertifiedConversion net label :=
+  semantic_certified_conversion_of_univ_subtype_conversion conversion
+
+def theorem1_semantic_conversion_xor_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (branches : List
+      (Σ part : Set Trans,
+        SubtypeCertifiedConversion net label part))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.subtypeTraceLanguage
+                  net label branch.1))
+            word) :
+    SemanticCertifiedConversion net label :=
+  semantic_certified_conversion_xor_of_subtype_conversions
+    branches hdecompose
+
+def theorem1_semantic_conversion_loop_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {bodyPart redoPart : Set Trans}
+    (body :
+      SubtypeCertifiedConversion net label bodyPart)
+    (redo :
+      SubtypeCertifiedConversion net label redoPart)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.concat
+            (WorkflowNet.subtypeTraceLanguage
+              net label bodyPart)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.subtypeTraceLanguage
+                  net label redoPart)
+                (WorkflowNet.subtypeTraceLanguage
+                  net label bodyPart)))
+            word) :
+    SemanticCertifiedConversion net label :=
+  semantic_certified_conversion_loop_of_subtype_conversions
+    body redo hdecompose
+
+def theorem1_semantic_conversion_partial_order_of_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {order : Rel Nat}
+    (branches : List
+      (Σ part : Set Trans,
+        SubtypeCertifiedConversion net label part))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.subtypeTraceLanguage
+                  net label branch.1))
+            word) :
+    SemanticCertifiedConversion net label :=
+  semantic_certified_conversion_partial_order_of_subtype_conversions
+    branches hdecompose
+
 structure LocalCertifiedConversion
     {Place : Type u}
     {Trans : Type v}
@@ -6001,7 +6300,7 @@ theorem theorem2_semi_block_base_safe_and_sound
     (hbase :
       WorkflowNet.semiBlockStructuredBaseRequirements net) :
     WorkflowNet.safeAndSound net :=
-  hbase.1
+  WorkflowNet.semiBlockStructuredBaseRequirements_safeAndSound hbase
 
 theorem theorem2_semi_block_base_explicit_decision_points
     {Place : Type u}
@@ -6011,7 +6310,8 @@ theorem theorem2_semi_block_base_explicit_decision_points
     (hbase :
       WorkflowNet.semiBlockStructuredBaseRequirements net) :
     WorkflowNet.explicitDecisionPoints net :=
-  hbase.2
+  WorkflowNet.semiBlockStructuredBaseRequirements_explicitDecisionPoints
+    hbase
 
 theorem theorem2_explicit_decision_points_place_to_transition
     {Place : Type u}
@@ -6173,7 +6473,7 @@ theorem theorem2_semi_block_base_free_choice
     (hbase :
       WorkflowNet.semiBlockStructuredBaseRequirements net) :
     PetriNet.freeChoice net.toPetriNet :=
-  WorkflowNet.explicitDecisionPoints_freeChoice hbase.2
+  WorkflowNet.semiBlockStructuredBaseRequirements_freeChoice hbase
 
 theorem theorem2_no_decision_places_marked_graph
     {Place : Type u}
@@ -6352,6 +6652,15 @@ theorem theorem2_decision_pairing_branch_equiv
         net split (pair split) toJoin fromJoin :=
   hpair.2 split hsplit
 
+theorem theorem2_decision_pairing_with_branch_equiv_pairing
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : WorkflowNet.decisionPairingWithBranchEquiv net pair) :
+    WorkflowNet.decisionPairing net pair :=
+  WorkflowNet.decisionPairingWithBranchEquiv_pairing hpair
+
 theorem theorem2_place_postset_preset_equiv_left_inverse
     {Place : Type u}
     {Trans : Type v}
@@ -6396,7 +6705,40 @@ theorem theorem2_semi_block_decision_base_requirements
     (hrequirements :
       WorkflowNet.semiBlockStructuredDecisionRequirements net) :
     WorkflowNet.semiBlockStructuredBaseRequirements net :=
-  hrequirements.1
+  WorkflowNet.semiBlockStructuredDecisionRequirements_base hrequirements
+
+theorem theorem2_semi_block_decision_safe_and_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    WorkflowNet.safeAndSound net :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_safeAndSound
+    hrequirements
+
+theorem theorem2_semi_block_decision_explicit_decision_points
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    WorkflowNet.explicitDecisionPoints net :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_explicitDecisionPoints
+    hrequirements
+
+theorem theorem2_semi_block_decision_free_choice
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    PetriNet.freeChoice net.toPetriNet :=
+  WorkflowNet.semiBlockStructuredDecisionRequirements_freeChoice
+    hrequirements
 
 theorem theorem2_semi_block_decision_pairing_exists
     {Place : Type u}
@@ -7925,7 +8267,40 @@ theorem theorem2_semi_block_subnet_base_requirements
     (hrequirements :
       WorkflowNet.semiBlockStructuredSubnetRequirements net) :
     WorkflowNet.semiBlockStructuredBaseRequirements net :=
-  hrequirements.1
+  WorkflowNet.semiBlockStructuredSubnetRequirements_base hrequirements
+
+theorem theorem2_semi_block_subnet_safe_and_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.safeAndSound net :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+    hrequirements
+
+theorem theorem2_semi_block_subnet_explicit_decision_points
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.explicitDecisionPoints net :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_explicitDecisionPoints
+    hrequirements
+
+theorem theorem2_semi_block_subnet_free_choice
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    PetriNet.freeChoice net.toPetriNet :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_freeChoice
+    hrequirements
 
 theorem theorem2_semi_block_subnet_pairing_exists
     {Place : Type u}
@@ -7936,6 +8311,46 @@ theorem theorem2_semi_block_subnet_pairing_exists
       WorkflowNet.semiBlockStructuredSubnetRequirements net) :
     ∃ pair, WorkflowNet.decisionPairingWithBranchSubnets net pair :=
   hrequirements.2
+
+theorem theorem2_semi_block_subnet_decision_requirements
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.semiBlockStructuredDecisionRequirements net :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_decisionRequirements
+    hrequirements
+
+theorem theorem2_semi_block_subnet_branch_equiv_exists
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    ∃ pair, WorkflowNet.decisionPairingWithBranchEquiv net pair :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_branchEquiv
+    hrequirements
+
+theorem theorem2_semi_block_subnet_branch_family_exists
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    ∃ (pair : Place -> Place)
+      (branches :
+        WorkflowNet.transitionPostsetOfPlace net split -> Set Trans),
+      WorkflowNet.decisionPairingWithBranchEquiv net pair ∧
+        WorkflowNet.decisionBranchFamily
+          net split (pair split) branches :=
+  WorkflowNet.semiBlockStructuredSubnetRequirements_branchFamily
+    hrequirements hsplit
 
 theorem lemma2_loop_pattern_trace_closure
     {Place : Type u}
