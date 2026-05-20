@@ -149,7 +149,12 @@ The current proof spine is:
   an exit point for at most one part; contracted-flow acyclicity builds the
   partial-order pattern required in Case 3 of the completeness proof, and a
   checked bridge now derives that no-return/acyclicity fact whenever the
-  contracted net is packaged as a sound marked-graph WF-net. The loop
+  contracted net is packaged as a sound marked-graph WF-net. A more faithful
+  boundary-place contraction is also available: it restricts the contraction to
+  places incident to contracted edges, proves transition flow and acyclicity are
+  equivalent to the original contraction, and derives the same Case 3
+  no-return/partial-order conclusions from a sound marked-graph WF-net package
+  over that boundary-place subtype. The loop
   pattern now has checked extraction theorems showing do/redo transitions lie
   on the corresponding place-to-place paths, that loop-projection boundary
   edges are created from the original entry/exit places, that loop entry/exit
@@ -344,12 +349,13 @@ The current proof spine is:
   rewrite forms and transition-equality corollaries, Case 3 contraction,
   contracted marked-graph equivalence, no-return, acyclicity wrappers, and a
   bundled contraction certificate that builds the partial-order pattern and
-  strict partial order, plus a sound-contraction certificate that derives
-  acyclicity from marked-graph soundness before feeding the same pipeline, and
-  now feeds the partial-order branch into the raw
-  algorithm-certificate layer, certified conversion, language-equivalence,
-  concrete POWL-witness, and visible-activity-witness pipeline, including
-  existential generated-model visible-witness forms, plus checked
+  strict partial order, plus sound-contraction and boundary-sound-contraction
+  certificates that derive acyclicity from marked-graph soundness before
+  feeding the same pipeline. All three Case 3 certificate forms now feed the
+  partial-order branch into the raw algorithm-certificate layer, certified
+  conversion, language-equivalence, concrete POWL-witness, and
+  visible-activity-witness pipeline, including existential generated-model
+  visible-witness forms, plus checked
   marked-graph soundness wrappers showing that transition-flow successors must
   occur, and can be split out as firings, in the completion suffix after their
   predecessors fire, ruling out direct transition-flow self-loops, and ruling
