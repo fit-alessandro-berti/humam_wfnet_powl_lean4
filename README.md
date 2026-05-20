@@ -239,7 +239,16 @@ The current proof spine is:
   equality, existential POWL-model, and visible-activity witness consequences;
   theorem-facing constructors now cover the single-transition base case and
   the XOR, loop, and partial-order recursive cases from supplied local subtype
-  conversions and global language decompositions,
+  conversions and global language decompositions, and a
+  `SemiBlockCompletenessCase`/`SemiBlockCompletenessCertificate` layer packages
+  that case split into one algorithm-certificate object with language
+  preservation/equality, existential POWL-model, safe-and-soundness, and
+  visible-activity witness consequences. A
+  pattern-aware `SemiBlockPatternCompletenessCase` variant carries detected
+  XOR/loop/partial-order pattern evidence, with the partial-order branch using
+  the transitive closure of the execution-order relation and exposing the
+  corresponding strict-partial-order object, while exposing the same
+  consequence surface,
   plus no-dead-transition, accepting-run trace-membership,
   language-word, visible-activity, semi-block local-conversion language
   equivalences, and local-conversion converted-POWL visible-activity witnesses
