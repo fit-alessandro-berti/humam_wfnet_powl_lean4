@@ -155,11 +155,14 @@ The current proof spine is:
   the remaining completion, proper-completion, and safeness obligations are
   supplied. Pointwise marking bounds now show that restricted and normalized
   projection markings preserve safeness from original markings, and a
-  reachable-shape invariant turns original safeness into safeness of the
-  normalized projection; the same invariant feeds a `safeAndSound` constructor
-  that only keeps completion and proper-completion as supplied residual
-  obligations. A more general raw-projection normalization constructor is also
-  available when connectedness is supplied over the ambient raw projection.
+  three-way reachable-shape invariant, covering the fresh initial marking,
+  projected original reachable markings, and the fresh final marking, turns
+  original safeness into safeness of the normalized projection; the same
+  invariant feeds a `safeAndSound` constructor that only keeps completion and
+  proper-completion as supplied residual obligations, and it has checked
+  constructor/eliminator lemmas for downstream proof scripts. A more general
+  raw-projection normalization constructor is also available when connectedness
+  is supplied over the ambient raw projection.
   Partial-order pattern consequences
   now also expose execution-order boundary construction, cycle exclusion,
   same-component entry/exit exclusion, and entry/exit place equivalence with

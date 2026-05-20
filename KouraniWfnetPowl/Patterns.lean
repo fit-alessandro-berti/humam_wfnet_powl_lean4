@@ -5832,6 +5832,478 @@ theorem partialOrderProjectionRestrictedNormalized_safeAndSound_of_original_reac
     hcomplete
     hproper
 
+def partialOrderProjectionRestrictedNormalizedReachableShape
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩))
+    (marking :
+      Marking
+        (PetriNet.NormalizedPlace
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place})) : Prop :=
+  marking =
+      WorkflowNet.initial
+        (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+          net part hconnected) ∨
+    (∃ original,
+      WorkflowNet.reachable net (WorkflowNet.initial net) original ∧
+        marking =
+          partialOrderProjectionNormalizedMarking
+            net part original) ∨
+    marking =
+      WorkflowNet.final
+        (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+          net part hconnected)
+
+theorem partialOrderProjectionRestrictedNormalizedReachableShape_initial
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩)) :
+    partialOrderProjectionRestrictedNormalizedReachableShape
+      net part hconnected
+      (WorkflowNet.initial
+        (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+          net part hconnected)) :=
+  Or.inl rfl
+
+theorem partialOrderProjectionRestrictedNormalizedReachableShape_projected
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩))
+    {original : Marking Place}
+    (hreachable :
+      WorkflowNet.reachable net (WorkflowNet.initial net) original) :
+    partialOrderProjectionRestrictedNormalizedReachableShape
+      net part hconnected
+      (partialOrderProjectionNormalizedMarking net part original) :=
+  Or.inr (Or.inl ⟨original, hreachable, rfl⟩)
+
+theorem partialOrderProjectionRestrictedNormalizedReachableShape_final
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩)) :
+    partialOrderProjectionRestrictedNormalizedReachableShape
+      net part hconnected
+      (WorkflowNet.final
+        (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+          net part hconnected)) :=
+  Or.inr (Or.inr rfl)
+
+theorem partialOrderProjectionRestrictedNormalizedReachableShape_cases
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩))
+    {marking :
+      Marking
+        (PetriNet.NormalizedPlace
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place})}
+    {motive : Prop}
+    (hshape :
+      partialOrderProjectionRestrictedNormalizedReachableShape
+        net part hconnected marking)
+    (hinitial :
+      marking =
+          WorkflowNet.initial
+            (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+              net part hconnected) ->
+        motive)
+    (hprojected :
+      (∃ original,
+        WorkflowNet.reachable net (WorkflowNet.initial net) original ∧
+          marking =
+            partialOrderProjectionNormalizedMarking
+              net part original) ->
+        motive)
+    (hfinal :
+      marking =
+          WorkflowNet.final
+            (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+              net part hconnected) ->
+        motive) :
+    motive := by
+  rcases hshape with hinitialShape | hrest
+  · exact hinitial hinitialShape
+  · rcases hrest with hprojectedShape | hfinalShape
+    · exact hprojected hprojectedShape
+    · exact hfinal hfinalShape
+
+theorem partialOrderProjectionRestrictedNormalized_initial_le_one
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩)) :
+    ∀ place,
+      WorkflowNet.initial
+          (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+            net part hconnected)
+          place ≤ 1 := by
+  intro place
+  unfold WorkflowNet.initial Marking.single
+  by_cases hplace :
+      place =
+        (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+          net part hconnected).source
+  · simp [hplace]
+  · simp [hplace]
+
+theorem partialOrderProjectionRestrictedNormalized_final_le_one
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩)) :
+    ∀ place,
+      WorkflowNet.final
+          (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+            net part hconnected)
+          place ≤ 1 := by
+  intro place
+  unfold WorkflowNet.final Marking.single
+  by_cases hplace :
+      place =
+        (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+          net part hconnected).sink
+  · simp [hplace]
+  · simp [hplace]
+
+theorem partialOrderProjectionRestrictedNormalizedReachableShape_le_one_of_original_safe
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩))
+    (horiginalSafe : WorkflowNet.safe net)
+    {marking :
+      Marking
+        (PetriNet.NormalizedPlace
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place})}
+    (hshape :
+      partialOrderProjectionRestrictedNormalizedReachableShape
+        net part hconnected marking) :
+    ∀ place, marking place ≤ 1 := by
+  intro place
+  exact
+    partialOrderProjectionRestrictedNormalizedReachableShape_cases
+      net hconnected hshape
+      (fun hinitial => by
+        subst hinitial
+        exact
+          partialOrderProjectionRestrictedNormalized_initial_le_one
+            net hconnected place)
+      (fun hprojected => by
+        rcases hprojected with
+          ⟨original, horiginalReachable, hprojected⟩
+        subst hprojected
+        exact
+          partialOrderProjectionNormalizedMarking_le_one_of_original_le_one
+            net part original
+            (fun place => horiginalSafe original horiginalReachable place)
+            place)
+      (fun hfinal => by
+        subst hfinal
+        exact
+          partialOrderProjectionRestrictedNormalized_final_le_one
+            net hconnected place)
+
+theorem partialOrderProjectionRestrictedNormalized_safe_of_original_three_way_reachable_shape
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩))
+    (horiginalSafe : WorkflowNet.safe net)
+    (hshape :
+      ∀ projected,
+        WorkflowNet.reachable
+            (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+              net part hconnected)
+            (WorkflowNet.initial
+              (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+                net part hconnected))
+            projected ->
+          partialOrderProjectionRestrictedNormalizedReachableShape
+            net part hconnected projected) :
+    WorkflowNet.safe
+      (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+        net part hconnected) := by
+  intro projected hreachable place
+  exact
+    partialOrderProjectionRestrictedNormalizedReachableShape_le_one_of_original_safe
+      net hconnected horiginalSafe (hshape projected hreachable) place
+
+theorem partialOrderProjectionRestrictedNormalized_safeAndSound_of_original_three_way_reachable_shape
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩))
+    (horiginal :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ marking,
+          WorkflowNet.reachable
+              (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+                net part hconnected)
+              (WorkflowNet.initial
+                (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+                  net part hconnected))
+              (partialOrderProjectionNormalizedMarking net part marking) ∧
+            WorkflowNet.enabled net marking trans.val ∧
+            (∀ entry, WorkflowNet.entryPoints net part entry ->
+              marking entry > 0) ∧
+            (∀ exit, WorkflowNet.exitPoints net part exit ->
+              marking exit > 0))
+    (hexit :
+      ∃ marking,
+        WorkflowNet.reachable
+            (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+              net part hconnected)
+            (WorkflowNet.initial
+              (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+                net part hconnected))
+            (partialOrderProjectionNormalizedMarking net part marking) ∧
+          (∀ exit, WorkflowNet.exitPoints net part exit ->
+            marking exit > 0))
+    (horiginalSafe : WorkflowNet.safe net)
+    (hshape :
+      ∀ projected,
+        WorkflowNet.reachable
+            (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+              net part hconnected)
+            (WorkflowNet.initial
+              (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+                net part hconnected))
+            projected ->
+          partialOrderProjectionRestrictedNormalizedReachableShape
+            net part hconnected projected)
+    (hcomplete :
+      WorkflowNet.optionToComplete
+        (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+          net part hconnected))
+    (hproper :
+      WorkflowNet.properCompletion
+        (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+          net part hconnected)) :
+    WorkflowNet.safeAndSound
+      (partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+        net part hconnected) :=
+  partialOrderProjectionRestrictedNormalized_safeAndSound_of_witnesses
+    net hconnected horiginal hexit
+    (partialOrderProjectionRestrictedNormalized_safe_of_original_three_way_reachable_shape
+      net hconnected horiginalSafe hshape)
+    hcomplete
+    hproper
+
 def partialOrderProjectionRestrictedNormalizedWorkflowNetOfPathIn
     (net : WorkflowNet Place Trans)
     (part : Set Trans)
