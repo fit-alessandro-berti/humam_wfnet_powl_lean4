@@ -3892,6 +3892,263 @@ theorem partialOrderProjectionRestricted_start_to_end
     (partialOrderProjectionRestricted_transition_to_end
       net hpart hexit hend)
 
+theorem partialOrderProjectionRestricted_transition_connected_of_entry_exit
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (trans : {trans : Trans // part trans})
+    (hentry :
+      ∃ entry,
+        WorkflowNet.entryPoints net part entry ∧
+          net.placeToTrans entry trans.val)
+    (hexit :
+      ∃ exit,
+        WorkflowNet.exitPoints net part exit ∧
+          net.transToPlace trans.val exit) :
+    PetriNet.Path
+        (partialOrderProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.start, partialOrderProjectionPlaces_start net part⟩)
+        (PetriNet.Node.trans trans) ∧
+      PetriNet.Path
+        (partialOrderProjectionRestricted net part)
+        (PetriNet.Node.trans trans)
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.end_, partialOrderProjectionPlaces_end net part⟩) := by
+  rcases hentry with ⟨entry, hentryPoint, hentryFlow⟩
+  rcases hexit with ⟨exit, hexitPoint, hexitFlow⟩
+  exact
+    ⟨partialOrderProjectionRestricted_start_to_transition
+        net trans.property hentryPoint hentryFlow,
+      partialOrderProjectionRestricted_transition_to_end
+        net trans.property hexitPoint hexitFlow⟩
+
+theorem partialOrderProjectionRestricted_original_connected_of_incident_transitions
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hplace :
+      partialOrderProjectionPlaces net part (BoundaryPlace.original place))
+    (hincoming :
+      ∃ trans,
+        part trans ∧
+          net.transToPlace trans place ∧
+          ∃ entry,
+            WorkflowNet.entryPoints net part entry ∧
+              net.placeToTrans entry trans)
+    (houtgoing :
+      ∃ trans,
+        part trans ∧
+          net.placeToTrans place trans ∧
+          ∃ exit,
+            WorkflowNet.exitPoints net part exit ∧
+              net.transToPlace trans exit) :
+    PetriNet.Path
+        (partialOrderProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.start, partialOrderProjectionPlaces_start net part⟩)
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.original place, hplace⟩) ∧
+      PetriNet.Path
+        (partialOrderProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.original place, hplace⟩)
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.end_, partialOrderProjectionPlaces_end net part⟩) := by
+  rcases hplace with ⟨htouching, hnotEntry, hnotExit⟩
+  rcases hincoming with
+    ⟨inTrans, hinPart, hinFlow, entry, hentryPoint, hentryFlow⟩
+  rcases houtgoing with
+    ⟨outTrans, houtPart, houtFlow, exit, hexitPoint, hexitFlow⟩
+  constructor
+  · exact
+      PetriNet.Path.trans
+        (partialOrderProjectionRestricted_start_to_transition
+          net hinPart hentryPoint hentryFlow)
+        (partialOrderProjectionRestricted_transition_to_original
+          net hinPart htouching hnotEntry hnotExit hinFlow)
+  · exact
+      PetriNet.Path.trans
+        (partialOrderProjectionRestricted_original_to_transition
+          net houtPart htouching hnotEntry hnotExit houtFlow)
+        (partialOrderProjectionRestricted_transition_to_end
+          net houtPart hexitPoint hexitFlow)
+
+theorem partialOrderProjectionRestricted_connected_of_entry_exit_incidence
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (hnonempty : ∃ trans, part trans)
+    (hentry :
+      ∀ trans, part trans ->
+        ∃ entry,
+          WorkflowNet.entryPoints net part entry ∧
+            net.placeToTrans entry trans)
+    (hexit :
+      ∀ trans, part trans ->
+        ∃ exit,
+          WorkflowNet.exitPoints net part exit ∧
+            net.transToPlace trans exit)
+    (hincoming :
+      ∀ {place : Place},
+        partialOrderProjectionPlaces net part (BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.transToPlace trans place ∧
+              ∃ entry,
+                WorkflowNet.entryPoints net part entry ∧
+                  net.placeToTrans entry trans)
+    (houtgoing :
+      ∀ {place : Place},
+        partialOrderProjectionPlaces net part (BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.placeToTrans place trans ∧
+              ∃ exit,
+                WorkflowNet.exitPoints net part exit ∧
+                  net.transToPlace trans exit) :
+    ∀ node :
+      PetriNet.Node
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place}
+        {trans : Trans // part trans},
+      PetriNet.Path
+          (partialOrderProjectionRestricted net part)
+          (PetriNet.Node.place
+            ⟨BoundaryPlace.start, partialOrderProjectionPlaces_start net part⟩)
+          node ∧
+        PetriNet.Path
+          (partialOrderProjectionRestricted net part)
+          node
+          (PetriNet.Node.place
+            ⟨BoundaryPlace.end_,
+              partialOrderProjectionPlaces_end net part⟩) := by
+  have hstartToEnd :
+      PetriNet.Path
+        (partialOrderProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.start, partialOrderProjectionPlaces_start net part⟩)
+        (PetriNet.Node.place
+          ⟨BoundaryPlace.end_, partialOrderProjectionPlaces_end net part⟩) := by
+    rcases hnonempty with ⟨trans, hpart⟩
+    rcases hentry trans hpart with ⟨entry, hentryPoint, hentryFlow⟩
+    rcases hexit trans hpart with ⟨exit, hexitPoint, hexitFlow⟩
+    exact
+      partialOrderProjectionRestricted_start_to_end
+        net hpart hentryPoint hexitPoint hentryFlow hexitFlow
+  intro node
+  cases node with
+  | place place =>
+      rcases place with ⟨place, hplace⟩
+      cases place with
+      | start =>
+          exact ⟨PetriNet.Path.refl, hstartToEnd⟩
+      | end_ =>
+          exact ⟨hstartToEnd, PetriNet.Path.refl⟩
+      | original place =>
+          exact
+            partialOrderProjectionRestricted_original_connected_of_incident_transitions
+              net hplace (hincoming hplace) (houtgoing hplace)
+  | trans trans =>
+      exact
+        partialOrderProjectionRestricted_transition_connected_of_entry_exit
+          net trans (hentry trans.val trans.property)
+          (hexit trans.val trans.property)
+
+def partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : BoundaryPlace Place //
+            partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.start,
+                partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨BoundaryPlace.end_,
+                partialOrderProjectionPlaces_end net part⟩)) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})
+      (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
+  WorkflowNet.normalized
+    (partialOrderProjectionRestricted net part)
+    ⟨BoundaryPlace.start, partialOrderProjectionPlaces_start net part⟩
+    ⟨BoundaryPlace.end_, partialOrderProjectionPlaces_end net part⟩
+    hconnected
+
+def partialOrderProjectionRestrictedNormalizedWorkflowNetOfIncidence
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (hnonempty : ∃ trans, part trans)
+    (hentry :
+      ∀ trans, part trans ->
+        ∃ entry,
+          WorkflowNet.entryPoints net part entry ∧
+            net.placeToTrans entry trans)
+    (hexit :
+      ∀ trans, part trans ->
+        ∃ exit,
+          WorkflowNet.exitPoints net part exit ∧
+            net.transToPlace trans exit)
+    (hincoming :
+      ∀ {place : Place},
+        partialOrderProjectionPlaces net part (BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.transToPlace trans place ∧
+              ∃ entry,
+                WorkflowNet.entryPoints net part entry ∧
+                  net.placeToTrans entry trans)
+    (houtgoing :
+      ∀ {place : Place},
+        partialOrderProjectionPlaces net part (BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.placeToTrans place trans ∧
+              ∃ exit,
+                WorkflowNet.exitPoints net part exit ∧
+                  net.transToPlace trans exit) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace
+        {place : BoundaryPlace Place //
+          partialOrderProjectionPlaces net part place})
+      (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
+  partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+    net part
+    (partialOrderProjectionRestricted_connected_of_entry_exit_incidence
+      net hnonempty hentry hexit hincoming houtgoing)
+
+def partialOrderProjectionNormalizedWorkflowNetOfConnected
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (hconnected :
+      ∀ node : PetriNet.Node (BoundaryPlace Place) Trans,
+        PetriNet.Path
+            (partialOrderProjection net part)
+            (PetriNet.Node.place BoundaryPlace.start)
+            node ∧
+          PetriNet.Path
+            (partialOrderProjection net part)
+            node
+            (PetriNet.Node.place BoundaryPlace.end_)) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace (BoundaryPlace Place))
+      (PetriNet.NormalizedTrans Trans) :=
+  WorkflowNet.normalized
+    (partialOrderProjection net part)
+    BoundaryPlace.start
+    BoundaryPlace.end_
+    hconnected
+
 end Patterns
 
 end KouraniWfnetPowl

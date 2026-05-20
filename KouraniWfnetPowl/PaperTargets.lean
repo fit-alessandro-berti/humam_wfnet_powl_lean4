@@ -1541,6 +1541,227 @@ theorem lemma3_partial_order_projection_restricted_start_to_end_path
   Patterns.partialOrderProjectionRestricted_start_to_end
     net hpart hentry hexit hstart hend
 
+theorem lemma3_partial_order_projection_restricted_transition_connected
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (trans : {trans : Trans // part trans})
+    (hentry :
+      ∃ entry,
+        WorkflowNet.entryPoints net part entry ∧
+          net.placeToTrans entry trans.val)
+    (hexit :
+      ∃ exit,
+        WorkflowNet.exitPoints net part exit ∧
+          net.transToPlace trans.val exit) :
+    PetriNet.Path
+        (Patterns.partialOrderProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨Patterns.BoundaryPlace.start,
+            Patterns.partialOrderProjectionPlaces_start net part⟩)
+        (PetriNet.Node.trans trans) ∧
+      PetriNet.Path
+        (Patterns.partialOrderProjectionRestricted net part)
+        (PetriNet.Node.trans trans)
+        (PetriNet.Node.place
+          ⟨Patterns.BoundaryPlace.end_,
+            Patterns.partialOrderProjectionPlaces_end net part⟩) :=
+  Patterns.partialOrderProjectionRestricted_transition_connected_of_entry_exit
+    net trans hentry hexit
+
+theorem lemma3_partial_order_projection_restricted_original_connected
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {place : Place}
+    (hplace :
+      Patterns.partialOrderProjectionPlaces
+        net part (Patterns.BoundaryPlace.original place))
+    (hincoming :
+      ∃ trans,
+        part trans ∧
+          net.transToPlace trans place ∧
+          ∃ entry,
+            WorkflowNet.entryPoints net part entry ∧
+              net.placeToTrans entry trans)
+    (houtgoing :
+      ∃ trans,
+        part trans ∧
+          net.placeToTrans place trans ∧
+          ∃ exit,
+            WorkflowNet.exitPoints net part exit ∧
+              net.transToPlace trans exit) :
+    PetriNet.Path
+        (Patterns.partialOrderProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨Patterns.BoundaryPlace.start,
+            Patterns.partialOrderProjectionPlaces_start net part⟩)
+        (PetriNet.Node.place
+          ⟨Patterns.BoundaryPlace.original place, hplace⟩) ∧
+      PetriNet.Path
+        (Patterns.partialOrderProjectionRestricted net part)
+        (PetriNet.Node.place
+          ⟨Patterns.BoundaryPlace.original place, hplace⟩)
+        (PetriNet.Node.place
+          ⟨Patterns.BoundaryPlace.end_,
+            Patterns.partialOrderProjectionPlaces_end net part⟩) :=
+  Patterns.partialOrderProjectionRestricted_original_connected_of_incident_transitions
+    net hplace hincoming houtgoing
+
+theorem lemma3_partial_order_projection_restricted_connected_of_entry_exit_incidence
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    (hnonempty : ∃ trans, part trans)
+    (hentry :
+      ∀ trans, part trans ->
+        ∃ entry,
+          WorkflowNet.entryPoints net part entry ∧
+            net.placeToTrans entry trans)
+    (hexit :
+      ∀ trans, part trans ->
+        ∃ exit,
+          WorkflowNet.exitPoints net part exit ∧
+            net.transToPlace trans exit)
+    (hincoming :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.transToPlace trans place ∧
+              ∃ entry,
+                WorkflowNet.entryPoints net part entry ∧
+                  net.placeToTrans entry trans)
+    (houtgoing :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.placeToTrans place trans ∧
+              ∃ exit,
+                WorkflowNet.exitPoints net part exit ∧
+                  net.transToPlace trans exit) :
+    ∀ node :
+      PetriNet.Node
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place}
+        {trans : Trans // part trans},
+      PetriNet.Path
+          (Patterns.partialOrderProjectionRestricted net part)
+          (PetriNet.Node.place
+            ⟨Patterns.BoundaryPlace.start,
+              Patterns.partialOrderProjectionPlaces_start net part⟩)
+          node ∧
+        PetriNet.Path
+          (Patterns.partialOrderProjectionRestricted net part)
+          node
+          (PetriNet.Node.place
+            ⟨Patterns.BoundaryPlace.end_,
+              Patterns.partialOrderProjectionPlaces_end net part⟩) :=
+  Patterns.partialOrderProjectionRestricted_connected_of_entry_exit_incidence
+    net hnonempty hentry hexit hincoming houtgoing
+
+def lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩)) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})
+      (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
+  Patterns.partialOrderProjectionRestrictedNormalizedWorkflowNetOfConnected
+    net part hconnected
+
+def lemma3_partial_order_projection_restricted_normalized_workflow_net_of_incidence
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (hnonempty : ∃ trans, part trans)
+    (hentry :
+      ∀ trans, part trans ->
+        ∃ entry,
+          WorkflowNet.entryPoints net part entry ∧
+            net.placeToTrans entry trans)
+    (hexit :
+      ∀ trans, part trans ->
+        ∃ exit,
+          WorkflowNet.exitPoints net part exit ∧
+            net.transToPlace trans exit)
+    (hincoming :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.transToPlace trans place ∧
+              ∃ entry,
+                WorkflowNet.entryPoints net part entry ∧
+                  net.placeToTrans entry trans)
+    (houtgoing :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.placeToTrans place trans ∧
+              ∃ exit,
+                WorkflowNet.exitPoints net part exit ∧
+                  net.transToPlace trans exit) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})
+      (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
+  Patterns.partialOrderProjectionRestrictedNormalizedWorkflowNetOfIncidence
+    net part hnonempty hentry hexit hincoming houtgoing
+
+def lemma3_partial_order_projection_normalized_workflow_net_of_connected
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (hconnected :
+      ∀ node : PetriNet.Node (Patterns.BoundaryPlace Place) Trans,
+        PetriNet.Path
+            (Patterns.partialOrderProjection net part)
+            (PetriNet.Node.place Patterns.BoundaryPlace.start)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjection net part)
+            node
+            (PetriNet.Node.place Patterns.BoundaryPlace.end_)) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace (Patterns.BoundaryPlace Place))
+      (PetriNet.NormalizedTrans Trans) :=
+  Patterns.partialOrderProjectionNormalizedWorkflowNetOfConnected
+    net part hconnected
+
 theorem lemma1_xor_projection_restricts_internal_paths
     {Place : Type u}
     {Trans : Type v}
@@ -2546,6 +2767,129 @@ theorem lemma2_loop_projection_restricted_internal_place_connected_of_incident_t
   Patterns.loopPattern_projection_restricted_internal_place_connected_of_incident_transitions
     hpattern
 
+theorem lemma2_loop_projection_restricted_connected_of_reachable_incident
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace : Place}
+    (hpartReach :
+      ∀ candidate,
+        part candidate ↔
+          PetriNet.reachableTransitionsBetweenPlaces
+            net.toPetriNet startPlace endPlace candidate)
+    (hnoInStart : ∀ candidate, part candidate ->
+      ¬ net.transToPlace candidate startPlace)
+    (hnonempty : ∃ trans, part trans)
+    (hincoming :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.transToPlace trans place)
+    (houtgoing :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.placeToTrans place trans) :
+    ∀ node :
+      PetriNet.Node
+        {place : Place //
+          Patterns.loopProjectionPlaces net part startPlace endPlace place}
+        {trans : Trans // part trans},
+      PetriNet.Path
+          (Patterns.loopProjectionRestricted net part startPlace endPlace)
+          (PetriNet.Node.place
+            ⟨net.source,
+              Patterns.loopProjectionPlaces_source
+                net part startPlace endPlace⟩)
+          node ∧
+        PetriNet.Path
+          (Patterns.loopProjectionRestricted net part startPlace endPlace)
+          node
+          (PetriNet.Node.place
+            ⟨net.sink,
+              Patterns.loopProjectionPlaces_sink
+                net part startPlace endPlace⟩) :=
+  Patterns.loopProjectionRestricted_connected_of_reachable_incident
+    (part := part)
+    (startPlace := startPlace)
+    (endPlace := endPlace)
+    net hpartReach hnoInStart hnonempty hincoming houtgoing
+
+theorem lemma2_loop_pattern_projection_restricted_connected_of_internal_incidence
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      ((∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet doPart place ->
+          place ≠ pdo ->
+          place ≠ predo ->
+            ∃ trans, doPart trans ∧ net.transToPlace trans place) ->
+        (∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet doPart place ->
+          place ≠ pdo ->
+          place ≠ predo ->
+            ∃ trans, doPart trans ∧ net.placeToTrans place trans) ->
+        ∀ node :
+          PetriNet.Node
+            {place : Place //
+              Patterns.loopProjectionPlaces net doPart pdo predo place}
+            {trans : Trans // doPart trans},
+          PetriNet.Path
+              (Patterns.loopProjectionRestricted net doPart pdo predo)
+              (PetriNet.Node.place
+                ⟨net.source,
+                  Patterns.loopProjectionPlaces_source
+                    net doPart pdo predo⟩)
+              node ∧
+            PetriNet.Path
+              (Patterns.loopProjectionRestricted net doPart pdo predo)
+              node
+              (PetriNet.Node.place
+                ⟨net.sink,
+                  Patterns.loopProjectionPlaces_sink
+                    net doPart pdo predo⟩)) ∧
+      ((∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet redoPart place ->
+          place ≠ predo ->
+          place ≠ pdo ->
+            ∃ trans, redoPart trans ∧ net.transToPlace trans place) ->
+        (∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet redoPart place ->
+          place ≠ predo ->
+          place ≠ pdo ->
+            ∃ trans, redoPart trans ∧ net.placeToTrans place trans) ->
+        ∀ node :
+          PetriNet.Node
+            {place : Place //
+              Patterns.loopProjectionPlaces net redoPart predo pdo place}
+            {trans : Trans // redoPart trans},
+          PetriNet.Path
+              (Patterns.loopProjectionRestricted net redoPart predo pdo)
+              (PetriNet.Node.place
+                ⟨net.source,
+                  Patterns.loopProjectionPlaces_source
+                    net redoPart predo pdo⟩)
+              node ∧
+            PetriNet.Path
+              (Patterns.loopProjectionRestricted net redoPart predo pdo)
+              node
+              (PetriNet.Node.place
+                ⟨net.sink,
+                  Patterns.loopProjectionPlaces_sink
+                    net redoPart predo pdo⟩)) :=
+  Patterns.loopPattern_projection_restricted_connected_of_internal_incidence
+    hpattern
+
 def lemma2_loop_projection_workflow_net_of_connected
     {Place : Type u}
     {Trans : Type v}
@@ -2579,6 +2923,41 @@ def lemma2_loop_projection_workflow_net_of_connected
       {trans : Trans // part trans} :=
   Patterns.loopProjectionWorkflowNetOfConnected
     net part startPlace endPlace hsourceSink hconnected
+
+def lemma2_loop_projection_workflow_net_of_reachable_incident
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hpartReach :
+      ∀ candidate,
+        part candidate ↔
+          PetriNet.reachableTransitionsBetweenPlaces
+            net.toPetriNet startPlace endPlace candidate)
+    (hnoInStart : ∀ candidate, part candidate ->
+      ¬ net.transToPlace candidate startPlace)
+    (hnonempty : ∃ trans, part trans)
+    (hincoming :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.transToPlace trans place)
+    (houtgoing :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.placeToTrans place trans) :
+    WorkflowNet
+      {place : Place //
+        Patterns.loopProjectionPlaces net part startPlace endPlace place}
+      {trans : Trans // part trans} :=
+  Patterns.loopProjectionWorkflowNetOfReachableIncident
+    net part startPlace endPlace hsourceSink
+    hpartReach hnoInStart hnonempty hincoming houtgoing
 
 theorem lemma2_loop_projection_restricted_boundary_path
     {Place : Type u}

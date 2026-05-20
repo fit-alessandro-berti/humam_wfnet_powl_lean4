@@ -73,14 +73,19 @@ The current proof spine is:
   yielding checked source/sink connectivity for selected do/redo transitions
   and directional source/sink connectivity for internal places incident to
   selected transitions. Internal places with both selected incoming and outgoing
-  transitions now have checked two-sided source/sink connectivity, and loop
-  projections can be packaged as `WorkflowNet`s once their restricted
-  source/sink connectedness obligation is supplied.
+  transitions now have checked two-sided source/sink connectivity. Full
+  restricted loop-projection connectedness is checked from transition
+  reachability, nonempty selected parts, no selected incoming edge to the loop
+  start boundary, and explicit incoming/outgoing incidence for every retained
+  internal place; under the same hypotheses these projections can be packaged
+  as `WorkflowNet`s.
   Partial-order projections now have a subtype-restricted representation with
   selected transitions and retained boundary/original places, checked boundary
   and internal edge constructors in all boundary directions, and one-step path
   constructors for boundary and retained-original edges. Restricted
   partial-order projection paths lift to ambient partial-order projection paths.
+  Connected raw partial-order projections can now be normalized and packaged as
+  `WorkflowNet`s, matching the projection-normalization step in Definition 14.
   Partial-order pattern consequences
   now also expose execution-order boundary construction, cycle exclusion,
   same-component entry/exit exclusion, and entry/exit place equivalence with
@@ -97,7 +102,9 @@ The current proof spine is:
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
-  connected-projection-to-`WorkflowNet` packaging facts, and Lemma 3
+  connected-projection-to-`WorkflowNet` packaging facts, including the
+  incidence-based full restricted loop-projection connectedness target, and
+  Lemma 3
   partial-order projection boundary/internal edge and one-step path
   facts plus restricted-path lifting, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
