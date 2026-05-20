@@ -14499,8 +14499,156 @@ theorem theorem2_workflow_marked_graph_free_choice
     {Trans : Type v}
     {net : WorkflowNet Place Trans}
     (hmarked : PetriNet.markedGraph net.toPetriNet) :
-    PetriNet.freeChoice net.toPetriNet :=
+  PetriNet.freeChoice net.toPetriNet :=
   PetriNet.markedGraph_freeChoice hmarked
+
+theorem theorem2_marked_graph_sound_transition_flow_successor_mem_completion_suffix
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : WorkflowNet.sound net)
+    {left right : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    ∃ before after preTrace suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          before ∧
+        WorkflowNet.fires net before left after ∧
+          WorkflowNet.FiringSequence
+            net
+            after
+            suffix
+            (WorkflowNet.final net) ∧
+            right ∈ suffix :=
+  WorkflowNet.markedGraph_sound_transitionFlow_successor_mem_completion_suffix
+    hmarked hsound hflow
+
+theorem theorem2_marked_graph_safe_and_sound_transition_flow_successor_mem_completion_suffix
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {left right : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    ∃ before after preTrace suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          before ∧
+        WorkflowNet.fires net before left after ∧
+          WorkflowNet.FiringSequence
+            net
+            after
+            suffix
+            (WorkflowNet.final net) ∧
+            right ∈ suffix :=
+  WorkflowNet.markedGraph_safeAndSound_transitionFlow_successor_mem_completion_suffix
+    hmarked hsafeSound hflow
+
+theorem theorem2_marked_graph_sound_transition_flow_successor_fires_in_completion_suffix
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : WorkflowNet.sound net)
+    {left right : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    ∃ beforeLeft afterLeft preTrace between beforeRight afterRight suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          beforeLeft ∧
+        WorkflowNet.fires net beforeLeft left afterLeft ∧
+          WorkflowNet.FiringSequence net afterLeft between beforeRight ∧
+            WorkflowNet.fires net beforeRight right afterRight ∧
+              WorkflowNet.FiringSequence
+                net
+                afterRight
+                suffix
+                (WorkflowNet.final net) :=
+  WorkflowNet.markedGraph_sound_transitionFlow_successor_fires_in_completion_suffix
+    hmarked hsound hflow
+
+theorem theorem2_marked_graph_safe_and_sound_transition_flow_successor_fires_in_completion_suffix
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {left right : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    ∃ beforeLeft afterLeft preTrace between beforeRight afterRight suffix,
+      WorkflowNet.FiringSequence
+          net
+          (WorkflowNet.initial net)
+          preTrace
+          beforeLeft ∧
+        WorkflowNet.fires net beforeLeft left afterLeft ∧
+          WorkflowNet.FiringSequence net afterLeft between beforeRight ∧
+            WorkflowNet.fires net beforeRight right afterRight ∧
+              WorkflowNet.FiringSequence
+                net
+                afterRight
+                suffix
+                (WorkflowNet.final net) :=
+  WorkflowNet.markedGraph_safeAndSound_transitionFlow_successor_fires_in_completion_suffix
+    hmarked hsafeSound hflow
+
+theorem theorem2_marked_graph_sound_no_self_transition_flow
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : WorkflowNet.sound net) :
+    ∀ trans,
+      ¬ PetriNet.transitionFlow net.toPetriNet trans trans :=
+  WorkflowNet.markedGraph_sound_no_self_transitionFlow
+    hmarked hsound
+
+theorem theorem2_marked_graph_safe_and_sound_no_self_transition_flow
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    ∀ trans,
+      ¬ PetriNet.transitionFlow net.toPetriNet trans trans :=
+  WorkflowNet.markedGraph_safeAndSound_no_self_transitionFlow
+    hmarked hsafeSound
+
+theorem theorem2_marked_graph_sound_transition_flow_irreflexive
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : WorkflowNet.sound net) :
+    Irreflexive (PetriNet.transitionFlow net.toPetriNet) :=
+  WorkflowNet.markedGraph_sound_transitionFlow_irreflexive
+    hmarked hsound
+
+theorem theorem2_marked_graph_safe_and_sound_transition_flow_irreflexive
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    Irreflexive (PetriNet.transitionFlow net.toPetriNet) :=
+  WorkflowNet.markedGraph_safeAndSound_transitionFlow_irreflexive
+    hmarked hsafeSound
 
 theorem theorem2_no_decision_places_free_choice
     {Place : Type u}

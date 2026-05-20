@@ -2416,6 +2416,53 @@ theorem firingSequence_split_append
               FiringSequence.cons hfires leftSequence,
               rightSequence⟩
 
+theorem firingSequence_split_at_mem
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {trace : List Trans}
+    {trans : Trans}
+    (sequence : FiringSequence net before trace after)
+    (hmem : trans ∈ trace) :
+    ∃ preTrace beforeHit afterHit suffix,
+      trace = preTrace ++ trans :: suffix ∧
+        FiringSequence net before preTrace beforeHit ∧
+          fires net beforeHit trans afterHit ∧
+            FiringSequence net afterHit suffix after := by
+  induction sequence with
+  | nil =>
+      cases hmem
+  | cons hfires tail ih =>
+      rename_i beforeStep middleStep afterStep firedTrans restTrace
+      rcases List.mem_cons.mp hmem with hhead | htail
+      · subst hhead
+        exact
+          ⟨[],
+            beforeStep,
+            middleStep,
+            restTrace,
+            rfl,
+            FiringSequence.nil,
+            hfires,
+            tail⟩
+      · rcases ih htail with
+          ⟨preTrace,
+            beforeHit,
+            afterHit,
+            suffix,
+            htrace,
+            hpreTrace,
+            htarget,
+            hsuffix⟩
+        exact
+          ⟨firedTrans :: preTrace,
+            beforeHit,
+            afterHit,
+            suffix,
+            by simp [htrace],
+            FiringSequence.cons hfires hpreTrace,
+            htarget,
+            hsuffix⟩
+
 theorem firingSequence_snoc
     {net : WorkflowNet Place Trans}
     {before middle after : Marking Place}
@@ -2548,6 +2595,61 @@ theorem fires_positive_of_transToPlace
     after place > 0 := by
   rw [hfires.2]
   exact fire_positive_of_transToPlace hfires.1 hpost
+
+theorem fire_positive_of_preserved_input_place
+    {net : WorkflowNet Place Trans}
+    {marking : Marking Place}
+    {place : Place}
+    {trans : Trans}
+    (hpreserve :
+      net.placeToTrans place trans -> net.transToPlace trans place)
+    (hpositive : marking place > 0) :
+    fire net marking trans place > 0 := by
+  classical
+  by_cases hinput : net.placeToTrans place trans
+  · have hpost : net.transToPlace trans place := hpreserve hinput
+    have hge : 1 ≤ marking place := Nat.succ_le_of_lt hpositive
+    have hfire :
+        fire net marking trans place =
+          marking place - 1 + 1 := by
+      simp [fire, consumed, produced, hinput, hpost]
+    rw [hfire, Nat.sub_add_cancel hge]
+    exact hpositive
+  · exact fire_positive_of_not_placeToTrans hinput hpositive
+
+theorem firingSequence_positive_of_consumers_preserve_place
+    {net : WorkflowNet Place Trans}
+    {before after : Marking Place}
+    {trace : List Trans}
+    {place : Place}
+    (sequence : FiringSequence net before trace after)
+    (hpositive : before place > 0)
+    (hpreserve :
+      ∀ trans, trans ∈ trace ->
+        net.placeToTrans place trans -> net.transToPlace trans place) :
+    after place > 0 := by
+  induction sequence with
+  | nil =>
+      exact hpositive
+  | cons hfires tail ih =>
+      rename_i beforeStep middleStep afterStep firedTrans restTrace
+      have hmiddle :
+          middleStep place > 0 := by
+        rw [hfires.2]
+        apply fire_positive_of_preserved_input_place
+        · intro hinput
+          exact
+            hpreserve firedTrans
+              (by simp : firedTrans ∈ firedTrans :: restTrace)
+              hinput
+        · exact hpositive
+      exact
+        ih
+          hmiddle
+          (fun trans hmem hinput =>
+            hpreserve trans
+              (by simp [hmem] : trans ∈ firedTrans :: restTrace)
+              hinput)
 
 theorem firingSequence_positive_of_no_consuming_transition
     {net : WorkflowNet Place Trans}
@@ -2870,6 +2972,195 @@ theorem sound_accepting_firing_sequence
     (sound_noDeadTransitions hsound)
     hsound.2.1
     trans
+
+theorem markedGraph_no_completion_after_self_transitionFlow_firing
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {trans : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet trans trans)
+    {before after : Marking Place}
+    {suffix : List Trans}
+    (hfires : fires net before trans after)
+    (hsuffix : FiringSequence net after suffix (final net)) :
+    False := by
+  rcases hflow with ⟨place, hpost, hpre⟩
+  have hplace : place ≠ net.sink := by
+    intro hsink
+    rw [hsink] at hpre
+    exact sink_no_output net trans hpre
+  have hpositive : after place > 0 :=
+    fires_positive_of_transToPlace hfires hpost
+  have hpreserve :
+      ∀ other, other ∈ suffix ->
+        net.placeToTrans place other -> net.transToPlace other place := by
+    intro other _hmem hconsumer
+    have hsame : other = trans :=
+      hmarked.2 place other trans hconsumer hpre
+    subst hsame
+    exact hpost
+  have hfinalPositive : final net place > 0 :=
+    firingSequence_positive_of_consumers_preserve_place
+      hsuffix hpositive hpreserve
+  have hfinalZero : ¬ final net place > 0 := by
+    simp [final, Marking.single, hplace]
+  exact hfinalZero hfinalPositive
+
+theorem markedGraph_sound_no_self_transitionFlow
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : sound net) :
+    ∀ trans, ¬ PetriNet.transitionFlow net.toPetriNet trans trans := by
+  intro trans hflow
+  rcases sound_accepting_firing_sequence hsound trans with
+    ⟨_before,
+      _after,
+      _preTrace,
+      _suffix,
+      _hpre,
+      hfires,
+      hsuffix,
+      _hcombined⟩
+  exact
+    markedGraph_no_completion_after_self_transitionFlow_firing
+      hmarked hflow hfires hsuffix
+
+theorem markedGraph_sound_transitionFlow_irreflexive
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : sound net) :
+    Irreflexive (PetriNet.transitionFlow net.toPetriNet) :=
+  markedGraph_sound_no_self_transitionFlow hmarked hsound
+
+theorem markedGraph_safeAndSound_no_self_transitionFlow
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : safeAndSound net) :
+    ∀ trans, ¬ PetriNet.transitionFlow net.toPetriNet trans trans :=
+  markedGraph_sound_no_self_transitionFlow
+    hmarked hsafeSound.2
+
+theorem markedGraph_safeAndSound_transitionFlow_irreflexive
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : safeAndSound net) :
+    Irreflexive (PetriNet.transitionFlow net.toPetriNet) :=
+  markedGraph_sound_transitionFlow_irreflexive
+    hmarked hsafeSound.2
+
+theorem markedGraph_sound_transitionFlow_successor_mem_completion_suffix
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : sound net)
+    {left right : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    ∃ before after preTrace suffix,
+      FiringSequence net (initial net) preTrace before ∧
+        fires net before left after ∧
+          FiringSequence net after suffix (final net) ∧
+            right ∈ suffix := by
+  rcases hflow with ⟨place, hleft, hright⟩
+  rcases sound_accepting_firing_sequence hsound left with
+    ⟨before,
+      after,
+      preTrace,
+      suffix,
+      hpre,
+      hfires,
+      hsuffix,
+      _hcombined⟩
+  have hplace : place ≠ net.sink := by
+    intro hsink
+    rw [hsink] at hright
+    exact sink_no_output net right hright
+  have hpositive : after place > 0 :=
+    fires_positive_of_transToPlace hfires hleft
+  have hmem : right ∈ suffix :=
+    markedGraph_completion_trace_contains_unique_place_output
+      hmarked hsuffix hplace hpositive hright
+  exact ⟨before, after, preTrace, suffix, hpre, hfires, hsuffix, hmem⟩
+
+theorem markedGraph_sound_transitionFlow_successor_fires_in_completion_suffix
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : sound net)
+    {left right : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    ∃ beforeLeft afterLeft preTrace between beforeRight afterRight suffix,
+      FiringSequence net (initial net) preTrace beforeLeft ∧
+        fires net beforeLeft left afterLeft ∧
+          FiringSequence net afterLeft between beforeRight ∧
+            fires net beforeRight right afterRight ∧
+              FiringSequence net afterRight suffix (final net) := by
+  rcases markedGraph_sound_transitionFlow_successor_mem_completion_suffix
+      hmarked hsound hflow with
+    ⟨beforeLeft,
+      afterLeft,
+      preTrace,
+      completionSuffix,
+      hpre,
+      hleft,
+      hcompletion,
+      hmem⟩
+  rcases firingSequence_split_at_mem hcompletion hmem with
+    ⟨between,
+      beforeRight,
+      afterRight,
+      suffix,
+      _hsuffix,
+      hbetween,
+      hright,
+      hafterRight⟩
+  exact
+    ⟨beforeLeft,
+      afterLeft,
+      preTrace,
+      between,
+      beforeRight,
+      afterRight,
+      suffix,
+      hpre,
+      hleft,
+      hbetween,
+      hright,
+      hafterRight⟩
+
+theorem markedGraph_safeAndSound_transitionFlow_successor_mem_completion_suffix
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : safeAndSound net)
+    {left right : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    ∃ before after preTrace suffix,
+      FiringSequence net (initial net) preTrace before ∧
+        fires net before left after ∧
+          FiringSequence net after suffix (final net) ∧
+            right ∈ suffix :=
+  markedGraph_sound_transitionFlow_successor_mem_completion_suffix
+    hmarked hsafeSound.2 hflow
+
+theorem markedGraph_safeAndSound_transitionFlow_successor_fires_in_completion_suffix
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : safeAndSound net)
+    {left right : Trans}
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    ∃ beforeLeft afterLeft preTrace between beforeRight afterRight suffix,
+      FiringSequence net (initial net) preTrace beforeLeft ∧
+        fires net beforeLeft left afterLeft ∧
+          FiringSequence net afterLeft between beforeRight ∧
+            fires net beforeRight right afterRight ∧
+              FiringSequence net afterRight suffix (final net) :=
+  markedGraph_sound_transitionFlow_successor_fires_in_completion_suffix
+    hmarked hsafeSound.2 hflow
 
 theorem sound_accepting_trace_mem
     [DecidableEq Place]

@@ -53,7 +53,14 @@ The current proof spine is:
   also preserves the no-dead-transitions property when the original net has no
   dead transitions and can complete from reachable markings. The Petri-net
   layer now exposes transition-to-transition flow, flow-path reachability, and
-  transition-flow acyclicity/no-return equivalence. Definition 6 work
+  transition-flow acyclicity/no-return equivalence, plus checked marking facts
+  showing that a token at a non-sink place must be consumed by some outgoing
+  transition in any completion to the final marking. Firing sequences can be
+  split at a named transition occurrence, and in a marked graph the unique
+  outgoing transition is identified, so every transition-flow successor of a
+  fired transition appears as an actual later firing in the completion suffix
+  under soundness; the direct self-loop transition-flow case is ruled out for
+  sound marked-graph WF-nets. Definition 6 work
   has started with checked explicit-decision-point predicates, split/join
   decision-place predicates, a checked split-to-join pairing skeleton with
   branch-count equivalence, a disjoint branch-subnet family specification, and
@@ -324,7 +331,11 @@ The current proof spine is:
   strict partial order and now feeds the partial-order branch into the raw
   algorithm-certificate layer, certified conversion, language-equivalence,
   concrete POWL-witness, and visible-activity-witness pipeline, including
-  existential generated-model visible-witness forms, plus semi-block
+  existential generated-model visible-witness forms, plus checked
+  marked-graph soundness wrappers showing that transition-flow successors must
+  occur, and can be split out as firings, in the completion suffix after their
+  predecessors fire, and ruling out direct transition-flow self-loops, plus
+  semi-block
   specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, no-dead-transition,
