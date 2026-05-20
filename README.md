@@ -180,10 +180,13 @@ The current proof spine is:
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
   disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
   checked branch-subnet closure/disjointness, local branch-language transfer,
-  mapped local subtype POWL transfer, local XOR composition for decision-branch
+  mapped local subtype POWL transfer, a `LocalCertifiedConversion` interface
+  for source-to-sink subproblems, local XOR composition for decision-branch
   models and local loop composition for source-to-sink/redo-back submodels
   plus local partial-order composition for component submodels under supplied
-  local decompositions, exact uniqueness,
+  local decompositions, and constructors whose certificates are supplied by
+  recursive `ConversionCertificate`s, exact
+  uniqueness,
   free-choice preset-equality,
   marked-graph/no-decision equivalence, and non-boundary unique-place-flow
   consequences used by the completeness argument, and Lemma 2 loop trace
