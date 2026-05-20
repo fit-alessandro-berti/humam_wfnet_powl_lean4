@@ -291,8 +291,8 @@ The current proof spine is:
   accepting-trace/completion/proper-completion obligations, with matching
   no-dead/sound/`safeAndSound` wrappers for reachable-incidence loop-projection
   constructors, including the incidence-based full restricted loop-projection
-  connectedness target and a
-  pattern-level do/redo loop-projection WF-net existence theorem, and
+  connectedness target and pattern-level do/redo loop-projection WF-net
+  existence plus `safeAndSound` constructor theorems, and
   Lemma 3
   partial-order projection boundary/internal edge, one-step path, and
   raw-`PathIn` constructor/path-lifting facts plus bidirectional
@@ -301,8 +301,9 @@ The current proof spine is:
   marking facts, original-transition enabledness, firing witnesses, singleton
   firing sequences, reachability, original-transition and fresh-boundary
   no-dead witnesses, and a full no-dead constructor for normalized projections,
-  reachable-shape-based safeness and `safeAndSound` packaging, sound packaging
-  under supplied residual obligations, generic normalization,
+  reachable-shape-based safeness and `safeAndSound` packaging, including
+  variants that consume the original net's `safeAndSound` hypothesis directly,
+  sound packaging under supplied residual obligations, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
   normalized-language equivalence targets, execution-order, source/sink-aware
