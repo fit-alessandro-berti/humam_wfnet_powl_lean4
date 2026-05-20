@@ -8,9 +8,10 @@ The current proof spine is:
 - `KouraniWfnetPowl.Basic`: sets-as-predicates, relations, transitive closure,
   strict partial orders, and the checked proof that irreflexive transitive
   relations are asymmetric.
-- `KouraniWfnetPowl.PetriNet`: Petri nets, workflow nets, paths, transition
-  reachability, subtype-restricted projections, markings, firing sequences,
-  safeness, and soundness definitions. `PathIn` records paths whose nodes stay
+- `KouraniWfnetPowl.PetriNet`: Petri nets, workflow nets, marked-graph and
+  free-choice predicates, paths, transition reachability, subtype-restricted
+  projections, markings, firing sequences, safeness, and soundness definitions.
+  `PathIn` records paths whose nodes stay
   inside a chosen projection and lowers them to the restricted subnet. Marking
   restriction/extension lemmas lift firing sequences from subtype-restricted
   nets back to the original WF-net when the selected transition preset and
@@ -45,8 +46,14 @@ The current proof spine is:
   completion, and preserves the full `sound` and `safeAndSound` predicates. It
   also preserves the no-dead-transitions property when the original net has no
   dead transitions and can complete from reachable markings. Definition 6 work
-  has started with checked explicit-decision-point predicates and the
-  safe-and-sound plus explicit-decision base requirements for
+  has started with checked explicit-decision-point predicates, split/join
+  decision-place predicates, a checked split-to-join pairing skeleton with
+  branch-count equivalence, a disjoint branch-subnet family specification, and
+  checked split/join consequences of the explicit-decision-point condition, and
+  checked free-choice, no-decision-place-to-marked-graph, and marked-graph
+  non-boundary unique-preset/postset consequences, plus the corresponding
+  safe-and-sound, explicit-decision, paired-decision, and branch-subnet
+  requirement layers for
   semi-block-structured WF-nets.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
@@ -161,9 +168,11 @@ The current proof spine is:
   subcalls, including normalized partial-order components; `CertifiedConversion`
   packages the output model and certificate as the checked successful-conversion
   interface for Theorem 1, including the paper-style `L(N) = L(ψ)` equality
-  form. Theorem 2 now has checked targets for the safe-and-sound and
-  explicit-decision-point base requirements of semi-block-structured WF-nets,
-  and Lemma 2 loop trace
+  form. Theorem 2 now has checked targets for the safe-and-sound,
+  explicit-decision-point, split/join pairing, paired branch-equivalence, and
+  disjoint branch-subnet requirements of semi-block-structured WF-nets, plus
+  checked free-choice, marked-graph, and non-boundary unique-place-flow
+  consequences used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, including the
   incidence-based full restricted loop-projection connectedness target, and

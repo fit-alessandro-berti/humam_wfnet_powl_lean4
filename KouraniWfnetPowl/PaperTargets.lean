@@ -4111,6 +4111,404 @@ theorem theorem2_explicit_decision_points_transition_to_place
       WorkflowNet.uniquePostsetOfTransition net trans :=
   hdecision.2 trans place hflow
 
+theorem theorem2_split_decision_place_not_unique_postset
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net place) :
+    ¬ WorkflowNet.uniquePostsetOfPlace net place :=
+  WorkflowNet.splitDecisionPlace_not_uniquePostsetOfPlace hsplit
+
+theorem theorem2_join_decision_place_not_unique_preset
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {place : Place}
+    (hjoin : WorkflowNet.joinDecisionPlace net place) :
+    ¬ WorkflowNet.uniquePresetOfPlace net place :=
+  WorkflowNet.joinDecisionPlace_not_uniquePresetOfPlace hjoin
+
+theorem theorem2_explicit_split_decision_transition_unique_preset
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hdecision : WorkflowNet.explicitDecisionPoints net)
+    {place : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net place)
+    {trans : Trans}
+    (hflow : net.placeToTrans place trans) :
+    WorkflowNet.uniquePresetOfTransition net trans :=
+  WorkflowNet.explicitDecisionPoints_split_transition_uniquePreset
+    hdecision hsplit hflow
+
+theorem theorem2_explicit_join_decision_transition_unique_postset
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hdecision : WorkflowNet.explicitDecisionPoints net)
+    {place : Place}
+    (hjoin : WorkflowNet.joinDecisionPlace net place)
+    {trans : Trans}
+    (hflow : net.transToPlace trans place) :
+    WorkflowNet.uniquePostsetOfTransition net trans :=
+  WorkflowNet.explicitDecisionPoints_join_transition_uniquePostset
+    hdecision hjoin hflow
+
+theorem theorem2_explicit_decision_points_free_choice
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hdecision : WorkflowNet.explicitDecisionPoints net) :
+    PetriNet.freeChoice net.toPetriNet :=
+  WorkflowNet.explicitDecisionPoints_freeChoice hdecision
+
+theorem theorem2_semi_block_base_free_choice
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hbase :
+      WorkflowNet.semiBlockStructuredBaseRequirements net) :
+    PetriNet.freeChoice net.toPetriNet :=
+  WorkflowNet.explicitDecisionPoints_freeChoice hbase.2
+
+theorem theorem2_no_decision_places_marked_graph
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hnoDecision : WorkflowNet.noDecisionPlaces net) :
+    PetriNet.markedGraph net.toPetriNet :=
+  WorkflowNet.noDecisionPlaces_markedGraph hnoDecision
+
+theorem theorem2_no_decision_places_no_split
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    (place : Place) :
+    ¬ WorkflowNet.splitDecisionPlace net place :=
+  hnoDecision.1 place
+
+theorem theorem2_no_decision_places_no_join
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    (place : Place) :
+    ¬ WorkflowNet.joinDecisionPlace net place :=
+  hnoDecision.2 place
+
+theorem theorem2_workflow_place_has_input_of_ne_source
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {place : Place}
+    (hplace : place ≠ net.source) :
+    ∃ trans, net.transToPlace trans place :=
+  WorkflowNet.place_has_input_of_ne_source net hplace
+
+theorem theorem2_workflow_place_has_output_of_ne_sink
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {place : Place}
+    (hplace : place ≠ net.sink) :
+    ∃ trans, net.placeToTrans place trans :=
+  WorkflowNet.place_has_output_of_ne_sink net hplace
+
+theorem theorem2_marked_graph_unique_preset_of_non_source_place
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {place : Place}
+    (hplace : place ≠ net.source) :
+    WorkflowNet.uniquePresetOfPlace net place :=
+  WorkflowNet.markedGraph_uniquePresetOfPlace_of_ne_source
+    hmarked hplace
+
+theorem theorem2_marked_graph_unique_postset_of_non_sink_place
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    {place : Place}
+    (hplace : place ≠ net.sink) :
+    WorkflowNet.uniquePostsetOfPlace net place :=
+  WorkflowNet.markedGraph_uniquePostsetOfPlace_of_ne_sink
+    hmarked hplace
+
+theorem theorem2_no_decision_places_unique_preset_of_non_source_place
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.source) :
+    WorkflowNet.uniquePresetOfPlace net place :=
+  WorkflowNet.markedGraph_uniquePresetOfPlace_of_ne_source
+    (WorkflowNet.noDecisionPlaces_markedGraph hnoDecision)
+    hplace
+
+theorem theorem2_no_decision_places_unique_postset_of_non_sink_place
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    (hnoDecision : WorkflowNet.noDecisionPlaces net)
+    {place : Place}
+    (hplace : place ≠ net.sink) :
+    WorkflowNet.uniquePostsetOfPlace net place :=
+  WorkflowNet.markedGraph_uniquePostsetOfPlace_of_ne_sink
+    (WorkflowNet.noDecisionPlaces_markedGraph hnoDecision)
+    hplace
+
+theorem theorem2_decision_pairing_maps_split_to_join
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : WorkflowNet.decisionPairing net pair)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    WorkflowNet.joinDecisionPlace net (pair split) :=
+  hpair.1 split hsplit
+
+theorem theorem2_decision_pairing_injective_on_splits
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : WorkflowNet.decisionPairing net pair)
+    {left right : Place}
+    (hleft : WorkflowNet.splitDecisionPlace net left)
+    (hright : WorkflowNet.splitDecisionPlace net right)
+    (heq : pair left = pair right) :
+    left = right :=
+  hpair.2.1 left right hleft hright heq
+
+theorem theorem2_decision_pairing_surjective_on_joins
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : WorkflowNet.decisionPairing net pair)
+    {join : Place}
+    (hjoin : WorkflowNet.joinDecisionPlace net join) :
+    ∃ split, WorkflowNet.splitDecisionPlace net split ∧ pair split = join :=
+  hpair.2.2 join hjoin
+
+theorem theorem2_decision_pairing_branch_equiv
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : WorkflowNet.decisionPairingWithBranchEquiv net pair)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    ∃ (toJoin :
+        WorkflowNet.transitionPostsetOfPlace net split ->
+          WorkflowNet.transitionPresetOfPlace net (pair split))
+      (fromJoin :
+        WorkflowNet.transitionPresetOfPlace net (pair split) ->
+          WorkflowNet.transitionPostsetOfPlace net split),
+      WorkflowNet.placePostsetPresetEquiv
+        net split (pair split) toJoin fromJoin :=
+  hpair.2 split hsplit
+
+theorem theorem2_place_postset_preset_equiv_left_inverse
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {toJoin :
+      WorkflowNet.transitionPostsetOfPlace net split ->
+        WorkflowNet.transitionPresetOfPlace net join}
+    {fromJoin :
+      WorkflowNet.transitionPresetOfPlace net join ->
+        WorkflowNet.transitionPostsetOfPlace net split}
+    (hequiv :
+      WorkflowNet.placePostsetPresetEquiv
+        net split join toJoin fromJoin)
+    (trans : WorkflowNet.transitionPostsetOfPlace net split) :
+    fromJoin (toJoin trans) = trans :=
+  hequiv.1 trans
+
+theorem theorem2_place_postset_preset_equiv_right_inverse
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {toJoin :
+      WorkflowNet.transitionPostsetOfPlace net split ->
+        WorkflowNet.transitionPresetOfPlace net join}
+    {fromJoin :
+      WorkflowNet.transitionPresetOfPlace net join ->
+        WorkflowNet.transitionPostsetOfPlace net split}
+    (hequiv :
+      WorkflowNet.placePostsetPresetEquiv
+        net split join toJoin fromJoin)
+    (trans : WorkflowNet.transitionPresetOfPlace net join) :
+    toJoin (fromJoin trans) = trans :=
+  hequiv.2 trans
+
+theorem theorem2_semi_block_decision_base_requirements
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    WorkflowNet.semiBlockStructuredBaseRequirements net :=
+  hrequirements.1
+
+theorem theorem2_semi_block_decision_pairing_exists
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredDecisionRequirements net) :
+    ∃ pair, WorkflowNet.decisionPairingWithBranchEquiv net pair :=
+  hrequirements.2
+
+theorem theorem2_decision_pairing_with_branch_subnets_pairing
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : WorkflowNet.decisionPairingWithBranchSubnets net pair) :
+    WorkflowNet.decisionPairingWithBranchEquiv net pair :=
+  hpair.1
+
+theorem theorem2_decision_pairing_branch_family_exists
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {pair : Place -> Place}
+    (hpair : WorkflowNet.decisionPairingWithBranchSubnets net pair)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    ∃ branches,
+      WorkflowNet.decisionBranchFamily net split (pair split) branches :=
+  hpair.2 split hsplit
+
+theorem theorem2_decision_branch_family_contains_split_transition
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : WorkflowNet.decisionBranchFamily net split join branches)
+    (branch : WorkflowNet.transitionPostsetOfPlace net split) :
+    branches branch branch.val :=
+  hfamily.1 branch
+
+theorem theorem2_decision_branch_family_subnet
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : WorkflowNet.decisionBranchFamily net split join branches)
+    (branch : WorkflowNet.transitionPostsetOfPlace net split) :
+    WorkflowNet.decisionBranchSubnet net split join (branches branch) :=
+  hfamily.2.1 branch
+
+theorem theorem2_decision_branch_family_disjoint
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {branches :
+      WorkflowNet.transitionPostsetOfPlace net split -> Set Trans}
+    (hfamily : WorkflowNet.decisionBranchFamily net split join branches)
+    {left right : WorkflowNet.transitionPostsetOfPlace net split}
+    (hne : left ≠ right)
+    {trans : Trans}
+    (hleft : branches left trans)
+    (hright : branches right trans) :
+    False :=
+  hfamily.2.2 left right hne trans hleft hright
+
+theorem theorem2_decision_branch_subnet_nonempty
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {part : Set Trans}
+    (hsubnet : WorkflowNet.decisionBranchSubnet net split join part) :
+    ∃ trans, part trans :=
+  hsubnet.1
+
+theorem theorem2_decision_branch_subnet_workflow_net
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {part : Set Trans}
+    (hsubnet : WorkflowNet.decisionBranchSubnet net split join part) :
+    WorkflowNet.restrictedDecisionBranchWorkflowNet net split join part :=
+  hsubnet.2
+
+theorem theorem2_restricted_decision_branch_workflow_net_source
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {part : Set Trans}
+    (hbranch :
+      WorkflowNet.restrictedDecisionBranchWorkflowNet
+        net split join part) :
+    ∃ branchNet :
+        WorkflowNet
+          {place : Place //
+            WorkflowNet.decisionBranchPlaceSet net split join part place}
+          {trans : Trans // part trans},
+      branchNet.source.val = split :=
+  let ⟨branchNet, hsource, _⟩ := hbranch
+  ⟨branchNet, hsource⟩
+
+theorem theorem2_restricted_decision_branch_workflow_net_sink
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {split join : Place}
+    {part : Set Trans}
+    (hbranch :
+      WorkflowNet.restrictedDecisionBranchWorkflowNet
+        net split join part) :
+    ∃ branchNet :
+        WorkflowNet
+          {place : Place //
+            WorkflowNet.decisionBranchPlaceSet net split join part place}
+          {trans : Trans // part trans},
+      branchNet.sink.val = join :=
+  let ⟨branchNet, _, hsink, _⟩ := hbranch
+  ⟨branchNet, hsink⟩
+
+theorem theorem2_semi_block_subnet_base_requirements
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    WorkflowNet.semiBlockStructuredBaseRequirements net :=
+  hrequirements.1
+
+theorem theorem2_semi_block_subnet_pairing_exists
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net) :
+    ∃ pair, WorkflowNet.decisionPairingWithBranchSubnets net pair :=
+  hrequirements.2
+
 theorem lemma2_loop_pattern_trace_closure
     {Place : Type u}
     {Trans : Type v}
