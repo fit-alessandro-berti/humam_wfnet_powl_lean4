@@ -1664,6 +1664,78 @@ theorem loopProjectionRestricted_member_transition_to_sink_of_placePath
           exact hclosed trans (by simp [htrans])
         exact ih hclosedTail htail
 
+theorem loopProjectionRestricted_source_to_internal_place_of_part_transition
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trans : Trans}
+    (hpartReach :
+      ∀ candidate,
+        part candidate ↔
+          PetriNet.reachableTransitionsBetweenPlaces
+            net.toPetriNet startPlace endPlace candidate)
+    (hnoInStart : ∀ candidate, part candidate ->
+      ¬ net.transToPlace candidate startPlace)
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace)
+    (hflow : net.transToPlace trans place) :
+    PetriNet.Path
+      (loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.place
+        ⟨net.source,
+          loopProjectionPlaces_source net part startPlace endPlace⟩)
+      (PetriNet.Node.place
+        ⟨place, loopProjectionPlaces_internal net htouching hstart hend⟩) := by
+  rcases (hpartReach trans).mp hpart with ⟨trace, path, hmem⟩
+  have hclosed :
+      ∀ candidate, candidate ∈ trace -> part candidate := by
+    intro candidate hcandidate
+    exact (hpartReach candidate).mpr ⟨trace, path, hcandidate⟩
+  exact
+    PetriNet.Path.trans
+      (loopProjectionRestricted_source_to_member_transition_of_placePath
+        net path hclosed hnoInStart hmem)
+      (loopProjectionRestricted_transition_to_internal_place
+        net (hclosed trans hmem) htouching hstart hend hflow)
+
+theorem loopProjectionRestricted_internal_place_to_sink_of_part_transition
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    {startPlace endPlace place : Place}
+    {trans : Trans}
+    (hpartReach :
+      ∀ candidate,
+        part candidate ↔
+          PetriNet.reachableTransitionsBetweenPlaces
+            net.toPetriNet startPlace endPlace candidate)
+    (hnoInStart : ∀ candidate, part candidate ->
+      ¬ net.transToPlace candidate startPlace)
+    (hpart : part trans)
+    (htouching : PetriNet.placesTouching net.toPetriNet part place)
+    (hstart : place ≠ startPlace)
+    (hend : place ≠ endPlace)
+    (hflow : net.placeToTrans place trans) :
+    PetriNet.Path
+      (loopProjectionRestricted net part startPlace endPlace)
+      (PetriNet.Node.place
+        ⟨place, loopProjectionPlaces_internal net htouching hstart hend⟩)
+      (PetriNet.Node.place
+        ⟨net.sink,
+          loopProjectionPlaces_sink net part startPlace endPlace⟩) := by
+  rcases (hpartReach trans).mp hpart with ⟨trace, path, hmem⟩
+  have hclosed :
+      ∀ candidate, candidate ∈ trace -> part candidate := by
+    intro candidate hcandidate
+    exact (hpartReach candidate).mpr ⟨trace, path, hcandidate⟩
+  exact
+    PetriNet.Path.trans
+      (loopProjectionRestricted_internal_place_to_transition
+        net (hclosed trans hmem) htouching hstart hend hflow)
+      (loopProjectionRestricted_member_transition_to_sink_of_placePath
+        net path hclosed hnoInStart hmem)
+
 theorem loopProjectionRestricted_source_no_in
     (net : WorkflowNet Place Trans)
     {part : Set Trans}
@@ -1737,6 +1809,262 @@ theorem loopPattern_part_paths
     exact PetriNet.reachableTransitionsBetweenPlaces_paths
       net.toPetriNet
       ((hredoReach trans).mp hredo)
+
+theorem loopPattern_projection_restricted_transition_connected
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ trans : {trans : Trans // doPart trans},
+        PetriNet.Path
+            (loopProjectionRestricted net doPart pdo predo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                loopProjectionPlaces_source net doPart pdo predo⟩)
+            (PetriNet.Node.trans trans) ∧
+          PetriNet.Path
+            (loopProjectionRestricted net doPart pdo predo)
+            (PetriNet.Node.trans trans)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                loopProjectionPlaces_sink net doPart pdo predo⟩)) ∧
+      (∀ trans : {trans : Trans // redoPart trans},
+        PetriNet.Path
+            (loopProjectionRestricted net redoPart predo pdo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                loopProjectionPlaces_source net redoPart predo pdo⟩)
+            (PetriNet.Node.trans trans) ∧
+          PetriNet.Path
+            (loopProjectionRestricted net redoPart predo pdo)
+            (PetriNet.Node.trans trans)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                loopProjectionPlaces_sink net redoPart predo pdo⟩)) := by
+  rcases hpattern with
+    ⟨doPart, redoPart, _silentPart,
+      hdoMem, hredoMem, _hsilentMem,
+      pdo, predo, _sourceTrans, _sinkTrans,
+      _hne, _hsilentSet, _hsourceSilent, _hsinkSilent,
+      _hsourcePost, _hsinkPre, _hsourcePre, _hsourceOut,
+      _hsinkIn, _hsinkOut,
+      hdoReach, hredoReach,
+      hdoNoIn, hredoNoIn, _hdoNoOut, _hredoNoOut⟩
+  refine ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem, ?_, ?_⟩
+  · intro trans
+    rcases (hdoReach trans.val).mp trans.property with
+      ⟨trace, path, hmem⟩
+    have hclosed :
+        ∀ candidate, candidate ∈ trace -> doPart candidate := by
+      intro candidate hcandidate
+      exact (hdoReach candidate).mpr ⟨trace, path, hcandidate⟩
+    constructor
+    · have hpath :=
+        loopProjectionRestricted_source_to_member_transition_of_placePath
+          net path hclosed hdoNoIn hmem
+      simpa using hpath
+    · have hpath :=
+        loopProjectionRestricted_member_transition_to_sink_of_placePath
+          net path hclosed hdoNoIn hmem
+      simpa using hpath
+  · intro trans
+    rcases (hredoReach trans.val).mp trans.property with
+      ⟨trace, path, hmem⟩
+    have hclosed :
+        ∀ candidate, candidate ∈ trace -> redoPart candidate := by
+      intro candidate hcandidate
+      exact (hredoReach candidate).mpr ⟨trace, path, hcandidate⟩
+    constructor
+    · have hpath :=
+        loopProjectionRestricted_source_to_member_transition_of_placePath
+          net path hclosed hredoNoIn hmem
+      simpa using hpath
+    · have hpath :=
+        loopProjectionRestricted_member_transition_to_sink_of_placePath
+          net path hclosed hredoNoIn hmem
+      simpa using hpath
+
+theorem loopPattern_projection_restricted_internal_place_directional_connected
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+        (∀ {place trans}, doPart trans ->
+          (htouching : PetriNet.placesTouching net.toPetriNet doPart place) ->
+          (hstart : place ≠ pdo) ->
+          (hend : place ≠ predo) ->
+          net.transToPlace trans place ->
+            PetriNet.Path
+              (loopProjectionRestricted net doPart pdo predo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                loopProjectionPlaces_source net doPart pdo predo⟩)
+              (PetriNet.Node.place
+                ⟨place,
+                  loopProjectionPlaces_internal net htouching
+                    hstart hend⟩)) ∧
+        (∀ {place trans}, doPart trans ->
+          (htouching : PetriNet.placesTouching net.toPetriNet doPart place) ->
+          (hstart : place ≠ pdo) ->
+          (hend : place ≠ predo) ->
+          net.placeToTrans place trans ->
+            PetriNet.Path
+              (loopProjectionRestricted net doPart pdo predo)
+              (PetriNet.Node.place
+                ⟨place,
+                  loopProjectionPlaces_internal net htouching
+                    hstart hend⟩)
+              (PetriNet.Node.place
+                ⟨net.sink,
+                  loopProjectionPlaces_sink net doPart pdo predo⟩)) ∧
+        (∀ {place trans}, redoPart trans ->
+          (htouching : PetriNet.placesTouching net.toPetriNet redoPart place) ->
+          (hstart : place ≠ predo) ->
+          (hend : place ≠ pdo) ->
+          net.transToPlace trans place ->
+            PetriNet.Path
+              (loopProjectionRestricted net redoPart predo pdo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                loopProjectionPlaces_source net redoPart predo pdo⟩)
+              (PetriNet.Node.place
+                ⟨place,
+                  loopProjectionPlaces_internal net htouching
+                    hstart hend⟩)) ∧
+        (∀ {place trans}, redoPart trans ->
+          (htouching : PetriNet.placesTouching net.toPetriNet redoPart place) ->
+          (hstart : place ≠ predo) ->
+          (hend : place ≠ pdo) ->
+          net.placeToTrans place trans ->
+            PetriNet.Path
+              (loopProjectionRestricted net redoPart predo pdo)
+              (PetriNet.Node.place
+                ⟨place,
+                  loopProjectionPlaces_internal net htouching
+                    hstart hend⟩)
+              (PetriNet.Node.place
+              ⟨net.sink,
+                loopProjectionPlaces_sink net redoPart predo pdo⟩)) := by
+  rcases hpattern with
+    ⟨doPart, redoPart, _silentPart,
+      hdoMem, hredoMem, _hsilentMem,
+      pdo, predo, _sourceTrans, _sinkTrans,
+      _hne, _hsilentSet, _hsourceSilent, _hsinkSilent,
+      _hsourcePost, _hsinkPre, _hsourcePre, _hsourceOut,
+      _hsinkIn, _hsinkOut,
+      hdoReach, hredoReach,
+      hdoNoIn, hredoNoIn, _hdoNoOut, _hredoNoOut⟩
+  refine
+    ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem,
+      ?_, ?_, ?_, ?_⟩
+  · intro place trans hpart htouching hstart hend hflow
+    exact
+      loopProjectionRestricted_source_to_internal_place_of_part_transition
+        net hdoReach hdoNoIn hpart htouching hstart hend hflow
+  · intro place trans hpart htouching hstart hend hflow
+    exact
+      loopProjectionRestricted_internal_place_to_sink_of_part_transition
+        net hdoReach hdoNoIn hpart htouching hstart hend hflow
+  · intro place trans hpart htouching hstart hend hflow
+    exact
+      loopProjectionRestricted_source_to_internal_place_of_part_transition
+        net hredoReach hredoNoIn hpart htouching hstart hend hflow
+  · intro place trans hpart htouching hstart hend hflow
+    exact
+      loopProjectionRestricted_internal_place_to_sink_of_part_transition
+        net hredoReach hredoNoIn hpart htouching hstart hend hflow
+
+theorem loopPattern_projection_restricted_internal_place_connected_of_incident_transitions
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ {place},
+        (htouching : PetriNet.placesTouching net.toPetriNet doPart place) ->
+        (hstart : place ≠ pdo) ->
+        (hend : place ≠ predo) ->
+        (∃ trans, doPart trans ∧ net.transToPlace trans place) ->
+        (∃ trans, doPart trans ∧ net.placeToTrans place trans) ->
+          PetriNet.Path
+              (loopProjectionRestricted net doPart pdo predo)
+              (PetriNet.Node.place
+                ⟨net.source,
+                  loopProjectionPlaces_source net doPart pdo predo⟩)
+              (PetriNet.Node.place
+                ⟨place,
+                  loopProjectionPlaces_internal net htouching hstart hend⟩) ∧
+            PetriNet.Path
+              (loopProjectionRestricted net doPart pdo predo)
+              (PetriNet.Node.place
+                ⟨place,
+                  loopProjectionPlaces_internal net htouching hstart hend⟩)
+              (PetriNet.Node.place
+                ⟨net.sink,
+                  loopProjectionPlaces_sink net doPart pdo predo⟩)) ∧
+      (∀ {place},
+        (htouching : PetriNet.placesTouching net.toPetriNet redoPart place) ->
+        (hstart : place ≠ predo) ->
+        (hend : place ≠ pdo) ->
+        (∃ trans, redoPart trans ∧ net.transToPlace trans place) ->
+        (∃ trans, redoPart trans ∧ net.placeToTrans place trans) ->
+          PetriNet.Path
+              (loopProjectionRestricted net redoPart predo pdo)
+              (PetriNet.Node.place
+                ⟨net.source,
+                  loopProjectionPlaces_source net redoPart predo pdo⟩)
+              (PetriNet.Node.place
+                ⟨place,
+                  loopProjectionPlaces_internal net htouching hstart hend⟩) ∧
+            PetriNet.Path
+              (loopProjectionRestricted net redoPart predo pdo)
+              (PetriNet.Node.place
+                ⟨place,
+                  loopProjectionPlaces_internal net htouching hstart hend⟩)
+              (PetriNet.Node.place
+                ⟨net.sink,
+                  loopProjectionPlaces_sink net redoPart predo pdo⟩)) := by
+  rcases hpattern with
+    ⟨doPart, redoPart, _silentPart,
+      hdoMem, hredoMem, _hsilentMem,
+      pdo, predo, _sourceTrans, _sinkTrans,
+      _hne, _hsilentSet, _hsourceSilent, _hsinkSilent,
+      _hsourcePost, _hsinkPre, _hsourcePre, _hsourceOut,
+      _hsinkIn, _hsinkOut,
+      hdoReach, hredoReach,
+      hdoNoIn, hredoNoIn, _hdoNoOut, _hredoNoOut⟩
+  refine ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem, ?_, ?_⟩
+  · intro place htouching hstart hend hinput houtput
+    rcases hinput with ⟨inTrans, hinPart, hinFlow⟩
+    rcases houtput with ⟨outTrans, houtPart, houtFlow⟩
+    constructor
+    · exact
+        loopProjectionRestricted_source_to_internal_place_of_part_transition
+          net hdoReach hdoNoIn hinPart htouching hstart hend hinFlow
+    · exact
+        loopProjectionRestricted_internal_place_to_sink_of_part_transition
+          net hdoReach hdoNoIn houtPart htouching hstart hend houtFlow
+  · intro place htouching hstart hend hinput houtput
+    rcases hinput with ⟨inTrans, hinPart, hinFlow⟩
+    rcases houtput with ⟨outTrans, houtPart, houtFlow⟩
+    constructor
+    · exact
+        loopProjectionRestricted_source_to_internal_place_of_part_transition
+          net hredoReach hredoNoIn hinPart htouching hstart hend hinFlow
+    · exact
+        loopProjectionRestricted_internal_place_to_sink_of_part_transition
+          net hredoReach hredoNoIn houtPart htouching hstart hend houtFlow
 
 theorem loopPattern_projection_boundary_edges
     {Activity : Type w}

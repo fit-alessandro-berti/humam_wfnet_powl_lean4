@@ -2356,6 +2356,181 @@ theorem lemma2_loop_projection_restricted_member_transition_to_sink
   Patterns.loopProjectionRestricted_member_transition_to_sink_of_placePath
     net path hclosed hnoInStart hmem
 
+theorem lemma2_loop_projection_restricted_transition_connected
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ trans : {trans : Trans // doPart trans},
+        PetriNet.Path
+            (Patterns.loopProjectionRestricted net doPart pdo predo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source net doPart pdo predo⟩)
+            (PetriNet.Node.trans trans) ∧
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net doPart pdo predo)
+            (PetriNet.Node.trans trans)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink net doPart pdo predo⟩)) ∧
+      (∀ trans : {trans : Trans // redoPart trans},
+        PetriNet.Path
+            (Patterns.loopProjectionRestricted net redoPart predo pdo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source net redoPart predo pdo⟩)
+            (PetriNet.Node.trans trans) ∧
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net redoPart predo pdo)
+            (PetriNet.Node.trans trans)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink net redoPart predo pdo⟩)) :=
+  Patterns.loopPattern_projection_restricted_transition_connected hpattern
+
+theorem lemma2_loop_projection_restricted_internal_place_directional_connected
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ {place trans}, doPart trans ->
+        (htouching : PetriNet.placesTouching net.toPetriNet doPart place) ->
+        (hstart : place ≠ pdo) ->
+        (hend : place ≠ predo) ->
+        net.transToPlace trans place ->
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net doPart pdo predo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source net doPart pdo predo⟩)
+            (PetriNet.Node.place
+              ⟨place,
+                Patterns.loopProjectionPlaces_internal net htouching
+                  hstart hend⟩)) ∧
+      (∀ {place trans}, doPart trans ->
+        (htouching : PetriNet.placesTouching net.toPetriNet doPart place) ->
+        (hstart : place ≠ pdo) ->
+        (hend : place ≠ predo) ->
+        net.placeToTrans place trans ->
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net doPart pdo predo)
+            (PetriNet.Node.place
+              ⟨place,
+                Patterns.loopProjectionPlaces_internal net htouching
+                  hstart hend⟩)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink net doPart pdo predo⟩)) ∧
+      (∀ {place trans}, redoPart trans ->
+        (htouching : PetriNet.placesTouching net.toPetriNet redoPart place) ->
+        (hstart : place ≠ predo) ->
+        (hend : place ≠ pdo) ->
+        net.transToPlace trans place ->
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net redoPart predo pdo)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source net redoPart predo pdo⟩)
+            (PetriNet.Node.place
+              ⟨place,
+                Patterns.loopProjectionPlaces_internal net htouching
+                  hstart hend⟩)) ∧
+      (∀ {place trans}, redoPart trans ->
+        (htouching : PetriNet.placesTouching net.toPetriNet redoPart place) ->
+        (hstart : place ≠ predo) ->
+        (hend : place ≠ pdo) ->
+        net.placeToTrans place trans ->
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net redoPart predo pdo)
+            (PetriNet.Node.place
+              ⟨place,
+                Patterns.loopProjectionPlaces_internal net htouching
+                  hstart hend⟩)
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink net redoPart predo pdo⟩)) :=
+  Patterns.loopPattern_projection_restricted_internal_place_directional_connected
+    hpattern
+
+theorem lemma2_loop_projection_restricted_internal_place_connected_of_incident_transitions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      (∀ {place},
+        (htouching : PetriNet.placesTouching net.toPetriNet doPart place) ->
+        (hstart : place ≠ pdo) ->
+        (hend : place ≠ predo) ->
+        (∃ trans, doPart trans ∧ net.transToPlace trans place) ->
+        (∃ trans, doPart trans ∧ net.placeToTrans place trans) ->
+          PetriNet.Path
+              (Patterns.loopProjectionRestricted net doPart pdo predo)
+              (PetriNet.Node.place
+                ⟨net.source,
+                  Patterns.loopProjectionPlaces_source
+                    net doPart pdo predo⟩)
+              (PetriNet.Node.place
+                ⟨place,
+                  Patterns.loopProjectionPlaces_internal
+                    net htouching hstart hend⟩) ∧
+            PetriNet.Path
+              (Patterns.loopProjectionRestricted net doPart pdo predo)
+              (PetriNet.Node.place
+                ⟨place,
+                  Patterns.loopProjectionPlaces_internal
+                    net htouching hstart hend⟩)
+              (PetriNet.Node.place
+                ⟨net.sink,
+                  Patterns.loopProjectionPlaces_sink
+                    net doPart pdo predo⟩)) ∧
+      (∀ {place},
+        (htouching : PetriNet.placesTouching net.toPetriNet redoPart place) ->
+        (hstart : place ≠ predo) ->
+        (hend : place ≠ pdo) ->
+        (∃ trans, redoPart trans ∧ net.transToPlace trans place) ->
+        (∃ trans, redoPart trans ∧ net.placeToTrans place trans) ->
+          PetriNet.Path
+              (Patterns.loopProjectionRestricted net redoPart predo pdo)
+              (PetriNet.Node.place
+                ⟨net.source,
+                  Patterns.loopProjectionPlaces_source
+                    net redoPart predo pdo⟩)
+              (PetriNet.Node.place
+                ⟨place,
+                  Patterns.loopProjectionPlaces_internal
+                    net htouching hstart hend⟩) ∧
+            PetriNet.Path
+              (Patterns.loopProjectionRestricted net redoPart predo pdo)
+              (PetriNet.Node.place
+                ⟨place,
+                  Patterns.loopProjectionPlaces_internal
+                    net htouching hstart hend⟩)
+              (PetriNet.Node.place
+                ⟨net.sink,
+                  Patterns.loopProjectionPlaces_sink
+                    net redoPart predo pdo⟩)) :=
+  Patterns.loopPattern_projection_restricted_internal_place_connected_of_incident_transitions
+    hpattern
+
 theorem lemma2_loop_projection_restricted_boundary_path
     {Place : Type u}
     {Trans : Type v}
