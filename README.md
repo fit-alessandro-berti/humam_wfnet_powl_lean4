@@ -21,7 +21,10 @@ The current proof spine is:
   output place. A generic normalization construction adds fresh source/sink
   places and enter/exit transitions around a connected designated-source/sink
   Petri net, with checked path lifting, connectedness, unique source/sink, and
-  `WorkflowNet` construction.
+  `WorkflowNet` construction. Accepting firing sequences lift into normalized
+  WF-nets by wrapping the original trace with silent enter/exit transitions.
+  Original-transition enabledness, firing, and fire-result equations are
+  equivalent between an original marking and its normalized embedding.
 - `KouraniWfnetPowl.Powl`: POWL syntax and language semantics for atom, XOR,
   loop, and partial-order nodes, including the checked atom-language theorem
   for Definition 5.
@@ -32,7 +35,8 @@ The current proof spine is:
   WF-nets, plus the fact that a typed subtype trace is already an original
   accepting trace. Normalized labels map enter/exit transitions to silent
   labels and preserve trace words for original traces with silent normalization
-  boundaries.
+  boundaries, yielding a checked original-language-to-normalized-language
+  inclusion.
 - `KouraniWfnetPowl.Patterns`: partition, XOR, loop, and partial-order pattern
   predicates plus the corresponding projection constructions from Section 4;
   also includes checked facts that XOR projection paths lift to the original net
@@ -75,7 +79,8 @@ The current proof spine is:
   language equivalence with typed original subtraces, and Lemma 2 loop trace
   closure plus loop projection boundary and restricted-projection facts, and
   Lemma 3 partial-order projection boundary/internal edge and one-step path
-  facts plus restricted-path lifting, generic normalization and normalized-trace
+  facts plus restricted-path lifting, generic normalization,
+  normalized-firing forward/reverse local invariants, and normalized-language
   targets, execution-order, source/sink-aware entry/exit point API, and
   boundary-equivalence consequences, plus common-postset same-component
   consequences.

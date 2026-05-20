@@ -815,11 +815,13 @@ inductive NormalizedPlace (Place : Type u) where
   | source : NormalizedPlace Place
   | original : Place -> NormalizedPlace Place
   | sink : NormalizedPlace Place
+  deriving DecidableEq
 
 inductive NormalizedTrans (Trans : Type u) where
   | enter : NormalizedTrans Trans
   | original : Trans -> NormalizedTrans Trans
   | exit : NormalizedTrans Trans
+  deriving DecidableEq
 
 def normalize
     (net : PetriNet Place Trans)
@@ -1041,6 +1043,41 @@ noncomputable def single (marked : Place) : Marking Place := by
   classical
   exact fun place => if place = marked then 1 else 0
 
+def normalize
+    (marking : Marking Place) :
+    Marking (PetriNet.NormalizedPlace Place)
+  | PetriNet.NormalizedPlace.source => 0
+  | PetriNet.NormalizedPlace.original place => marking place
+  | PetriNet.NormalizedPlace.sink => 0
+
+theorem normalize_original_apply
+    (marking : Marking Place)
+    (place : Place) :
+    normalize marking (PetriNet.NormalizedPlace.original place) =
+      marking place :=
+  rfl
+
+theorem normalize_source_apply
+    (marking : Marking Place) :
+    normalize marking (PetriNet.NormalizedPlace.source :
+      PetriNet.NormalizedPlace Place) = 0 :=
+  rfl
+
+theorem normalize_sink_apply
+    (marking : Marking Place) :
+    normalize marking (PetriNet.NormalizedPlace.sink :
+      PetriNet.NormalizedPlace Place) = 0 :=
+  rfl
+
+theorem normalize_injective
+    {left right : Marking Place}
+    (hmarking : normalize left = normalize right) :
+    left = right := by
+  funext place
+  have happly :=
+    congrFun hmarking (PetriNet.NormalizedPlace.original place)
+  exact happly
+
 def restrict
     {places : Set Place}
     (marking : Marking Place) :
@@ -1214,6 +1251,12 @@ def normalized
     · exact PetriNet.normalize_sink_no_output net source sink
     · exact PetriNet.normalize_connected net source sink hconnected
   connected := PetriNet.normalize_connected net source sink hconnected
+
+def normalizedNet (net : WorkflowNet Place Trans) :
+    WorkflowNet
+      (PetriNet.NormalizedPlace Place)
+      (PetriNet.NormalizedTrans Trans) :=
+  normalized net.toPetriNet net.source net.sink net.connected
 
 theorem entryPoints_has_part_output
     (net : WorkflowNet Place Trans)
@@ -1408,6 +1451,30 @@ inductive FiringSequence
       FiringSequence net middle trace after ->
       FiringSequence net before (trans :: trace) after
 
+theorem firingSequence_append
+    {net : WorkflowNet Place Trans}
+    {before middle after : Marking Place}
+    {left right : List Trans}
+    (leftSequence : FiringSequence net before left middle)
+    (rightSequence : FiringSequence net middle right after) :
+    FiringSequence net before (left ++ right) after := by
+  induction leftSequence with
+  | nil =>
+      exact rightSequence
+  | cons hfires _ ih =>
+      exact FiringSequence.cons hfires (ih rightSequence)
+
+theorem firingSequence_snoc
+    {net : WorkflowNet Place Trans}
+    {before middle after : Marking Place}
+    {trace : List Trans}
+    {trans : Trans}
+    (sequence : FiringSequence net before trace middle)
+    (hfires : fires net middle trans after) :
+    FiringSequence net before (trace ++ [trans]) after :=
+  firingSequence_append sequence
+    (FiringSequence.cons hfires FiringSequence.nil)
+
 def reachable
     (net : WorkflowNet Place Trans)
     (before after : Marking Place) : Prop :=
@@ -1438,6 +1505,270 @@ def sound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
 
 def safeAndSound [DecidableEq Place] (net : WorkflowNet Place Trans) : Prop :=
   safe net ∧ sound net
+
+theorem normalized_enter_fires
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) :
+    fires
+      (normalizedNet net)
+      (initial (normalizedNet net))
+      PetriNet.NormalizedTrans.enter
+      (Marking.normalize (initial net)) := by
+  constructor
+  · intro place hflow
+    cases place with
+    | source =>
+        simp [normalizedNet, normalized, PetriNet.normalize, initial,
+          Marking.single]
+    | original place =>
+        simp [normalizedNet, normalized, PetriNet.normalize] at hflow
+    | sink =>
+        simp [normalizedNet, normalized, PetriNet.normalize] at hflow
+  · funext place
+    cases place with
+    | source =>
+        simp [fire, consumed, produced, normalizedNet, normalized,
+          PetriNet.normalize, initial, Marking.single, Marking.normalize]
+    | original place =>
+        simp [fire, consumed, produced, normalizedNet, normalized,
+          PetriNet.normalize, initial, Marking.single, Marking.normalize]
+    | sink =>
+        simp [fire, consumed, produced, normalizedNet, normalized,
+          PetriNet.normalize, initial, Marking.single, Marking.normalize]
+
+theorem normalized_original_fires
+    (net : WorkflowNet Place Trans)
+    {before after : Marking Place}
+    {trans : Trans}
+    (hfires : fires net before trans after) :
+    fires
+      (normalizedNet net)
+      (Marking.normalize before)
+      (PetriNet.NormalizedTrans.original trans)
+      (Marking.normalize after) := by
+  constructor
+  · intro place hflow
+    cases place with
+    | source =>
+        simp [normalizedNet, normalized, PetriNet.normalize] at hflow
+    | original place =>
+        exact hfires.1 place
+          (by
+            simpa [normalizedNet, normalized, PetriNet.normalize] using hflow)
+    | sink =>
+        simp [normalizedNet, normalized, PetriNet.normalize] at hflow
+  · rw [hfires.2]
+    funext place
+    cases place with
+    | source =>
+        simp [fire, consumed, produced, normalizedNet, normalized,
+          PetriNet.normalize, Marking.normalize]
+    | original place =>
+        simp [fire, consumed, produced, normalizedNet, normalized,
+          PetriNet.normalize, Marking.normalize]
+        rfl
+    | sink =>
+        simp [fire, consumed, produced, normalizedNet, normalized,
+          PetriNet.normalize, Marking.normalize]
+
+theorem normalized_original_enabled_iff
+    (net : WorkflowNet Place Trans)
+    (marking : Marking Place)
+    (trans : Trans) :
+    enabled
+      (normalizedNet net)
+      (Marking.normalize marking)
+      (PetriNet.NormalizedTrans.original trans) ↔
+        enabled net marking trans := by
+  constructor
+  · intro henabled place hflow
+    exact henabled (PetriNet.NormalizedPlace.original place)
+      (by
+        simpa [normalizedNet, normalized, PetriNet.normalize] using hflow)
+  · intro henabled place hflow
+    cases place with
+    | source =>
+        simp [normalizedNet, normalized, PetriNet.normalize] at hflow
+    | original place =>
+        exact henabled place
+          (by
+            simpa [normalizedNet, normalized, PetriNet.normalize] using hflow)
+    | sink =>
+        simp [normalizedNet, normalized, PetriNet.normalize] at hflow
+
+theorem normalized_original_fire_eq
+    (net : WorkflowNet Place Trans)
+    (marking : Marking Place)
+    (trans : Trans) :
+    fire
+      (normalizedNet net)
+      (Marking.normalize marking)
+      (PetriNet.NormalizedTrans.original trans) =
+        Marking.normalize (fire net marking trans) := by
+  funext place
+  cases place with
+  | source =>
+      simp [fire, consumed, produced, normalizedNet, normalized,
+        PetriNet.normalize, Marking.normalize]
+  | original place =>
+      simp [fire, consumed, produced, normalizedNet, normalized,
+        PetriNet.normalize, Marking.normalize]
+      rfl
+  | sink =>
+      simp [fire, consumed, produced, normalizedNet, normalized,
+        PetriNet.normalize, Marking.normalize]
+
+theorem normalized_original_fires_iff
+    (net : WorkflowNet Place Trans)
+    (before after : Marking Place)
+    (trans : Trans) :
+    fires
+      (normalizedNet net)
+      (Marking.normalize before)
+      (PetriNet.NormalizedTrans.original trans)
+      (Marking.normalize after) ↔
+        fires net before trans after := by
+  constructor
+  · intro hfires
+    constructor
+    · exact
+        (normalized_original_enabled_iff net before trans).mp
+          hfires.1
+    · apply Marking.normalize_injective
+      rw [hfires.2, normalized_original_fire_eq]
+  · intro hfires
+    exact normalized_original_fires net hfires
+
+theorem normalized_firingSequence_original
+    (net : WorkflowNet Place Trans)
+    {before after : Marking Place}
+    {trace : List Trans}
+    (sequence : FiringSequence net before trace after) :
+    FiringSequence
+      (normalizedNet net)
+      (Marking.normalize before)
+      (trace.map PetriNet.NormalizedTrans.original)
+      (Marking.normalize after) := by
+  induction sequence with
+  | nil =>
+      exact FiringSequence.nil
+  | cons hfires _ ih =>
+      exact FiringSequence.cons
+        (normalized_original_fires net hfires)
+        ih
+
+theorem normalized_firingSequence_original_reverse
+    (net : WorkflowNet Place Trans)
+    {before after : Marking Place}
+    {trace : List Trans}
+    (sequence :
+      FiringSequence
+        (normalizedNet net)
+        (Marking.normalize before)
+        (trace.map PetriNet.NormalizedTrans.original)
+        (Marking.normalize after)) :
+    FiringSequence net before trace after := by
+  induction trace generalizing before with
+  | nil =>
+      cases sequence with
+      | nil =>
+          have hmarking :
+              before = after :=
+            Marking.normalize_injective rfl
+          subst hmarking
+          exact FiringSequence.nil
+      | cons hfires tail =>
+          cases tail
+  | cons trans rest ih =>
+      cases sequence with
+      | nil =>
+          contradiction
+      | cons hfires tail =>
+          rw [List.map_cons] at tail
+          have horiginalFires :
+              fires net before trans
+                (fire net before trans) := by
+            exact
+              (normalized_original_fires_iff
+                net before (fire net before trans) trans).mp
+                ⟨hfires.1,
+                  by
+                    rw [hfires.2]
+                    exact normalized_original_fire_eq net before trans⟩
+          have hmiddle :
+              tail = FiringSequence.cast (by rfl) tail := rfl
+          exact
+            FiringSequence.cons
+              horiginalFires
+              (ih tail)
+
+theorem normalized_firingSequence_original_iff
+    (net : WorkflowNet Place Trans)
+    {before after : Marking Place}
+    {trace : List Trans} :
+    FiringSequence
+      (normalizedNet net)
+      (Marking.normalize before)
+      (trace.map PetriNet.NormalizedTrans.original)
+      (Marking.normalize after) ↔
+        FiringSequence net before trace after := by
+  constructor
+  · exact normalized_firingSequence_original_reverse net
+  · exact normalized_firingSequence_original net
+
+theorem normalized_exit_fires
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans) :
+    fires
+      (normalizedNet net)
+      (Marking.normalize (final net))
+      PetriNet.NormalizedTrans.exit
+      (final (normalizedNet net)) := by
+  constructor
+  · intro place hflow
+    cases place with
+    | source =>
+        simp [normalizedNet, normalized, PetriNet.normalize] at hflow
+    | original place =>
+        simp [normalizedNet, normalized, PetriNet.normalize] at hflow
+        subst hflow
+        simp [final, Marking.single, Marking.normalize]
+    | sink =>
+        simp [normalizedNet, normalized, PetriNet.normalize] at hflow
+  · funext place
+    cases place with
+    | source =>
+        simp [fire, consumed, produced, normalizedNet, normalized,
+          PetriNet.normalize, final, Marking.single, Marking.normalize]
+    | original place =>
+        by_cases hsink : place = net.sink
+        · simp [fire, consumed, produced, normalizedNet, normalized,
+            PetriNet.normalize, final, Marking.single, Marking.normalize,
+            hsink]
+        · simp [fire, consumed, produced, normalizedNet, normalized,
+            PetriNet.normalize, final, Marking.single, Marking.normalize,
+            hsink]
+    | sink =>
+        simp [fire, consumed, produced, normalizedNet, normalized,
+          PetriNet.normalize, final, Marking.single, Marking.normalize]
+
+theorem normalized_firingSequence_accepting
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {trace : List Trans}
+    (sequence : FiringSequence net (initial net) trace (final net)) :
+    FiringSequence
+      (normalizedNet net)
+      (initial (normalizedNet net))
+      (PetriNet.NormalizedTrans.enter ::
+        (trace.map PetriNet.NormalizedTrans.original ++
+          [PetriNet.NormalizedTrans.exit]))
+      (final (normalizedNet net)) :=
+  FiringSequence.cons
+    (normalized_enter_fires net)
+    (firingSequence_snoc
+      (normalized_firingSequence_original net sequence)
+      (normalized_exit_fires net))
 
 theorem restricted_initial_eq
     [DecidableEq Place]

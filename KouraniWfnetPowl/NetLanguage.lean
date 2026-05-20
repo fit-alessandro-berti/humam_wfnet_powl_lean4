@@ -141,8 +141,8 @@ theorem traceWord_normalized_with_boundary
     (trace : List Trans) :
     traceWord (normalizedLabel label)
       (PetriNet.NormalizedTrans.enter ::
-        trace.map PetriNet.NormalizedTrans.original ++
-          [PetriNet.NormalizedTrans.exit]) =
+        (trace.map PetriNet.NormalizedTrans.original ++
+          [PetriNet.NormalizedTrans.exit])) =
         traceWord label trace := by
   simp [traceWord, Powl.transitionWord, normalizedLabel, TransitionLabel.word]
   rw [traceWord_append]
@@ -207,6 +207,22 @@ theorem language_of_subtypeTraceLanguage
     language net label word := by
   rcases hlanguage with ⟨trace, sequence, hword⟩
   exact language_intro sequence hword
+
+theorem normalized_language_of_original
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {word : List Activity}
+    (hlanguage : language net label word) :
+    language (normalizedNet net) (normalizedLabel label) word := by
+  rcases hlanguage with ⟨trace, sequence, hword⟩
+  refine language_intro
+    (normalized_firingSequence_accepting net sequence)
+    ?_
+  rw [traceWord_normalized_with_boundary, hword]
 
 theorem restricted_language_of_typed_original_sequence
     {Place : Type u}
