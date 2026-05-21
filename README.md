@@ -248,10 +248,13 @@ The current proof spine is:
   dependencies for Lemma 1 path restriction, reachable-marking lifting,
   selected-sequence restriction, safeness preservation, no-dead-transition,
   soundness, and `safeAndSound` transfer from selected accepting sequences
-  plus supplied completion/proper-completion obligations, including variants
-  that consume the original net's `safeAndSound` hypothesis directly, indexed
+  plus supplied completion/proper-completion obligations, direct
+  no-dead/completion/proper-completion projection sound and `safeAndSound`
+  packaging, including variants
+  that consume the original net's safeness or `safeAndSound` hypothesis directly, indexed
   XOR-pattern projection WF-net, selected accepting-trace transfer, and
-  no-dead/safe-no-dead/sound/`safeAndSound` constructor witnesses, with direct original-safe-and-sound indexed `safe`,
+  no-dead/safe-no-dead/sound/`safeAndSound` constructor witnesses, direct
+  no-dead/completion/proper-completion indexed sound bridges, with direct original-safe-and-sound indexed `safe`,
   safe/no-dead, and `safeAndSound` wrappers, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, a mapped recursive
@@ -472,8 +475,10 @@ The current proof spine is:
   connected-projection-to-`WorkflowNet` packaging facts, no-dead-transition,
   safe/no-dead, soundness, and `safeAndSound` packaging for connected loop
   projections from accepting-trace/completion/proper-completion obligations,
-  with matching no-dead, safe/no-dead, sound, and `safeAndSound` wrappers for
-  reachable-incidence loop-projection constructors, including the
+  plus direct no-dead/completion/proper-completion connected sound bridges,
+  with matching no-dead, safe/no-dead, sound, `safeAndSound`, and direct
+  no-dead/completion/proper-completion sound wrappers for reachable-incidence
+  loop-projection constructors, including the
   incidence-based full restricted loop-projection
   connectedness target and pattern-level do/redo loop-projection WF-net
   existence plus a no-dead/completion-to-accepting-trace bridge, direct
@@ -486,7 +491,9 @@ The current proof spine is:
   restricted projection normalization, restricted and normalized projection
   marking facts, original-transition enabledness, firing witnesses, singleton
   firing sequences, reachability, original-transition and fresh-boundary
-  no-dead witnesses, and a full no-dead constructor for normalized projections,
+  no-dead witnesses, a full no-dead constructor for normalized projections,
+  and direct no-dead/completion/proper-completion sound bridges for connected
+  normalized projections,
   reachable-shape-based safeness and `safeAndSound` packaging, including
   variants that consume the original net's `safeAndSound` hypothesis directly,
   indexed partial-order-pattern projection WF-net existence plus
