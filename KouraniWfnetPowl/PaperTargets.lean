@@ -55,8 +55,47 @@ theorem subtype_powl_language_lift
     (model : Powl {trans : Trans // transitions trans})
     (word : List Activity) :
     Powl.language label (Powl.map Subtype.val model) word ↔
-      Powl.language (fun trans => label trans.val) model word :=
+    Powl.language (fun trans => label trans.val) model word :=
   Powl.language_map Subtype.val label model word
+
+theorem list_subtype_trace_of_forall_mem
+    {alpha : Type u}
+    {part : Set alpha} :
+    ∀ trace : List alpha,
+      (∀ item, item ∈ trace -> part item) ->
+        ∃ typedTrace : List {item : alpha // part item},
+          typedTrace.map Subtype.val = trace ∧
+            ∀ item,
+              item ∈ trace ->
+                ∃ typedItem,
+                  typedItem ∈ typedTrace ∧ typedItem.val = item := by
+  intro trace
+  induction trace with
+  | nil =>
+      intro _hpart
+      exact ⟨[], rfl, by intro item hmem; cases hmem⟩
+  | cons head tail ih =>
+      intro hpart
+      have hhead : part head := hpart head (by simp)
+      have htail : ∀ item, item ∈ tail -> part item := by
+        intro item hmem
+        exact hpart item (List.mem_cons_of_mem head hmem)
+      rcases ih htail with ⟨typedTail, htypedTail, hmemTail⟩
+      let typedHead : {item : alpha // part item} := ⟨head, hhead⟩
+      exact
+        ⟨typedHead :: typedTail,
+          by simp [typedHead, htypedTail],
+          by
+            intro item hmem
+            rcases List.mem_cons.mp hmem with hheadEq | htailMem
+            · subst hheadEq
+              exact ⟨typedHead, by simp [typedHead], rfl⟩
+            · rcases hmemTail item htailMem with
+                ⟨typedItem, htypedMem, htypedVal⟩
+              exact
+                ⟨typedItem,
+                  by simp [typedHead, htypedMem],
+                  htypedVal⟩⟩
 
 theorem language_iff_local_language_source_sink
     {Place : Type u}
@@ -8562,6 +8601,77 @@ theorem lemma1_xor_projection_accepting_traces_of_original_safe_and_sound_and_tr
     ⟨typedTrace, hmap, htypedMem⟩
   exact ⟨typedTrace, by simpa [hmap] using hsequence, htypedMem⟩
 
+theorem lemma1_xor_projection_trace_closed_of_accepting_trace_part_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {part : Set Trans}
+    (hacceptingTracePart :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∀ item, item ∈ trace -> part item) :
+    ∀ trans : {trans : Trans // part trans},
+      ∀ trace : List Trans,
+        WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            trace
+            (WorkflowNet.final net) ->
+          trans.val ∈ trace ->
+            ∃ typedTrace : List {trans : Trans // part trans},
+              typedTrace.map Subtype.val = trace ∧
+                trans ∈ typedTrace := by
+  intro trans trace hsequence hmem
+  rcases
+      list_subtype_trace_of_forall_mem
+        trace
+        (hacceptingTracePart trans trace hsequence hmem) with
+    ⟨typedTrace, htypedTrace, hmemTyped⟩
+  rcases hmemTyped trans.val hmem with
+    ⟨typedTrans, htypedMem, htypedVal⟩
+  have htypedEq : typedTrans = trans := Subtype.ext htypedVal
+  exact
+    ⟨typedTrace,
+      htypedTrace,
+      by simpa [htypedEq] using htypedMem⟩
+
+theorem lemma1_xor_projection_accepting_traces_of_original_safe_and_sound_and_accepting_trace_part_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {part : Set Trans}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (hacceptingTracePart :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∀ item, item ∈ trace -> part item) :
+    ∀ trans : {trans : Trans // part trans},
+      ∃ trace : List {trans : Trans // part trans},
+        WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            (trace.map Subtype.val)
+            (WorkflowNet.final net) ∧
+          trans ∈ trace :=
+  lemma1_xor_projection_accepting_traces_of_original_safe_and_sound_and_trace_closed
+    hsafeSound
+    (lemma1_xor_projection_trace_closed_of_accepting_trace_part_mem
+      hacceptingTracePart)
+
 theorem lemma1_xor_projection_safe_and_no_dead_transitions_of_original_safe_and_sound_and_trace_closed
     {Place : Type u}
     {Trans : Type v}
@@ -8793,6 +8903,93 @@ theorem lemma1_xor_projection_option_to_complete_of_branch_completion_witnesses
       by
         simpa [hrestrictExtend, hfinalRestrict]
           using hprojectedCompletion⟩
+
+theorem lemma1_xor_projection_completion_trace_closed_of_completion_trace_part_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {part : Set Trans}
+    (hcompletionTracePart :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (Marking.extend marking)
+              trace
+              (WorkflowNet.final net) ->
+            ∀ item, item ∈ trace -> part item) :
+    ∀ marking :
+        Marking
+          {place : Place //
+            PetriNet.placesTouching net.toPetriNet part place},
+      ∀ trace : List Trans,
+        WorkflowNet.FiringSequence
+            net
+            (Marking.extend marking)
+            trace
+            (WorkflowNet.final net) ->
+          ∃ typedTrace : List {trans : Trans // part trans},
+            typedTrace.map Subtype.val = trace := by
+  intro marking trace hsequence
+  rcases
+      list_subtype_trace_of_forall_mem
+        trace
+        (hcompletionTracePart marking trace hsequence) with
+    ⟨typedTrace, htypedTrace, _hmemTyped⟩
+  exact ⟨typedTrace, htypedTrace⟩
+
+theorem lemma1_xor_projection_branch_completion_witnesses_of_completion_trace_part_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hcompletionTracePart :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            (Patterns.xorProjectionWorkflowNet hpattern hpart)
+            (WorkflowNet.initial
+              (Patterns.xorProjectionWorkflowNet hpattern hpart))
+            marking ->
+          ∃ trace : List Trans,
+            WorkflowNet.FiringSequence
+                net
+                (Marking.extend marking)
+                trace
+                (WorkflowNet.final net) ∧
+              ∀ item, item ∈ trace -> part item) :
+    ∀ marking :
+        Marking
+          {place : Place //
+            PetriNet.placesTouching net.toPetriNet part place},
+      WorkflowNet.reachable
+          (Patterns.xorProjectionWorkflowNet hpattern hpart)
+          (WorkflowNet.initial
+            (Patterns.xorProjectionWorkflowNet hpattern hpart))
+          marking ->
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+            net
+            (Marking.extend marking)
+            (trace.map Subtype.val)
+            (WorkflowNet.final net) := by
+  intro marking hreachable
+  rcases hcompletionTracePart marking hreachable with
+    ⟨trace, hsequence, htracePart⟩
+  rcases
+      list_subtype_trace_of_forall_mem trace htracePart with
+    ⟨typedTrace, htypedTrace, _hmemTyped⟩
+  exact ⟨typedTrace, by simpa [htypedTrace] using hsequence⟩
 
 theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_closed_traces
     {Place : Type u}
@@ -9036,6 +9233,52 @@ theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_bran
       hpattern hpart hcompletionWitness)
     (lemma1_xor_projection_proper_completion_of_original_safe_and_sound
       hpattern hpart hsafeSound)
+
+theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_trace_part_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (hacceptingTracePart :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∀ item, item ∈ trace -> part item)
+    (hcompletionTracePart :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            (Patterns.xorProjectionWorkflowNet hpattern hpart)
+            (WorkflowNet.initial
+              (Patterns.xorProjectionWorkflowNet hpattern hpart))
+            marking ->
+          ∃ trace : List Trans,
+            WorkflowNet.FiringSequence
+                net
+                (Marking.extend marking)
+                trace
+                (WorkflowNet.final net) ∧
+              ∀ item, item ∈ trace -> part item) :
+    WorkflowNet.safeAndSound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_branch_completion_witnesses
+    hpattern hpart hsafeSound
+    (lemma1_xor_projection_trace_closed_of_accepting_trace_part_mem
+      hacceptingTracePart)
+    (lemma1_xor_projection_branch_completion_witnesses_of_completion_trace_part_mem
+      hpattern hpart hcompletionTracePart)
 
 theorem lemma1_xor_pattern_projection_workflow_net_of_indexed_part
     {Place : Type u}
@@ -9421,6 +9664,115 @@ theorem lemma1_xor_pattern_projection_safe_and_sound_of_original_safe_and_sound_
       fun hsafeSound haccepting hcomplete hproper =>
         lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound
           hpattern hpartMem hsafeSound haccepting hcomplete hproper⟩
+
+theorem lemma1_xor_pattern_projection_safe_and_sound_of_original_safe_and_sound_and_branch_completion_witnesses_of_indexed_part
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    (hpart : Powl.listGet? partition.parts index = some part) :
+    ∃ projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans},
+      WorkflowNet.safeAndSound net ->
+      (∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∃ typedTrace : List {trans : Trans // part trans},
+                typedTrace.map Subtype.val = trace ∧
+                  trans ∈ typedTrace) ->
+      (∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            projection
+            (WorkflowNet.initial projection)
+            marking ->
+          ∃ trace : List {trans : Trans // part trans},
+            WorkflowNet.FiringSequence
+              net
+              (Marking.extend marking)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net)) ->
+        WorkflowNet.safeAndSound projection := by
+  have hpartMem : part ∈ partition.parts :=
+    Partition.mem_of_listGet? partition hpart
+  let projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans} :=
+    Patterns.xorProjectionWorkflowNet hpattern hpartMem
+  exact
+    ⟨projection,
+      fun hsafeSound htraceClosed hcompletionWitness =>
+        lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_branch_completion_witnesses
+          hpattern hpartMem hsafeSound htraceClosed hcompletionWitness⟩
+
+theorem lemma1_xor_pattern_projection_safe_and_sound_of_original_safe_and_sound_and_trace_part_mem_of_indexed_part
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    (hpart : Powl.listGet? partition.parts index = some part) :
+    ∃ projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans},
+      WorkflowNet.safeAndSound net ->
+      (∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∀ item, item ∈ trace -> part item) ->
+      (∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            projection
+            (WorkflowNet.initial projection)
+            marking ->
+          ∃ trace : List Trans,
+            WorkflowNet.FiringSequence
+                net
+                (Marking.extend marking)
+                trace
+                (WorkflowNet.final net) ∧
+              ∀ item, item ∈ trace -> part item) ->
+        WorkflowNet.safeAndSound projection := by
+  have hpartMem : part ∈ partition.parts :=
+    Partition.mem_of_listGet? partition hpart
+  let projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans} :=
+    Patterns.xorProjectionWorkflowNet hpattern hpartMem
+  exact
+    ⟨projection,
+      fun hsafeSound hacceptingTracePart hcompletionTracePart =>
+        lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_trace_part_mem
+          hpattern hpartMem hsafeSound
+          hacceptingTracePart
+          hcompletionTracePart⟩
 
 theorem lemma4_xor_projection_language_of_selected_original_sequence
     {Place : Type u}
