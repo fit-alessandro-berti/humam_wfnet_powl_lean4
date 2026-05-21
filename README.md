@@ -308,20 +308,23 @@ The current proof spine is:
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` constructors,
   abstract certified-conversion language preservation/equality plus safe paired
   preservation, abstract existential-model pointwise/equality and
-  visible-activity witness wrappers with safe paired variants, source-to-sink
+  visible-activity witness wrappers with direct safe paired variants,
+  source-to-sink
   global explicit language, safe paired explicit language preservation/equality,
   explicit original-transition existential-model pointwise/equality, safe
-  existential language-equality, and visible-activity witness wrappers for
-  certified branch data,
+  existential language-equality, and visible-activity witness wrappers with
+  direct safe paired abstract and explicit forms for certified branch data,
   sigma-valued requirements-to-package continuations for generic
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` outputs,
   requirements-to-package continuations for source-to-sink global abstract
   language preservation/equality, abstract existential-model pointwise/equality,
-  abstract visible-activity witnesses, explicit language preservation/equality
+  abstract visible-activity witnesses with direct safe paired continuations,
+  explicit language preservation/equality
   plus original-transition existential-model pointwise/equality,
   safe-and-sound paired global language preservation/equality,
   safe-and-sound paired explicit language preservation/equality, and
-  explicit/existential/safe visible-activity witness consequences,
+  explicit/existential/safe visible-activity witness consequences including
+  direct safe paired explicit witness continuations,
   conversion builders, and package-returning continuations from the explicit
   branch package, a
   `LocalCertifiedConversion` interface
@@ -348,8 +351,9 @@ The current proof spine is:
   partial-order-pattern package that carries the induced strict partial order
   through to the semi-block certified conversion and combined safe/equivalent
   POWL-model consequence, plus explicit pointwise language-preservation,
-  language-equality, and visible-activity witness theorems for the concrete
-  atom, XOR, loop, and partial-order POWL models, bundled into a
+  language-equality, and visible-activity witness theorems with direct safe
+  paired witness forms for the concrete atom, XOR, loop, and partial-order
+  POWL models, bundled into a
   `ConcretePowlWitness` case/certificate eliminator
   with reusable preservation, safe+existence, and existential
   visible-activity-witness consequences, and a
