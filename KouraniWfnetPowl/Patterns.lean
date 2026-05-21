@@ -4258,6 +4258,30 @@ theorem partialOrderPattern_of_irreflexive_execution_order
     partialOrderPattern net partition :=
   ⟨hparts, hsamePart, hirrefl, hentry, hexit⟩
 
+theorem partialOrderPattern_iff_irreflexive_execution_order
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      Irreflexive (TransGen (executionOrder net partition)) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :=
+  Iff.rfl
+
 theorem partialOrderPattern_of_no_execution_order_return
     (net : WorkflowNet Place Trans)
     (partition : Partition Trans)
@@ -4654,6 +4678,56 @@ theorem partialOrderPattern_strictPartialOrder_rel
     (partialOrderPattern_strictPartialOrder net partition hpattern).rel =
       TransGen (executionOrder net partition) :=
   rfl
+
+theorem partialOrderPattern_iff_exists_strictPartialOrder
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      (∃ order : StrictPartialOrder Nat,
+        order.rel = TransGen (executionOrder net partition)) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) := by
+  constructor
+  · intro hpattern
+    exact
+      ⟨hpattern.1,
+        hpattern.2.1,
+        ⟨partialOrderPattern_strictPartialOrder
+          net partition hpattern,
+          partialOrderPattern_strictPartialOrder_rel
+            net partition hpattern⟩,
+        hpattern.2.2.2.1,
+        hpattern.2.2.2.2⟩
+  · intro hpattern
+    rcases hpattern.2.2.1 with ⟨order, horderRel⟩
+    have hirrefl :
+        Irreflexive (TransGen (executionOrder net partition)) := by
+      rw [← horderRel]
+      exact order.irrefl
+    exact
+      partialOrderPattern_of_irreflexive_execution_order
+        net
+        partition
+        hpattern.1
+        hpattern.2.1
+        hirrefl
+        hpattern.2.2.2.1
+        hpattern.2.2.2.2
 
 theorem partialOrderPattern_irreflexive
     (net : WorkflowNet Place Trans)

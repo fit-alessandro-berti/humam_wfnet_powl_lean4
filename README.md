@@ -414,7 +414,10 @@ The current proof spine is:
   strict-order wrappers with relation equalities, direct partition-contraction
   no-return partial-order pattern wrappers, generic partial-order-pattern
   strict-order relation, irreflexivity, transitivity, no-return, and contraction
-  acyclicity accessors, direct Definition 13 field accessors, and a
+  acyclicity accessors, direct Definition 13 field accessors and exact bundled
+  generic/Case 3 `↔` forms through irreflexive execution order,
+  existential strict partial orders, execution-order no-return, and contraction
+  no-return/acyclicity, and a
   bundled contraction certificate that builds the partial-order pattern and
   strict partial order, with explicit relation-equality wrappers for all
   contraction-certificate variants, plus sound-contraction and
