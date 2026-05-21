@@ -306,16 +306,21 @@ The current proof spine is:
   pointwise/equality, and abstract visible-activity witness consequences, plus
   package-level
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` constructors,
-  abstract certified-conversion language preservation/equality plus abstract
-  existential-model pointwise/equality and visible-activity witness wrappers,
-  source-to-sink global explicit language, safe existential language-equality,
-  and visible-activity witness wrappers for certified branch data,
+  abstract certified-conversion language preservation/equality plus safe paired
+  preservation, abstract existential-model pointwise/equality and
+  visible-activity witness wrappers, source-to-sink global explicit language,
+  safe paired explicit language preservation/equality, explicit
+  original-transition existential-model pointwise/equality, safe existential
+  language-equality, and visible-activity witness wrappers for certified branch
+  data,
   sigma-valued requirements-to-package continuations for generic
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` outputs,
   requirements-to-package continuations for source-to-sink global abstract
   language preservation/equality, abstract existential-model pointwise/equality,
   abstract visible-activity witnesses, explicit language preservation/equality
-  plus safe-and-sound paired global language equality, existential model, and
+  plus original-transition existential-model pointwise/equality,
+  safe-and-sound paired global language preservation/equality,
+  safe-and-sound paired explicit language preservation/equality, and
   explicit/existential/safe visible-activity witness consequences,
   conversion builders, and package-returning continuations from the explicit
   branch package, a
