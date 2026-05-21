@@ -9312,6 +9312,180 @@ theorem lemma1_xor_trace_part_mem_of_reachable_to_or_from_anchor
       Partition.left_mem_of_samePart_right_mem
         partition hpart anchor.property hsamePart
 
+theorem lemma1_xor_pattern_right_mem_of_transition_reachable_from_part
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {left right : Trans}
+    (hleft : part left)
+    (hreachable : PetriNet.transitionReachable net.toPetriNet left right) :
+    part right := by
+  have hsamePart : partition.samePart left right :=
+    hpattern.2 left right hreachable
+  exact
+    Partition.right_mem_of_samePart_left_mem
+      partition hpart hleft hsamePart
+
+theorem lemma1_xor_pattern_left_mem_of_transition_reachable_to_part
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {left right : Trans}
+    (hright : part right)
+    (hreachable : PetriNet.transitionReachable net.toPetriNet left right) :
+    part left := by
+  have hsamePart : partition.samePart left right :=
+    hpattern.2 left right hreachable
+  exact
+    Partition.left_mem_of_samePart_right_mem
+      partition hpart hright hsamePart
+
+theorem lemma1_xor_pattern_transition_flow_right_mem_of_left_mem
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {left right : Trans}
+    (hleft : part left)
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    part right :=
+  lemma1_xor_pattern_right_mem_of_transition_reachable_from_part
+    hpattern hpart hleft
+    (PetriNet.transitionFlow_path hflow)
+
+theorem lemma1_xor_pattern_transition_flow_left_mem_of_right_mem
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {left right : Trans}
+    (hright : part right)
+    (hflow : PetriNet.transitionFlow net.toPetriNet left right) :
+    part left :=
+  lemma1_xor_pattern_left_mem_of_transition_reachable_to_part
+    hpattern hpart hright
+    (PetriNet.transitionFlow_path hflow)
+
+theorem lemma1_xor_pattern_place_successor_mem_of_predecessor_mem
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hleft : part left)
+    (hleftFlow : net.transToPlace left place)
+    (hrightFlow : net.placeToTrans place right) :
+    part right :=
+  lemma1_xor_pattern_transition_flow_right_mem_of_left_mem
+    hpattern hpart hleft ⟨place, hleftFlow, hrightFlow⟩
+
+theorem lemma1_xor_pattern_place_predecessor_mem_of_successor_mem
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hright : part right)
+    (hleftFlow : net.transToPlace left place)
+    (hrightFlow : net.placeToTrans place right) :
+    part left :=
+  lemma1_xor_pattern_transition_flow_left_mem_of_right_mem
+    hpattern hpart hright ⟨place, hleftFlow, hrightFlow⟩
+
+theorem lemma1_xor_pattern_no_transition_flow_from_part_to_complement
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {left right : Trans}
+    (hleft : part left)
+    (hright : ¬ part right) :
+    ¬ PetriNet.transitionFlow net.toPetriNet left right := by
+  intro hflow
+  exact hright
+    (lemma1_xor_pattern_transition_flow_right_mem_of_left_mem
+      hpattern hpart hleft hflow)
+
+theorem lemma1_xor_pattern_no_transition_flow_from_complement_to_part
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {left right : Trans}
+    (hleft : ¬ part left)
+    (hright : part right) :
+    ¬ PetriNet.transitionFlow net.toPetriNet left right := by
+  intro hflow
+  exact hleft
+    (lemma1_xor_pattern_transition_flow_left_mem_of_right_mem
+      hpattern hpart hright hflow)
+
+theorem lemma1_xor_pattern_no_place_flow_from_part_to_complement
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hleft : part left)
+    (hright : ¬ part right)
+    (hleftFlow : net.transToPlace left place)
+    (hrightFlow : net.placeToTrans place right) :
+    False :=
+  hright
+    (lemma1_xor_pattern_place_successor_mem_of_predecessor_mem
+      hpattern hpart hleft hleftFlow hrightFlow)
+
+theorem lemma1_xor_pattern_no_place_flow_from_complement_to_part
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hleft : ¬ part left)
+    (hright : part right)
+    (hleftFlow : net.transToPlace left place)
+    (hrightFlow : net.placeToTrans place right) :
+    False :=
+  hleft
+    (lemma1_xor_pattern_place_predecessor_mem_of_successor_mem
+      hpattern hpart hright hleftFlow hrightFlow)
+
 theorem lemma1_xor_projection_accepting_trace_part_mem_of_reachable_to_or_from_hit
     {Place : Type u}
     {Trans : Type v}
