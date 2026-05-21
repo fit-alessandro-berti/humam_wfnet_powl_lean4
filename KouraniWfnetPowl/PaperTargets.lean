@@ -9280,6 +9280,429 @@ theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_trac
     (lemma1_xor_projection_branch_completion_witnesses_of_completion_trace_part_mem
       hpattern hpart hcompletionTracePart)
 
+theorem lemma1_xor_trace_part_mem_of_reachable_to_or_from_anchor
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (anchor : {trans : Trans // part trans})
+    {trace : List Trans}
+    (hreachableToOrFromAnchor :
+      ∀ item, item ∈ trace ->
+        item = anchor.val ∨
+          PetriNet.transitionReachable net.toPetriNet anchor.val item ∨
+          PetriNet.transitionReachable net.toPetriNet item anchor.val) :
+    ∀ item, item ∈ trace -> part item := by
+  intro item hmem
+  rcases hreachableToOrFromAnchor item hmem with
+    hsame | hanchorReaches | hitemReaches
+  · rw [hsame]
+    exact anchor.property
+  · have hsamePart : partition.samePart anchor.val item :=
+      hpattern.2 anchor.val item hanchorReaches
+    exact
+      Partition.right_mem_of_samePart_left_mem
+        partition hpart anchor.property hsamePart
+  · have hsamePart : partition.samePart item anchor.val :=
+      hpattern.2 item anchor.val hitemReaches
+    exact
+      Partition.left_mem_of_samePart_right_mem
+        partition hpart anchor.property hsamePart
+
+theorem lemma1_xor_projection_accepting_trace_part_mem_of_reachable_to_or_from_hit
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hreachableToOrFromHit :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∀ item, item ∈ trace ->
+                item = trans.val ∨
+                  PetriNet.transitionReachable net.toPetriNet trans.val item ∨
+                  PetriNet.transitionReachable net.toPetriNet item trans.val) :
+    ∀ trans : {trans : Trans // part trans},
+      ∀ trace : List Trans,
+        WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            trace
+            (WorkflowNet.final net) ->
+          trans.val ∈ trace ->
+            ∀ item, item ∈ trace -> part item := by
+  intro trans trace hsequence hmem
+  exact
+    lemma1_xor_trace_part_mem_of_reachable_to_or_from_anchor
+      hpattern hpart trans
+      (hreachableToOrFromHit trans trace hsequence hmem)
+
+theorem lemma1_xor_projection_branch_completion_witnesses_of_reachable_to_or_from_anchor
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hcompletionTraceReach :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            (Patterns.xorProjectionWorkflowNet hpattern hpart)
+            (WorkflowNet.initial
+              (Patterns.xorProjectionWorkflowNet hpattern hpart))
+            marking ->
+          ∃ anchor : {trans : Trans // part trans},
+            ∃ trace : List Trans,
+              WorkflowNet.FiringSequence
+                  net
+                  (Marking.extend marking)
+                  trace
+                  (WorkflowNet.final net) ∧
+                ∀ item, item ∈ trace ->
+                  item = anchor.val ∨
+                    PetriNet.transitionReachable net.toPetriNet anchor.val item ∨
+                    PetriNet.transitionReachable net.toPetriNet item anchor.val) :
+    ∀ marking :
+        Marking
+          {place : Place //
+            PetriNet.placesTouching net.toPetriNet part place},
+      WorkflowNet.reachable
+          (Patterns.xorProjectionWorkflowNet hpattern hpart)
+          (WorkflowNet.initial
+            (Patterns.xorProjectionWorkflowNet hpattern hpart))
+          marking ->
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+            net
+            (Marking.extend marking)
+            (trace.map Subtype.val)
+            (WorkflowNet.final net) := by
+  intro marking hreachable
+  rcases hcompletionTraceReach marking hreachable with
+    ⟨anchor, trace, hsequence, hreachableToOrFromAnchor⟩
+  have htracePart : ∀ item, item ∈ trace -> part item :=
+    lemma1_xor_trace_part_mem_of_reachable_to_or_from_anchor
+      hpattern hpart anchor hreachableToOrFromAnchor
+  rcases list_subtype_trace_of_forall_mem trace htracePart with
+    ⟨typedTrace, htypedTrace, _hmemTyped⟩
+  exact ⟨typedTrace, by simpa [htypedTrace] using hsequence⟩
+
+theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_reachable_branch_traces
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (hreachableToOrFromHit :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∀ item, item ∈ trace ->
+                item = trans.val ∨
+                  PetriNet.transitionReachable net.toPetriNet trans.val item ∨
+                  PetriNet.transitionReachable net.toPetriNet item trans.val)
+    (hcompletionTraceReach :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            (Patterns.xorProjectionWorkflowNet hpattern hpart)
+            (WorkflowNet.initial
+              (Patterns.xorProjectionWorkflowNet hpattern hpart))
+            marking ->
+          ∃ anchor : {trans : Trans // part trans},
+            ∃ trace : List Trans,
+              WorkflowNet.FiringSequence
+                  net
+                  (Marking.extend marking)
+                  trace
+                  (WorkflowNet.final net) ∧
+                ∀ item, item ∈ trace ->
+                  item = anchor.val ∨
+                    PetriNet.transitionReachable net.toPetriNet anchor.val item ∨
+                    PetriNet.transitionReachable net.toPetriNet item anchor.val) :
+    WorkflowNet.safeAndSound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_branch_completion_witnesses
+    hpattern hpart hsafeSound
+    (lemma1_xor_projection_trace_closed_of_accepting_trace_part_mem
+      (lemma1_xor_projection_accepting_trace_part_mem_of_reachable_to_or_from_hit
+        hpattern hpart hreachableToOrFromHit))
+    (lemma1_xor_projection_branch_completion_witnesses_of_reachable_to_or_from_anchor
+      hpattern hpart hcompletionTraceReach)
+
+theorem lemma1_xor_projection_accepting_trace_reachable_to_or_from_hit_of_split_reachability
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {part : Set Trans}
+    (hsplitReach :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace beforeHit afterHit preTrace suffix,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              preTrace
+              beforeHit ->
+          WorkflowNet.fires net beforeHit trans.val afterHit ->
+          WorkflowNet.FiringSequence
+              net
+              afterHit
+              suffix
+              (WorkflowNet.final net) ->
+          trace = preTrace ++ trans.val :: suffix ->
+            (∀ item, item ∈ preTrace ->
+              PetriNet.transitionReachable net.toPetriNet item trans.val) ∧
+            (∀ item, item ∈ suffix ->
+              PetriNet.transitionReachable net.toPetriNet trans.val item)) :
+    ∀ trans : {trans : Trans // part trans},
+      ∀ trace : List Trans,
+        WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            trace
+            (WorkflowNet.final net) ->
+          trans.val ∈ trace ->
+            ∀ item, item ∈ trace ->
+              item = trans.val ∨
+                PetriNet.transitionReachable net.toPetriNet trans.val item ∨
+                PetriNet.transitionReachable net.toPetriNet item trans.val := by
+  intro trans trace hsequence hmem item hitem
+  rcases WorkflowNet.firingSequence_split_at_mem hsequence hmem with
+    ⟨preTrace, beforeHit, afterHit, suffix,
+      htrace, hpreTrace, hfireHit, hsuffix⟩
+  rcases
+      hsplitReach
+        trans trace beforeHit afterHit preTrace suffix
+        hpreTrace hfireHit hsuffix htrace with
+    ⟨hpreReach, hsuffixReach⟩
+  have hitemSplit : item ∈ preTrace ++ trans.val :: suffix := by
+    simpa [htrace] using hitem
+  rcases List.mem_append.mp hitemSplit with hpreMem | hrestMem
+  · exact Or.inr (Or.inr (hpreReach item hpreMem))
+  · rcases List.mem_cons.mp hrestMem with hhit | hsuffixMem
+    · exact Or.inl hhit
+    · exact Or.inr (Or.inl (hsuffixReach item hsuffixMem))
+
+theorem lemma1_xor_projection_accepting_trace_part_mem_of_split_reachability
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsplitReach :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace beforeHit afterHit preTrace suffix,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              preTrace
+              beforeHit ->
+          WorkflowNet.fires net beforeHit trans.val afterHit ->
+          WorkflowNet.FiringSequence
+              net
+              afterHit
+              suffix
+              (WorkflowNet.final net) ->
+          trace = preTrace ++ trans.val :: suffix ->
+            (∀ item, item ∈ preTrace ->
+              PetriNet.transitionReachable net.toPetriNet item trans.val) ∧
+            (∀ item, item ∈ suffix ->
+              PetriNet.transitionReachable net.toPetriNet trans.val item)) :
+    ∀ trans : {trans : Trans // part trans},
+      ∀ trace : List Trans,
+        WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            trace
+            (WorkflowNet.final net) ->
+          trans.val ∈ trace ->
+            ∀ item, item ∈ trace -> part item :=
+  lemma1_xor_projection_accepting_trace_part_mem_of_reachable_to_or_from_hit
+    hpattern hpart
+    (lemma1_xor_projection_accepting_trace_reachable_to_or_from_hit_of_split_reachability
+      hsplitReach)
+
+theorem lemma1_xor_projection_completion_reachable_branch_traces_of_split_reachability
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hcompletionSplitReach :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            (Patterns.xorProjectionWorkflowNet hpattern hpart)
+            (WorkflowNet.initial
+              (Patterns.xorProjectionWorkflowNet hpattern hpart))
+            marking ->
+          ∃ anchor : {trans : Trans // part trans},
+            ∃ beforeHit afterHit preTrace suffix,
+              WorkflowNet.FiringSequence
+                  net
+                  (Marking.extend marking)
+                  preTrace
+                  beforeHit ∧
+                WorkflowNet.fires net beforeHit anchor.val afterHit ∧
+                  WorkflowNet.FiringSequence
+                    net
+                    afterHit
+                    suffix
+                    (WorkflowNet.final net) ∧
+                    (∀ item, item ∈ preTrace ->
+                      PetriNet.transitionReachable net.toPetriNet item anchor.val) ∧
+                    (∀ item, item ∈ suffix ->
+                      PetriNet.transitionReachable net.toPetriNet anchor.val item)) :
+    ∀ marking :
+        Marking
+          {place : Place //
+            PetriNet.placesTouching net.toPetriNet part place},
+      WorkflowNet.reachable
+          (Patterns.xorProjectionWorkflowNet hpattern hpart)
+          (WorkflowNet.initial
+            (Patterns.xorProjectionWorkflowNet hpattern hpart))
+          marking ->
+        ∃ anchor : {trans : Trans // part trans},
+          ∃ trace : List Trans,
+            WorkflowNet.FiringSequence
+                net
+                (Marking.extend marking)
+                trace
+                (WorkflowNet.final net) ∧
+              ∀ item, item ∈ trace ->
+                item = anchor.val ∨
+                  PetriNet.transitionReachable net.toPetriNet anchor.val item ∨
+                  PetriNet.transitionReachable net.toPetriNet item anchor.val := by
+  intro marking hreachable
+  rcases hcompletionSplitReach marking hreachable with
+    ⟨anchor, beforeHit, afterHit, preTrace, suffix,
+      hpreTrace, hfireHit, hsuffix, hpreReach, hsuffixReach⟩
+  let trace : List Trans := preTrace ++ anchor.val :: suffix
+  have hsequence :
+      WorkflowNet.FiringSequence
+        net
+        (Marking.extend marking)
+        trace
+        (WorkflowNet.final net) := by
+    exact
+      WorkflowNet.firingSequence_append
+        hpreTrace
+        (WorkflowNet.FiringSequence.cons hfireHit hsuffix)
+  have hreachableToOrFrom :
+      ∀ item, item ∈ trace ->
+        item = anchor.val ∨
+          PetriNet.transitionReachable net.toPetriNet anchor.val item ∨
+          PetriNet.transitionReachable net.toPetriNet item anchor.val := by
+    intro item hitem
+    rcases List.mem_append.mp hitem with hpreMem | hrestMem
+    · exact Or.inr (Or.inr (hpreReach item hpreMem))
+    · rcases List.mem_cons.mp hrestMem with hhit | hsuffixMem
+      · exact Or.inl hhit
+      · exact Or.inr (Or.inl (hsuffixReach item hsuffixMem))
+  exact ⟨anchor, trace, hsequence, hreachableToOrFrom⟩
+
+theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_split_reachability
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (hacceptingSplitReach :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace beforeHit afterHit preTrace suffix,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              preTrace
+              beforeHit ->
+          WorkflowNet.fires net beforeHit trans.val afterHit ->
+          WorkflowNet.FiringSequence
+              net
+              afterHit
+              suffix
+              (WorkflowNet.final net) ->
+          trace = preTrace ++ trans.val :: suffix ->
+            (∀ item, item ∈ preTrace ->
+              PetriNet.transitionReachable net.toPetriNet item trans.val) ∧
+            (∀ item, item ∈ suffix ->
+              PetriNet.transitionReachable net.toPetriNet trans.val item))
+    (hcompletionSplitReach :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            (Patterns.xorProjectionWorkflowNet hpattern hpart)
+            (WorkflowNet.initial
+              (Patterns.xorProjectionWorkflowNet hpattern hpart))
+            marking ->
+          ∃ anchor : {trans : Trans // part trans},
+            ∃ beforeHit afterHit preTrace suffix,
+              WorkflowNet.FiringSequence
+                  net
+                  (Marking.extend marking)
+                  preTrace
+                  beforeHit ∧
+                WorkflowNet.fires net beforeHit anchor.val afterHit ∧
+                  WorkflowNet.FiringSequence
+                    net
+                    afterHit
+                    suffix
+                    (WorkflowNet.final net) ∧
+                    (∀ item, item ∈ preTrace ->
+                      PetriNet.transitionReachable net.toPetriNet item anchor.val) ∧
+                    (∀ item, item ∈ suffix ->
+                      PetriNet.transitionReachable net.toPetriNet anchor.val item)) :
+    WorkflowNet.safeAndSound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_reachable_branch_traces
+    hpattern hpart hsafeSound
+    (lemma1_xor_projection_accepting_trace_reachable_to_or_from_hit_of_split_reachability
+      hacceptingSplitReach)
+    (lemma1_xor_projection_completion_reachable_branch_traces_of_split_reachability
+      hpattern hpart hcompletionSplitReach)
+
 theorem lemma1_xor_pattern_projection_workflow_net_of_indexed_part
     {Place : Type u}
     {Trans : Type v}
@@ -9773,6 +10196,142 @@ theorem lemma1_xor_pattern_projection_safe_and_sound_of_original_safe_and_sound_
           hpattern hpartMem hsafeSound
           hacceptingTracePart
           hcompletionTracePart⟩
+
+theorem lemma1_xor_pattern_projection_safe_and_sound_of_original_safe_and_sound_and_reachable_branch_traces_of_indexed_part
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    (hpart : Powl.listGet? partition.parts index = some part) :
+    ∃ projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans},
+      WorkflowNet.safeAndSound net ->
+      (∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∀ item, item ∈ trace ->
+                item = trans.val ∨
+                  PetriNet.transitionReachable net.toPetriNet trans.val item ∨
+                  PetriNet.transitionReachable net.toPetriNet item trans.val) ->
+      (∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            projection
+            (WorkflowNet.initial projection)
+            marking ->
+          ∃ anchor : {trans : Trans // part trans},
+            ∃ trace : List Trans,
+              WorkflowNet.FiringSequence
+                  net
+                  (Marking.extend marking)
+                  trace
+                  (WorkflowNet.final net) ∧
+                ∀ item, item ∈ trace ->
+                  item = anchor.val ∨
+                    PetriNet.transitionReachable net.toPetriNet anchor.val item ∨
+                    PetriNet.transitionReachable net.toPetriNet item anchor.val) ->
+        WorkflowNet.safeAndSound projection := by
+  have hpartMem : part ∈ partition.parts :=
+    Partition.mem_of_listGet? partition hpart
+  let projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans} :=
+    Patterns.xorProjectionWorkflowNet hpattern hpartMem
+  exact
+    ⟨projection,
+      fun hsafeSound hreachableToOrFromHit hcompletionTraceReach =>
+        lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_reachable_branch_traces
+          hpattern hpartMem hsafeSound
+          hreachableToOrFromHit
+          hcompletionTraceReach⟩
+
+theorem lemma1_xor_pattern_projection_safe_and_sound_of_original_safe_and_sound_and_split_reachability_of_indexed_part
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    (hpart : Powl.listGet? partition.parts index = some part) :
+    ∃ projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans},
+      WorkflowNet.safeAndSound net ->
+      (∀ trans : {trans : Trans // part trans},
+        ∀ trace beforeHit afterHit preTrace suffix,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              preTrace
+              beforeHit ->
+          WorkflowNet.fires net beforeHit trans.val afterHit ->
+          WorkflowNet.FiringSequence
+              net
+              afterHit
+              suffix
+              (WorkflowNet.final net) ->
+          trace = preTrace ++ trans.val :: suffix ->
+            (∀ item, item ∈ preTrace ->
+              PetriNet.transitionReachable net.toPetriNet item trans.val) ∧
+            (∀ item, item ∈ suffix ->
+              PetriNet.transitionReachable net.toPetriNet trans.val item)) ->
+      (∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            projection
+            (WorkflowNet.initial projection)
+            marking ->
+          ∃ anchor : {trans : Trans // part trans},
+            ∃ beforeHit afterHit preTrace suffix,
+              WorkflowNet.FiringSequence
+                  net
+                  (Marking.extend marking)
+                  preTrace
+                  beforeHit ∧
+                WorkflowNet.fires net beforeHit anchor.val afterHit ∧
+                  WorkflowNet.FiringSequence
+                    net
+                    afterHit
+                    suffix
+                    (WorkflowNet.final net) ∧
+                    (∀ item, item ∈ preTrace ->
+                      PetriNet.transitionReachable net.toPetriNet item anchor.val) ∧
+                    (∀ item, item ∈ suffix ->
+                      PetriNet.transitionReachable net.toPetriNet anchor.val item)) ->
+        WorkflowNet.safeAndSound projection := by
+  have hpartMem : part ∈ partition.parts :=
+    Partition.mem_of_listGet? partition hpart
+  let projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans} :=
+    Patterns.xorProjectionWorkflowNet hpattern hpartMem
+  exact
+    ⟨projection,
+      fun hsafeSound hacceptingSplitReach hcompletionSplitReach =>
+        lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_split_reachability
+          hpattern hpartMem hsafeSound
+          hacceptingSplitReach
+          hcompletionSplitReach⟩
 
 theorem lemma4_xor_projection_language_of_selected_original_sequence
     {Place : Type u}
