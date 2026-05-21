@@ -412,7 +412,9 @@ The current proof spine is:
   contracted marked-graph equivalence, no-return, acyclicity wrappers, direct
   reusable execution-order no-return and partition-contraction no-return/acyclic
   strict-order wrappers with relation equalities, direct partition-contraction
-  no-return partial-order pattern wrappers, and a
+  no-return partial-order pattern wrappers, generic partial-order-pattern
+  strict-order relation, irreflexivity, transitivity, no-return, and contraction
+  acyclicity accessors, direct Definition 13 field accessors, and a
   bundled contraction certificate that builds the partial-order pattern and
   strict partial order, with explicit relation-equality wrappers for all
   contraction-certificate variants, plus sound-contraction and

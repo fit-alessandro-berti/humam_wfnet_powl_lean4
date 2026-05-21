@@ -1506,6 +1506,132 @@ theorem partial_order_pattern_execution_order_asymmetric
       (TransGen (Patterns.executionOrder net partition)) :=
   Patterns.partialOrderPattern_asymmetric net partition hpattern
 
+theorem partial_order_pattern_has_at_least_two_parts
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    partition.hasAtLeastTwoParts :=
+  Patterns.partialOrderPattern_hasAtLeastTwoParts
+    net partition hpattern
+
+theorem partial_order_pattern_decision_same_part
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    ∀ place left right,
+      Patterns.reachesFromPostset net place left ->
+      Patterns.reachesFromPostset net place right ->
+        partition.samePart left right :=
+  Patterns.partialOrderPattern_decision_samePart
+    net partition hpattern
+
+theorem partial_order_pattern_entry_places_equivalent_all
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    ∀ index part leftPlace rightPlace,
+      Powl.listGet? partition.parts index = some part ->
+      WorkflowNet.entryPoints net part leftPlace ->
+      WorkflowNet.entryPoints net part rightPlace ->
+        PetriNet.placeEquivalentWrt
+          net.toPetriNet part leftPlace rightPlace :=
+  Patterns.partialOrderPattern_entry_placeEquivalent_all
+    net partition hpattern
+
+theorem partial_order_pattern_exit_places_equivalent_all
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    ∀ index part leftPlace rightPlace,
+      Powl.listGet? partition.parts index = some part ->
+      WorkflowNet.exitPoints net part leftPlace ->
+      WorkflowNet.exitPoints net part rightPlace ->
+        PetriNet.placeEquivalentWrt
+          net.toPetriNet part leftPlace rightPlace :=
+  Patterns.partialOrderPattern_exit_placeEquivalent_all
+    net partition hpattern
+
+def partial_order_pattern_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    StrictPartialOrder Nat :=
+  Patterns.partialOrderPattern_strictPartialOrder
+    net partition hpattern
+
+theorem partial_order_pattern_strict_partial_order_rel
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    (partial_order_pattern_strict_partial_order hpattern).rel =
+      TransGen (Patterns.executionOrder net partition) :=
+  Patterns.partialOrderPattern_strictPartialOrder_rel
+    net partition hpattern
+
+theorem partial_order_pattern_execution_order_irreflexive
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    Irreflexive
+      (TransGen (Patterns.executionOrder net partition)) :=
+  Patterns.partialOrderPattern_irreflexive net partition hpattern
+
+theorem partial_order_pattern_execution_order_transitive
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    Transitive
+      (TransGen (Patterns.executionOrder net partition)) :=
+  Patterns.partialOrderPattern_transitive net partition hpattern
+
+theorem partial_order_pattern_execution_order_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    Patterns.executionOrderNoReturn net partition :=
+  Patterns.executionOrderNoReturn_of_partialOrderPattern
+    net partition hpattern
+
+theorem partial_order_pattern_partition_contraction_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    PetriNet.transitionFlowNoReturn
+      (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContraction_transitionFlowNoReturn_of_partialOrderPattern
+    net partition hpattern
+
+theorem partial_order_pattern_partition_contraction_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    PetriNet.transitionFlowAcyclic
+      (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContraction_transitionFlowAcyclic_of_partialOrderPattern
+    net partition hpattern
+
 theorem indexed_component_mem
     {alpha : Type u}
     (partition : Partition alpha)
@@ -2879,6 +3005,29 @@ theorem lemma3_execution_order_of_boundary
     Patterns.executionOrder net partition left right :=
   Patterns.executionOrder_of_boundary
     net partition hleft hright hexit hentry
+
+theorem lemma3_partial_order_pattern_has_at_least_two_parts
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    partition.hasAtLeastTwoParts :=
+  Patterns.partialOrderPattern_hasAtLeastTwoParts
+    net partition hpattern
+
+theorem lemma3_partial_order_pattern_decision_same_part
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    ∀ place left right,
+      Patterns.reachesFromPostset net place left ->
+      Patterns.reachesFromPostset net place right ->
+        partition.samePart left right :=
+  Patterns.partialOrderPattern_decision_samePart
+    net partition hpattern
 
 theorem lemma3_partial_order_pattern_no_self_execution_order
     {Place : Type u}
@@ -20850,6 +20999,38 @@ theorem theorem2_case3_execution_order_no_return_iff_irreflexive
       Irreflexive
         (TransGen (Patterns.executionOrder net partition)) :=
   Patterns.executionOrderNoReturn_iff_irreflexive net partition
+
+theorem theorem2_case3_execution_order_no_return_of_partial_order_pattern
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    Patterns.executionOrderNoReturn net partition :=
+  Patterns.executionOrderNoReturn_of_partialOrderPattern
+    net partition hpattern
+
+theorem theorem2_case3_partition_contraction_no_return_of_partial_order_pattern
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    PetriNet.transitionFlowNoReturn
+      (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContraction_transitionFlowNoReturn_of_partialOrderPattern
+    net partition hpattern
+
+theorem theorem2_case3_partition_contraction_acyclic_of_partial_order_pattern
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    PetriNet.transitionFlowAcyclic
+      (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContraction_transitionFlowAcyclic_of_partialOrderPattern
+    net partition hpattern
 
 def theorem2_case3_execution_order_strict_partial_order_of_no_return
     {Place : Type u}
