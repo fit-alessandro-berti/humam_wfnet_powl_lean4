@@ -1698,6 +1698,49 @@ theorem partial_order_pattern_iff_exists_strict_partial_order
   Patterns.partialOrderPattern_iff_exists_strictPartialOrder
     net partition
 
+theorem partial_order_pattern_exists_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.partialOrderPattern_exists_strictPartialOrder
+    net partition hpattern
+
+theorem partial_order_pattern_of_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (order : StrictPartialOrder Nat)
+    (horderRel :
+      order.rel = TransGen (Patterns.executionOrder net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    Patterns.partialOrderPattern net partition :=
+  Patterns.partialOrderPattern_of_strictPartialOrder
+    net partition hparts hsamePart order horderRel hentry hexit
+
 def partial_order_pattern_strict_partial_order
     {Place : Type u}
     {Trans : Type v}
@@ -21310,6 +21353,49 @@ theorem theorem2_case3_partial_order_pattern_iff_exists_strict_partial_order
   Patterns.partialOrderPattern_iff_exists_strictPartialOrder
     net partition
 
+theorem theorem2_case3_partial_order_pattern_exists_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.partialOrderPattern net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.partialOrderPattern_exists_strictPartialOrder
+    net partition hpattern
+
+theorem theorem2_case3_partial_order_pattern_of_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (order : StrictPartialOrder Nat)
+    (horderRel :
+      order.rel = TransGen (Patterns.executionOrder net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    Patterns.partialOrderPattern net partition :=
+  Patterns.partialOrderPattern_of_strictPartialOrder
+    net partition hparts hsamePart order horderRel hentry hexit
+
 def theorem2_case3_execution_order_strict_partial_order_of_no_return
     {Place : Type u}
     {Trans : Type v}
@@ -21330,6 +21416,67 @@ theorem theorem2_case3_execution_order_strict_partial_order_of_no_return_rel
       hnoReturn).rel =
       TransGen (Patterns.executionOrder net partition) :=
   rfl
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_of_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hnoReturn : Patterns.executionOrderNoReturn net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_of_noReturn
+    net partition hnoReturn
+
+theorem theorem2_case3_execution_order_no_return_of_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (order : StrictPartialOrder Nat)
+    (horderRel :
+      order.rel = TransGen (Patterns.executionOrder net partition)) :
+    Patterns.executionOrderNoReturn net partition :=
+  Patterns.executionOrderNoReturn_of_strictPartialOrder
+    net partition order horderRel
+
+theorem theorem2_case3_execution_order_no_return_iff_exists_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    Patterns.executionOrderNoReturn net partition ↔
+      ∃ order : StrictPartialOrder Nat,
+        order.rel =
+          TransGen (Patterns.executionOrder net partition) :=
+  Patterns.executionOrderNoReturn_iff_exists_strictPartialOrder
+    net partition
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_iff_partition_contraction_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    (∃ order : StrictPartialOrder Nat,
+      order.rel =
+        TransGen (Patterns.executionOrder net partition)) ↔
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContraction net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_iff_partitionContraction_noReturn
+    net partition
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_iff_partition_contraction_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    (∃ order : StrictPartialOrder Nat,
+      order.rel =
+        TransGen (Patterns.executionOrder net partition)) ↔
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContraction net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_iff_partitionContraction_acyclic
+    net partition
 
 def theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_no_return
     {Place : Type u}
@@ -21356,6 +21503,19 @@ theorem theorem2_case3_execution_order_strict_partial_order_of_partition_contrac
       TransGen (Patterns.executionOrder net partition) :=
   rfl
 
+theorem theorem2_case3_execution_order_exists_strict_partial_order_of_partition_contraction_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContraction net partition)) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_of_partitionContraction_noReturn
+    net partition hnoReturn
+
 def theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_acyclic
     {Place : Type u}
     {Trans : Type v}
@@ -21380,6 +21540,19 @@ theorem theorem2_case3_execution_order_strict_partial_order_of_partition_contrac
       hacyclic).rel =
       TransGen (Patterns.executionOrder net partition) :=
   rfl
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_of_partition_contraction_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContraction net partition)) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_of_partitionContraction_acyclic
+    net partition hacyclic
 
 theorem theorem2_case3_partial_order_pattern_of_no_return
     {Place : Type u}
@@ -27004,6 +27177,26 @@ theorem theorem2_marked_graph_transition_flow_cycle_set_firing_support
   WorkflowNet.markedGraph_transitionFlow_cycle_setFiringSupport
     hmarked hflow hreturn
 
+theorem theorem2_transition_flow_acyclic_iff_exists_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : PetriNet Place Trans} :
+    PetriNet.transitionFlowAcyclic net ↔
+      ∃ order : StrictPartialOrder Trans,
+        order.rel =
+          TransGen (PetriNet.transitionFlow net) :=
+  PetriNet.transitionFlowAcyclic_iff_exists_strictPartialOrder net
+
+theorem theorem2_transition_flow_no_return_iff_exists_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    {net : PetriNet Place Trans} :
+    PetriNet.transitionFlowNoReturn net ↔
+      ∃ order : StrictPartialOrder Trans,
+        order.rel =
+          TransGen (PetriNet.transitionFlow net) :=
+  PetriNet.transitionFlowNoReturn_iff_exists_strictPartialOrder net
+
 theorem theorem2_marked_graph_sound_transition_flow_no_return
     {Place : Type u}
     {Trans : Type v}
@@ -27076,6 +27269,21 @@ theorem theorem2_marked_graph_sound_transition_flow_strict_partial_order_rel
       TransGen (PetriNet.transitionFlow net.toPetriNet) :=
   rfl
 
+theorem theorem2_marked_graph_sound_transition_flow_exists_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsound : WorkflowNet.sound net) :
+    ∃ order : StrictPartialOrder Trans,
+      order.rel =
+        TransGen (PetriNet.transitionFlow net.toPetriNet) :=
+  PetriNet.transitionFlow_exists_strictPartialOrder
+    net.toPetriNet
+    (theorem2_marked_graph_sound_transition_flow_acyclic
+      hmarked hsound)
+
 theorem theorem2_marked_graph_safe_and_sound_transition_flow_no_return
     {Place : Type u}
     {Trans : Type v}
@@ -27147,6 +27355,21 @@ theorem theorem2_marked_graph_safe_and_sound_transition_flow_strict_partial_orde
       hmarked hsafeSound).rel =
       TransGen (PetriNet.transitionFlow net.toPetriNet) :=
   rfl
+
+theorem theorem2_marked_graph_safe_and_sound_transition_flow_exists_strict_partial_order
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hmarked : PetriNet.markedGraph net.toPetriNet)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    ∃ order : StrictPartialOrder Trans,
+      order.rel =
+        TransGen (PetriNet.transitionFlow net.toPetriNet) :=
+  PetriNet.transitionFlow_exists_strictPartialOrder
+    net.toPetriNet
+    (theorem2_marked_graph_safe_and_sound_transition_flow_acyclic
+      hmarked hsafeSound)
 
 theorem theorem2_sound_transition_flow_no_return_of_cycle_firing_support
     {Place : Type u}

@@ -4091,6 +4091,69 @@ theorem executionOrderNoReturnStrictPartialOrder_rel
       TransGen (executionOrder net partition) :=
   rfl
 
+theorem executionOrder_exists_strictPartialOrder_of_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hnoReturn : executionOrderNoReturn net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition) :=
+  ⟨executionOrderNoReturnStrictPartialOrder
+      net partition hnoReturn,
+    rfl⟩
+
+theorem executionOrderNoReturn_of_strictPartialOrder
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (order : StrictPartialOrder Nat)
+    (horderRel :
+      order.rel = TransGen (executionOrder net partition)) :
+    executionOrderNoReturn net partition := by
+  have hirrefl :
+      Irreflexive (TransGen (executionOrder net partition)) := by
+    rw [← horderRel]
+    exact order.irrefl
+  exact
+    (executionOrderNoReturn_iff_irreflexive
+      net partition).mpr hirrefl
+
+theorem executionOrderNoReturn_iff_exists_strictPartialOrder
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    executionOrderNoReturn net partition ↔
+      ∃ order : StrictPartialOrder Nat,
+        order.rel = TransGen (executionOrder net partition) := by
+  constructor
+  · exact executionOrder_exists_strictPartialOrder_of_noReturn
+      net partition
+  · intro horder
+    rcases horder with ⟨order, horderRel⟩
+    exact executionOrderNoReturn_of_strictPartialOrder
+      net partition order horderRel
+
+theorem executionOrder_exists_strictPartialOrder_iff_partitionContraction_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    (∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition)) ↔
+      PetriNet.transitionFlowNoReturn
+        (partitionContraction net partition) :=
+  (executionOrderNoReturn_iff_exists_strictPartialOrder
+    net partition).symm.trans
+    (executionOrderNoReturn_iff_partitionContraction_noReturn
+      net partition)
+
+theorem executionOrder_exists_strictPartialOrder_iff_partitionContraction_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    (∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition)) ↔
+      PetriNet.transitionFlowAcyclic
+        (partitionContraction net partition) :=
+  (executionOrder_exists_strictPartialOrder_iff_partitionContraction_noReturn
+    net partition).trans
+    (PetriNet.transitionFlowNoReturn_iff_acyclic
+      (partitionContraction net partition))
+
 theorem executionOrderNoReturn_asymmetric
     {net : WorkflowNet Place Trans}
     {partition : Partition Trans}
@@ -4122,6 +4185,18 @@ theorem executionOrderStrictPartialOrder_of_partitionContraction_noReturn_rel
       net partition hnoReturn).rel =
       TransGen (executionOrder net partition) :=
   rfl
+
+theorem executionOrder_exists_strictPartialOrder_of_partitionContraction_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (partitionContraction net partition)) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition) :=
+  ⟨executionOrderStrictPartialOrder_of_partitionContraction_noReturn
+      net partition hnoReturn,
+    rfl⟩
 
 theorem executionOrder_asymmetric_of_partitionContraction_noReturn
     {net : WorkflowNet Place Trans}
@@ -4156,6 +4231,18 @@ theorem executionOrderStrictPartialOrder_of_partitionContraction_acyclic_rel
       net partition hacyclic).rel =
       TransGen (executionOrder net partition) :=
   rfl
+
+theorem executionOrder_exists_strictPartialOrder_of_partitionContraction_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (partitionContraction net partition)) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition) :=
+  ⟨executionOrderStrictPartialOrder_of_partitionContraction_acyclic
+      net partition hacyclic,
+    rfl⟩
 
 theorem executionOrder_asymmetric_of_partitionContraction_acyclic
     {net : WorkflowNet Place Trans}
@@ -4679,6 +4766,55 @@ theorem partialOrderPattern_strictPartialOrder_rel
       TransGen (executionOrder net partition) :=
   rfl
 
+theorem partialOrderPattern_exists_strictPartialOrder
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hpattern : partialOrderPattern net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition) :=
+  ⟨partialOrderPattern_strictPartialOrder net partition hpattern, rfl⟩
+
+theorem partialOrderPattern_of_strictPartialOrder
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (order : StrictPartialOrder Nat)
+    (horderRel :
+      order.rel = TransGen (executionOrder net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    partialOrderPattern net partition := by
+  have hirrefl :
+      Irreflexive (TransGen (executionOrder net partition)) := by
+    rw [← horderRel]
+    exact order.irrefl
+  exact
+    partialOrderPattern_of_irreflexive_execution_order
+      net
+      partition
+      hparts
+      hsamePart
+      hirrefl
+      hentry
+      hexit
+
 theorem partialOrderPattern_iff_exists_strictPartialOrder
     (net : WorkflowNet Place Trans)
     (partition : Partition Trans) :
@@ -4707,25 +4843,20 @@ theorem partialOrderPattern_iff_exists_strictPartialOrder
     exact
       ⟨hpattern.1,
         hpattern.2.1,
-        ⟨partialOrderPattern_strictPartialOrder
+        partialOrderPattern_exists_strictPartialOrder
           net partition hpattern,
-          partialOrderPattern_strictPartialOrder_rel
-            net partition hpattern⟩,
         hpattern.2.2.2.1,
         hpattern.2.2.2.2⟩
   · intro hpattern
     rcases hpattern.2.2.1 with ⟨order, horderRel⟩
-    have hirrefl :
-        Irreflexive (TransGen (executionOrder net partition)) := by
-      rw [← horderRel]
-      exact order.irrefl
     exact
-      partialOrderPattern_of_irreflexive_execution_order
+      partialOrderPattern_of_strictPartialOrder
         net
         partition
         hpattern.1
         hpattern.2.1
-        hirrefl
+        order
+        horderRel
         hpattern.2.2.2.1
         hpattern.2.2.2.2
 

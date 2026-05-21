@@ -677,6 +677,42 @@ theorem transitionFlowNoReturnStrictPartialOrder_rel
       TransGen (transitionFlow net) :=
   rfl
 
+theorem transitionFlow_exists_strictPartialOrder
+    (net : PetriNet Place Trans)
+    (hacyclic : transitionFlowAcyclic net) :
+    ∃ order : StrictPartialOrder Trans,
+      order.rel = TransGen (transitionFlow net) :=
+  ⟨transitionFlowStrictPartialOrder net hacyclic, rfl⟩
+
+theorem transitionFlowAcyclic_of_strictPartialOrder
+    (net : PetriNet Place Trans)
+    (order : StrictPartialOrder Trans)
+    (horderRel :
+      order.rel = TransGen (transitionFlow net)) :
+    transitionFlowAcyclic net := by
+  rw [transitionFlowAcyclic, ← horderRel]
+  exact order.irrefl
+
+theorem transitionFlowAcyclic_iff_exists_strictPartialOrder
+    (net : PetriNet Place Trans) :
+    transitionFlowAcyclic net ↔
+      ∃ order : StrictPartialOrder Trans,
+        order.rel = TransGen (transitionFlow net) := by
+  constructor
+  · exact transitionFlow_exists_strictPartialOrder net
+  · intro horder
+    rcases horder with ⟨order, horderRel⟩
+    exact transitionFlowAcyclic_of_strictPartialOrder
+      net order horderRel
+
+theorem transitionFlowNoReturn_iff_exists_strictPartialOrder
+    (net : PetriNet Place Trans) :
+    transitionFlowNoReturn net ↔
+      ∃ order : StrictPartialOrder Trans,
+        order.rel = TransGen (transitionFlow net) :=
+  (transitionFlowNoReturn_iff_acyclic net).trans
+    (transitionFlowAcyclic_iff_exists_strictPartialOrder net)
+
 theorem transitionFlowAcyclic_asymmetric
     {net : PetriNet Place Trans}
     (hacyclic : transitionFlowAcyclic net) :

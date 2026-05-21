@@ -411,13 +411,16 @@ The current proof spine is:
   rewrite forms and transition-equality corollaries, Case 3 contraction,
   contracted marked-graph equivalence, no-return, acyclicity wrappers, direct
   reusable execution-order no-return and partition-contraction no-return/acyclic
-  strict-order wrappers with relation equalities, direct partition-contraction
-  no-return partial-order pattern wrappers, generic partial-order-pattern
+  strict-order wrappers with relation equalities, existential strict-order
+  witnesses, and reverse/`↔` bridges, direct partition-contraction no-return
+  partial-order pattern wrappers, generic partial-order-pattern
   strict-order relation, irreflexivity, transitivity, no-return, and contraction
   acyclicity accessors, direct Definition 13 field accessors and exact bundled
   generic/Case 3 `↔` forms through irreflexive execution order,
-  existential strict partial orders, execution-order no-return, and contraction
-  no-return/acyclicity, and a
+  existential strict partial orders with named constructor/projector bridges,
+  execution-order no-return, and contraction no-return/acyclicity, transition-flow
+  strict-order existence equivalences and marked-graph sound/safe-and-sound
+  existence wrappers, and a
   bundled contraction certificate that builds the partial-order pattern and
   strict partial order, with explicit relation-equality wrappers for all
   contraction-certificate variants, plus sound-contraction and
