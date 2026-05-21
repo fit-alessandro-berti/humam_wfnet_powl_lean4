@@ -24886,6 +24886,54 @@ theorem theorem2_completeness_xor_safe_and_explicit_language_eq_of_split_decisio
     theorem2_completeness_xor_explicit_language_eq_of_split_decision_branch_certificate
       certificate hsource hsink⟩
 
+theorem theorem2_completeness_xor_exists_explicit_powl_model_of_split_decision_branch_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    (certificate :
+      SemiBlockSplitDecisionXorBranchConversionCertificate
+        net label split)
+    (hsource : split = net.source)
+    (hsink : certificate.package.pair split = net.sink) :
+    ∃ model : Powl Trans,
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language label model word :=
+  ⟨Powl.xor
+      (certificate.branches.map
+        (fun branch => Powl.map Subtype.val branch.2)),
+    theorem2_completeness_xor_explicit_language_preservation_of_split_decision_branch_certificate
+      certificate hsource hsink⟩
+
+theorem theorem2_completeness_xor_safe_and_exists_explicit_powl_model_of_split_decision_branch_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      SemiBlockSplitDecisionXorBranchConversionCertificate
+        net label split)
+    (hsource : split = net.source)
+    (hsink : certificate.package.pair split = net.sink) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ model : Powl Trans,
+        ∀ word,
+          WorkflowNet.language net label word ↔
+            Powl.language label model word :=
+  ⟨WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements,
+    theorem2_completeness_xor_exists_explicit_powl_model_of_split_decision_branch_certificate
+      certificate hsource hsink⟩
+
 theorem theorem2_completeness_xor_exists_explicit_powl_model_language_eq_of_split_decision_branch_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -25033,6 +25081,57 @@ theorem theorem2_completeness_xor_safe_and_exists_explicit_powl_model_visible_ac
       hrequirements,
     theorem2_completeness_xor_exists_explicit_powl_model_visible_activity_language_witness_of_split_decision_branch_certificate
       hrequirements certificate hsource hsink hlabel⟩
+
+theorem theorem2_completeness_xor_exists_powl_model_of_split_decision_branch_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      SemiBlockSplitDecisionXorBranchConversionCertificate
+        net label split)
+    (hsource : split = net.source)
+    (hsink : certificate.package.pair split = net.sink) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  theorem2_completeness_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_xor_semi_block_certified_conversion_of_split_decision_branch_certificate
+      hrequirements certificate hsource hsink)
+
+theorem theorem2_completeness_xor_safe_and_exists_powl_model_of_split_decision_branch_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      SemiBlockSplitDecisionXorBranchConversionCertificate
+        net label split)
+    (hsource : split = net.source)
+    (hsink : certificate.package.pair split = net.sink) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  theorem2_completeness_safe_and_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_xor_semi_block_certified_conversion_of_split_decision_branch_certificate
+      hrequirements certificate hsource hsink)
 
 theorem theorem2_completeness_xor_exists_powl_model_language_eq_of_split_decision_branch_certificate
     {Place : Type u}
@@ -25385,6 +25484,254 @@ theorem theorem2_completeness_partial_order_language_eq_of_split_decision_packag
           (order := order)
           hrequirements package branches certificates hdecompose hsource hsink).conversion.model :=
   theorem2_completeness_language_eq_of_semi_block_certified_conversion
+    (theorem2_completeness_partial_order_semi_block_certified_conversion_of_split_decision_package_certified_branches
+      (order := order)
+      hrequirements package branches certificates hdecompose hsource hsink)
+
+theorem theorem2_completeness_xor_exists_powl_model_of_split_decision_package_certified_branches
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (package : SemiBlockSplitDecisionBranchPackage net split)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // package.branches branch trans}))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split (package.pair split)
+                  (package.branches branch.1) place}
+            {trans : Trans // package.branches branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = package.pair split ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // package.branches branch.1 trans}
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage
+            net label split (package.pair split) word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (package.branches branch.1)
+                  split (package.pair split)))
+            word)
+    (hsource : split = net.source)
+    (hsink : package.pair split = net.sink) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  theorem2_completeness_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_xor_semi_block_certified_conversion_of_split_decision_package_certified_branches
+      hrequirements package branches certificates hdecompose hsource hsink)
+
+theorem theorem2_completeness_xor_safe_and_exists_powl_model_of_split_decision_package_certified_branches
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (package : SemiBlockSplitDecisionBranchPackage net split)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // package.branches branch trans}))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split (package.pair split)
+                  (package.branches branch.1) place}
+            {trans : Trans // package.branches branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = package.pair split ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // package.branches branch.1 trans}
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage
+            net label split (package.pair split) word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (package.branches branch.1)
+                  split (package.pair split)))
+            word)
+    (hsource : split = net.source)
+    (hsink : package.pair split = net.sink) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  theorem2_completeness_safe_and_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_xor_semi_block_certified_conversion_of_split_decision_package_certified_branches
+      hrequirements package branches certificates hdecompose hsource hsink)
+
+theorem theorem2_completeness_partial_order_exists_powl_model_of_split_decision_package_certified_branches
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    {order : Rel Nat}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (package : SemiBlockSplitDecisionBranchPackage net split)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // package.branches branch trans}))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split (package.pair split)
+                  (package.branches branch.1) place}
+            {trans : Trans // package.branches branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = package.pair split ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // package.branches branch.1 trans}
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage
+            net label split (package.pair split) word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (package.branches branch.1)
+                  split (package.pair split)))
+            word)
+    (hsource : split = net.source)
+    (hsink : package.pair split = net.sink) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  theorem2_completeness_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_partial_order_semi_block_certified_conversion_of_split_decision_package_certified_branches
+      (order := order)
+      hrequirements package branches certificates hdecompose hsource hsink)
+
+theorem theorem2_completeness_partial_order_safe_and_exists_powl_model_of_split_decision_package_certified_branches
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    {order : Rel Nat}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (package : SemiBlockSplitDecisionBranchPackage net split)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // package.branches branch trans}))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split (package.pair split)
+                  (package.branches branch.1) place}
+            {trans : Trans // package.branches branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = package.pair split ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // package.branches branch.1 trans}
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage
+            net label split (package.pair split) word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (package.branches branch.1)
+                  split (package.pair split)))
+            word)
+    (hsource : split = net.source)
+    (hsink : package.pair split = net.sink) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  theorem2_completeness_safe_and_exists_powl_model_of_semi_block_certified_conversion
     (theorem2_completeness_partial_order_semi_block_certified_conversion_of_split_decision_package_certified_branches
       (order := order)
       hrequirements package branches certificates hdecompose hsource hsink)
@@ -26178,6 +26525,56 @@ theorem theorem2_completeness_partial_order_safe_and_explicit_language_eq_of_spl
     theorem2_completeness_partial_order_explicit_language_eq_of_split_decision_branch_certificate
       (order := order) certificate hsource hsink⟩
 
+theorem theorem2_completeness_partial_order_exists_explicit_powl_model_of_split_decision_branch_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    {order : Rel Nat}
+    (certificate :
+      SemiBlockSplitDecisionPartialOrderBranchConversionCertificate
+        net label split order)
+    (hsource : split = net.source)
+    (hsink : certificate.package.pair split = net.sink) :
+    ∃ model : Powl Trans,
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language label model word :=
+  ⟨Powl.partialOrder order
+      (certificate.branches.map
+        (fun branch => Powl.map Subtype.val branch.2)),
+    theorem2_completeness_partial_order_explicit_language_preservation_of_split_decision_branch_certificate
+      (order := order) certificate hsource hsink⟩
+
+theorem theorem2_completeness_partial_order_safe_and_exists_explicit_powl_model_of_split_decision_branch_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    {order : Rel Nat}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      SemiBlockSplitDecisionPartialOrderBranchConversionCertificate
+        net label split order)
+    (hsource : split = net.source)
+    (hsink : certificate.package.pair split = net.sink) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ model : Powl Trans,
+        ∀ word,
+          WorkflowNet.language net label word ↔
+            Powl.language label model word :=
+  ⟨WorkflowNet.semiBlockStructuredSubnetRequirements_safeAndSound
+      hrequirements,
+    theorem2_completeness_partial_order_exists_explicit_powl_model_of_split_decision_branch_certificate
+      (order := order) certificate hsource hsink⟩
+
 theorem theorem2_completeness_partial_order_exists_explicit_powl_model_language_eq_of_split_decision_branch_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -26330,6 +26727,59 @@ theorem theorem2_completeness_partial_order_safe_and_exists_explicit_powl_model_
       hrequirements,
     theorem2_completeness_partial_order_exists_explicit_powl_model_visible_activity_language_witness_of_split_decision_branch_certificate
       hrequirements certificate hsource hsink hlabel⟩
+
+theorem theorem2_completeness_partial_order_exists_powl_model_of_split_decision_branch_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    {order : Rel Nat}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      SemiBlockSplitDecisionPartialOrderBranchConversionCertificate
+        net label split order)
+    (hsource : split = net.source)
+    (hsink : certificate.package.pair split = net.sink) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  theorem2_completeness_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_partial_order_semi_block_certified_conversion_of_split_decision_branch_certificate
+      hrequirements certificate hsource hsink)
+
+theorem theorem2_completeness_partial_order_safe_and_exists_powl_model_of_split_decision_branch_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    {order : Rel Nat}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (certificate :
+      SemiBlockSplitDecisionPartialOrderBranchConversionCertificate
+        net label split order)
+    (hsource : split = net.source)
+    (hsink : certificate.package.pair split = net.sink) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  theorem2_completeness_safe_and_exists_powl_model_of_semi_block_certified_conversion
+    (theorem2_completeness_partial_order_semi_block_certified_conversion_of_split_decision_branch_certificate
+      hrequirements certificate hsource hsink)
 
 theorem theorem2_completeness_partial_order_exists_powl_model_language_eq_of_split_decision_branch_certificate
     {Place : Type u}
@@ -26658,6 +27108,124 @@ theorem theorem2_completeness_xor_safe_and_explicit_language_eq_of_split_decisio
       package branches certificates hdecompose)
     hsource hsink
 
+theorem theorem2_completeness_xor_exists_explicit_powl_model_of_split_decision_package_certified_branches
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    (package : SemiBlockSplitDecisionBranchPackage net split)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // package.branches branch trans}))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split (package.pair split)
+                  (package.branches branch.1) place}
+            {trans : Trans // package.branches branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = package.pair split ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // package.branches branch.1 trans}
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage
+            net label split (package.pair split) word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (package.branches branch.1)
+                  split (package.pair split)))
+            word)
+    (hsource : split = net.source)
+    (hsink : package.pair split = net.sink) :
+    ∃ model : Powl Trans,
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language label model word :=
+  theorem2_completeness_xor_exists_explicit_powl_model_of_split_decision_branch_certificate
+    (theorem2_semi_block_split_decision_xor_branch_certificate
+      package branches certificates hdecompose)
+    hsource hsink
+
+theorem theorem2_completeness_xor_safe_and_exists_explicit_powl_model_of_split_decision_package_certified_branches
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (package : SemiBlockSplitDecisionBranchPackage net split)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // package.branches branch trans}))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split (package.pair split)
+                  (package.branches branch.1) place}
+            {trans : Trans // package.branches branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = package.pair split ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // package.branches branch.1 trans}
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage
+            net label split (package.pair split) word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (package.branches branch.1)
+                  split (package.pair split)))
+            word)
+    (hsource : split = net.source)
+    (hsink : package.pair split = net.sink) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ model : Powl Trans,
+        ∀ word,
+          WorkflowNet.language net label word ↔
+            Powl.language label model word :=
+  theorem2_completeness_xor_safe_and_exists_explicit_powl_model_of_split_decision_branch_certificate
+    hrequirements
+    (theorem2_semi_block_split_decision_xor_branch_certificate
+      package branches certificates hdecompose)
+    hsource hsink
+
 theorem theorem2_completeness_xor_exists_explicit_powl_model_language_eq_of_split_decision_package_certified_branches
     {Place : Type u}
     {Trans : Type v}
@@ -26957,6 +27525,130 @@ theorem theorem2_completeness_partial_order_safe_and_explicit_language_eq_of_spl
             (branches.map
               (fun branch => Powl.map Subtype.val branch.2))) :=
   theorem2_completeness_partial_order_safe_and_explicit_language_eq_of_split_decision_branch_certificate
+    (order := order)
+    hrequirements
+    (theorem2_semi_block_split_decision_partial_order_branch_certificate
+      (order := order) package branches certificates hdecompose)
+    hsource hsink
+
+theorem theorem2_completeness_partial_order_exists_explicit_powl_model_of_split_decision_package_certified_branches
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    {order : Rel Nat}
+    (package : SemiBlockSplitDecisionBranchPackage net split)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // package.branches branch trans}))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split (package.pair split)
+                  (package.branches branch.1) place}
+            {trans : Trans // package.branches branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = package.pair split ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // package.branches branch.1 trans}
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage
+            net label split (package.pair split) word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (package.branches branch.1)
+                  split (package.pair split)))
+            word)
+    (hsource : split = net.source)
+    (hsink : package.pair split = net.sink) :
+    ∃ model : Powl Trans,
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language label model word :=
+  theorem2_completeness_partial_order_exists_explicit_powl_model_of_split_decision_branch_certificate
+    (order := order)
+    (theorem2_semi_block_split_decision_partial_order_branch_certificate
+      (order := order) package branches certificates hdecompose)
+    hsource hsink
+
+theorem theorem2_completeness_partial_order_safe_and_exists_explicit_powl_model_of_split_decision_package_certified_branches
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {split : Place}
+    {order : Rel Nat}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    (package : SemiBlockSplitDecisionBranchPackage net split)
+    (branches : List
+      (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+        Powl {trans : Trans // package.branches branch trans}))
+    (certificates :
+      ∀ (branch :
+          Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})
+        (restricted :
+          WorkflowNet
+            {place : Place //
+              WorkflowNet.decisionBranchPlaceSet
+                net split (package.pair split)
+                  (package.branches branch.1) place}
+            {trans : Trans // package.branches branch.1 trans}),
+        restricted.source.val = split ->
+        restricted.sink.val = package.pair split ->
+          ConversionCertificate
+            restricted
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            {trans : Trans // package.branches branch.1 trans}
+            (fun trans :
+              {trans : Trans // package.branches branch.1 trans} =>
+                label trans.val)
+            branch.2)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.localLanguage
+            net label split (package.pair split) word ↔
+          Powl.partialOrderComponentLanguage
+            order
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label (package.branches branch.1)
+                  split (package.pair split)))
+            word)
+    (hsource : split = net.source)
+    (hsink : package.pair split = net.sink) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ model : Powl Trans,
+        ∀ word,
+          WorkflowNet.language net label word ↔
+            Powl.language label model word :=
+  theorem2_completeness_partial_order_safe_and_exists_explicit_powl_model_of_split_decision_branch_certificate
     (order := order)
     hrequirements
     (theorem2_semi_block_split_decision_partial_order_branch_certificate
@@ -28014,6 +28706,274 @@ theorem theorem2_semi_block_subnet_split_decision_package_partial_order_global_l
       (order := order)
       hrequirements package branches certificates hdecompose hsource hsink
 
+theorem theorem2_semi_block_subnet_split_decision_package_xor_global_exists_powl_model_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // package.branches branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (package.pair split)
+                    (package.branches branch.1) place}
+              {trans : Trans // package.branches branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = package.pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // package.branches branch.1 trans}
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage
+              net label split (package.pair split) word ↔
+            Language.unionList
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (package.branches branch.1)
+                    split (package.pair split)))
+              word) ->
+        split = net.source ->
+        package.pair split = net.sink ->
+          ∃ OutTrans : Type v,
+            ∃ outLabel : OutTrans -> TransitionLabel Activity,
+              ∃ model : Powl OutTrans,
+                ∀ word,
+                  WorkflowNet.language net label word ↔
+                    Powl.language outLabel model word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink
+  exact
+    theorem2_completeness_xor_exists_powl_model_of_split_decision_package_certified_branches
+      hrequirements package branches certificates hdecompose hsource hsink
+
+theorem theorem2_semi_block_subnet_split_decision_package_xor_global_safe_and_exists_powl_model_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // package.branches branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (package.pair split)
+                    (package.branches branch.1) place}
+              {trans : Trans // package.branches branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = package.pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // package.branches branch.1 trans}
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage
+              net label split (package.pair split) word ↔
+            Language.unionList
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (package.branches branch.1)
+                    split (package.pair split)))
+              word) ->
+        split = net.source ->
+        package.pair split = net.sink ->
+          WorkflowNet.safeAndSound net ∧
+            ∃ OutTrans : Type v,
+              ∃ outLabel : OutTrans -> TransitionLabel Activity,
+                ∃ model : Powl OutTrans,
+                  ∀ word,
+                    WorkflowNet.language net label word ↔
+                      Powl.language outLabel model word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink
+  exact
+    theorem2_completeness_xor_safe_and_exists_powl_model_of_split_decision_package_certified_branches
+      hrequirements package branches certificates hdecompose hsource hsink
+
+theorem theorem2_semi_block_subnet_split_decision_package_partial_order_global_exists_powl_model_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split)
+    (order : Rel Nat) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // package.branches branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (package.pair split)
+                    (package.branches branch.1) place}
+              {trans : Trans // package.branches branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = package.pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // package.branches branch.1 trans}
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage
+              net label split (package.pair split) word ↔
+            Powl.partialOrderComponentLanguage
+              order
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (package.branches branch.1)
+                    split (package.pair split)))
+              word) ->
+        split = net.source ->
+        package.pair split = net.sink ->
+          ∃ OutTrans : Type v,
+            ∃ outLabel : OutTrans -> TransitionLabel Activity,
+              ∃ model : Powl OutTrans,
+                ∀ word,
+                  WorkflowNet.language net label word ↔
+                    Powl.language outLabel model word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink
+  exact
+    theorem2_completeness_partial_order_exists_powl_model_of_split_decision_package_certified_branches
+      (order := order)
+      hrequirements package branches certificates hdecompose hsource hsink
+
+theorem theorem2_semi_block_subnet_split_decision_package_partial_order_global_safe_and_exists_powl_model_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split)
+    (order : Rel Nat) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // package.branches branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (package.pair split)
+                    (package.branches branch.1) place}
+              {trans : Trans // package.branches branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = package.pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // package.branches branch.1 trans}
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage
+              net label split (package.pair split) word ↔
+            Powl.partialOrderComponentLanguage
+              order
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (package.branches branch.1)
+                    split (package.pair split)))
+              word) ->
+        split = net.source ->
+        package.pair split = net.sink ->
+          WorkflowNet.safeAndSound net ∧
+            ∃ OutTrans : Type v,
+              ∃ outLabel : OutTrans -> TransitionLabel Activity,
+                ∃ model : Powl OutTrans,
+                  ∀ word,
+                    WorkflowNet.language net label word ↔
+                      Powl.language outLabel model word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink
+  exact
+    theorem2_completeness_partial_order_safe_and_exists_powl_model_of_split_decision_package_certified_branches
+      (order := order)
+      hrequirements package branches certificates hdecompose hsource hsink
+
 theorem theorem2_semi_block_subnet_split_decision_package_xor_global_exists_powl_model_language_eq_continuation
     {Place : Type u}
     {Trans : Type v}
@@ -28277,6 +29237,441 @@ theorem theorem2_semi_block_subnet_split_decision_package_partial_order_global_s
     theorem2_completeness_partial_order_safe_and_exists_powl_model_language_eq_of_split_decision_package_certified_branches
       (order := order)
       hrequirements package branches certificates hdecompose hsource hsink
+
+theorem theorem2_semi_block_subnet_split_decision_package_xor_global_visible_activity_language_witness_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (certificates :
+          ∀ (branch :
+              Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+                Powl {trans : Trans // package.branches branch trans})
+            (restricted :
+              WorkflowNet
+                {place : Place //
+                  WorkflowNet.decisionBranchPlaceSet
+                    net split (package.pair split)
+                      (package.branches branch.1) place}
+                {trans : Trans // package.branches branch.1 trans}),
+            restricted.source.val = split ->
+            restricted.sink.val = package.pair split ->
+              ConversionCertificate
+                restricted
+                (fun trans :
+                  {trans : Trans // package.branches branch.1 trans} =>
+                    label trans.val)
+                {trans : Trans // package.branches branch.1 trans}
+                (fun trans :
+                  {trans : Trans // package.branches branch.1 trans} =>
+                    label trans.val)
+                branch.2) ->
+        (hdecompose :
+          ∀ word,
+            WorkflowNet.localLanguage
+                net label split (package.pair split) word ↔
+              Language.unionList
+                (branches.map
+                  (fun branch =>
+                    WorkflowNet.localSubtypeTraceLanguage
+                      net label (package.branches branch.1)
+                      split (package.pair split)))
+                word) ->
+        (hsource : split = net.source) ->
+        (hsink : package.pair split = net.sink) ->
+        ∀ {trans : Trans} {activity : Activity},
+          label trans = TransitionLabel.visible activity ->
+            ∃ word,
+              Powl.language
+                  (theorem2_completeness_xor_semi_block_certified_conversion_of_split_decision_package_certified_branches
+                    hrequirements package branches certificates hdecompose hsource hsink).conversion.outLabel
+                  (theorem2_completeness_xor_semi_block_certified_conversion_of_split_decision_package_certified_branches
+                    hrequirements package branches certificates hdecompose hsource hsink).conversion.model
+                  word ∧
+                activity ∈ word ∧
+                  WorkflowNet.language net label word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink trans activity hlabel
+  exact
+    theorem2_completeness_xor_visible_activity_language_witness_of_split_decision_package_certified_branches
+      hrequirements package branches certificates hdecompose
+      hsource hsink hlabel
+
+theorem theorem2_semi_block_subnet_split_decision_package_xor_global_exists_powl_model_visible_activity_language_witness_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // package.branches branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (package.pair split)
+                    (package.branches branch.1) place}
+              {trans : Trans // package.branches branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = package.pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // package.branches branch.1 trans}
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage
+              net label split (package.pair split) word ↔
+            Language.unionList
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (package.branches branch.1)
+                    split (package.pair split)))
+              word) ->
+        split = net.source ->
+        package.pair split = net.sink ->
+        ∀ {trans : Trans} {activity : Activity},
+          label trans = TransitionLabel.visible activity ->
+            ∃ OutTrans : Type v,
+              ∃ outLabel : OutTrans -> TransitionLabel Activity,
+                ∃ model : Powl OutTrans,
+                  ∃ word,
+                    Powl.language outLabel model word ∧
+                      activity ∈ word ∧
+                        WorkflowNet.language net label word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink trans activity hlabel
+  exact
+    theorem2_completeness_xor_exists_powl_model_visible_activity_language_witness_of_split_decision_package_certified_branches
+      hrequirements package branches certificates hdecompose
+      hsource hsink hlabel
+
+theorem theorem2_semi_block_subnet_split_decision_package_xor_global_safe_and_exists_powl_model_visible_activity_language_witness_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // package.branches branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (package.pair split)
+                    (package.branches branch.1) place}
+              {trans : Trans // package.branches branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = package.pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // package.branches branch.1 trans}
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage
+              net label split (package.pair split) word ↔
+            Language.unionList
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (package.branches branch.1)
+                    split (package.pair split)))
+              word) ->
+        split = net.source ->
+        package.pair split = net.sink ->
+        ∀ {trans : Trans} {activity : Activity},
+          label trans = TransitionLabel.visible activity ->
+            WorkflowNet.safeAndSound net ∧
+              ∃ OutTrans : Type v,
+                ∃ outLabel : OutTrans -> TransitionLabel Activity,
+                  ∃ model : Powl OutTrans,
+                    ∃ word,
+                      Powl.language outLabel model word ∧
+                        activity ∈ word ∧
+                          WorkflowNet.language net label word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink trans activity hlabel
+  exact
+    theorem2_completeness_xor_safe_and_exists_powl_model_visible_activity_language_witness_of_split_decision_package_certified_branches
+      hrequirements package branches certificates hdecompose
+      hsource hsink hlabel
+
+theorem theorem2_semi_block_subnet_split_decision_package_partial_order_global_visible_activity_language_witness_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split)
+    (order : Rel Nat) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (certificates :
+          ∀ (branch :
+              Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+                Powl {trans : Trans // package.branches branch trans})
+            (restricted :
+              WorkflowNet
+                {place : Place //
+                  WorkflowNet.decisionBranchPlaceSet
+                    net split (package.pair split)
+                      (package.branches branch.1) place}
+                {trans : Trans // package.branches branch.1 trans}),
+            restricted.source.val = split ->
+            restricted.sink.val = package.pair split ->
+              ConversionCertificate
+                restricted
+                (fun trans :
+                  {trans : Trans // package.branches branch.1 trans} =>
+                    label trans.val)
+                {trans : Trans // package.branches branch.1 trans}
+                (fun trans :
+                  {trans : Trans // package.branches branch.1 trans} =>
+                    label trans.val)
+                branch.2) ->
+        (hdecompose :
+          ∀ word,
+            WorkflowNet.localLanguage
+                net label split (package.pair split) word ↔
+              Powl.partialOrderComponentLanguage
+                order
+                (branches.map
+                  (fun branch =>
+                    WorkflowNet.localSubtypeTraceLanguage
+                      net label (package.branches branch.1)
+                      split (package.pair split)))
+                word) ->
+        (hsource : split = net.source) ->
+        (hsink : package.pair split = net.sink) ->
+        ∀ {trans : Trans} {activity : Activity},
+          label trans = TransitionLabel.visible activity ->
+            ∃ word,
+              Powl.language
+                  (theorem2_completeness_partial_order_semi_block_certified_conversion_of_split_decision_package_certified_branches
+                    (order := order)
+                    hrequirements package branches certificates hdecompose hsource hsink).conversion.outLabel
+                  (theorem2_completeness_partial_order_semi_block_certified_conversion_of_split_decision_package_certified_branches
+                    (order := order)
+                    hrequirements package branches certificates hdecompose hsource hsink).conversion.model
+                  word ∧
+                activity ∈ word ∧
+                  WorkflowNet.language net label word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink trans activity hlabel
+  exact
+    theorem2_completeness_partial_order_visible_activity_language_witness_of_split_decision_package_certified_branches
+      (order := order)
+      hrequirements package branches certificates hdecompose
+      hsource hsink hlabel
+
+theorem theorem2_semi_block_subnet_split_decision_package_partial_order_global_exists_powl_model_visible_activity_language_witness_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split)
+    (order : Rel Nat) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // package.branches branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (package.pair split)
+                    (package.branches branch.1) place}
+              {trans : Trans // package.branches branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = package.pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // package.branches branch.1 trans}
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage
+              net label split (package.pair split) word ↔
+            Powl.partialOrderComponentLanguage
+              order
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (package.branches branch.1)
+                    split (package.pair split)))
+              word) ->
+        split = net.source ->
+        package.pair split = net.sink ->
+        ∀ {trans : Trans} {activity : Activity},
+          label trans = TransitionLabel.visible activity ->
+            ∃ OutTrans : Type v,
+              ∃ outLabel : OutTrans -> TransitionLabel Activity,
+                ∃ model : Powl OutTrans,
+                  ∃ word,
+                    Powl.language outLabel model word ∧
+                      activity ∈ word ∧
+                        WorkflowNet.language net label word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink trans activity hlabel
+  exact
+    theorem2_completeness_partial_order_exists_powl_model_visible_activity_language_witness_of_split_decision_package_certified_branches
+      (order := order)
+      hrequirements package branches certificates hdecompose
+      hsource hsink hlabel
+
+theorem theorem2_semi_block_subnet_split_decision_package_partial_order_global_safe_and_exists_powl_model_visible_activity_language_witness_continuation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hrequirements :
+      WorkflowNet.semiBlockStructuredSubnetRequirements net)
+    {split : Place}
+    (hsplit : WorkflowNet.splitDecisionPlace net split)
+    (order : Rel Nat) :
+    ∃ package : SemiBlockSplitDecisionBranchPackage net split,
+      ∀ (branches : List
+          (Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+            Powl {trans : Trans // package.branches branch trans})),
+        (∀ (branch :
+            Σ branch : WorkflowNet.transitionPostsetOfPlace net split,
+              Powl {trans : Trans // package.branches branch trans})
+          (restricted :
+            WorkflowNet
+              {place : Place //
+                WorkflowNet.decisionBranchPlaceSet
+                  net split (package.pair split)
+                    (package.branches branch.1) place}
+              {trans : Trans // package.branches branch.1 trans}),
+          restricted.source.val = split ->
+          restricted.sink.val = package.pair split ->
+            ConversionCertificate
+              restricted
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              {trans : Trans // package.branches branch.1 trans}
+              (fun trans :
+                {trans : Trans // package.branches branch.1 trans} =>
+                  label trans.val)
+              branch.2) ->
+        (∀ word,
+          WorkflowNet.localLanguage
+              net label split (package.pair split) word ↔
+            Powl.partialOrderComponentLanguage
+              order
+              (branches.map
+                (fun branch =>
+                  WorkflowNet.localSubtypeTraceLanguage
+                    net label (package.branches branch.1)
+                    split (package.pair split)))
+              word) ->
+        split = net.source ->
+        package.pair split = net.sink ->
+        ∀ {trans : Trans} {activity : Activity},
+          label trans = TransitionLabel.visible activity ->
+            WorkflowNet.safeAndSound net ∧
+              ∃ OutTrans : Type v,
+                ∃ outLabel : OutTrans -> TransitionLabel Activity,
+                  ∃ model : Powl OutTrans,
+                    ∃ word,
+                      Powl.language outLabel model word ∧
+                        activity ∈ word ∧
+                          WorkflowNet.language net label word := by
+  classical
+  let package :=
+    theorem2_semi_block_subnet_split_decision_branch_package
+      hrequirements hsplit
+  refine ⟨package, ?_⟩
+  intro branches certificates hdecompose hsource hsink trans activity hlabel
+  exact
+    theorem2_completeness_partial_order_safe_and_exists_powl_model_visible_activity_language_witness_of_split_decision_package_certified_branches
+      (order := order)
+      hrequirements package branches certificates hdecompose
+      hsource hsink hlabel
 
 theorem theorem2_semi_block_subnet_split_decision_package_xor_global_explicit_language_preservation_continuation
     {Place : Type u}

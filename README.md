@@ -302,20 +302,21 @@ The current proof spine is:
   concrete-model XOR/partial-order language preservation/equality with
   safe-and-sound, original-transition existential model, concrete
   visible-activity witness, and original-transition existential
-  visible-activity witness consequences, existential language-equality, and
-  abstract visible-activity witness consequences, plus package-level
+  visible-activity witness consequences, abstract existential-model
+  pointwise/equality, and abstract visible-activity witness consequences, plus
+  package-level
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` constructors,
   abstract certified-conversion language preservation/equality plus abstract
-  existential-model language-equality and visible-activity witness wrappers,
+  existential-model pointwise/equality and visible-activity witness wrappers,
   source-to-sink global explicit language, safe existential language-equality,
   and visible-activity witness wrappers for certified branch data,
   sigma-valued requirements-to-package continuations for generic
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` outputs,
   requirements-to-package continuations for source-to-sink global abstract
-  language preservation/equality, abstract existential-model language equality,
-  explicit language preservation/equality plus safe-and-sound paired global
-  language equality, existential model, and explicit/existential/safe
-  visible-activity witness consequences,
+  language preservation/equality, abstract existential-model pointwise/equality,
+  abstract visible-activity witnesses, explicit language preservation/equality
+  plus safe-and-sound paired global language equality, existential model, and
+  explicit/existential/safe visible-activity witness consequences,
   conversion builders, and package-returning continuations from the explicit
   branch package, a
   `LocalCertifiedConversion` interface
