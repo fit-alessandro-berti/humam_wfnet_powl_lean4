@@ -9486,6 +9486,117 @@ theorem lemma1_xor_pattern_no_place_flow_from_complement_to_part
     (lemma1_xor_pattern_place_predecessor_mem_of_successor_mem
       hpattern hpart hright hleftFlow hrightFlow)
 
+theorem lemma1_xor_pattern_common_preset_place_eq_source
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hleft : part left)
+    (hright : ¬ part right)
+    (hleftFlow : net.placeToTrans place left)
+    (hrightFlow : net.placeToTrans place right) :
+    place = net.source := by
+  apply (net.uniqueSource place).1
+  intro pred hpredFlow
+  have hpredPart : part pred :=
+    lemma1_xor_pattern_place_predecessor_mem_of_successor_mem
+      hpattern hpart hleft hpredFlow hleftFlow
+  exact hright
+    (lemma1_xor_pattern_place_successor_mem_of_predecessor_mem
+      hpattern hpart hpredPart hpredFlow hrightFlow)
+
+theorem lemma1_xor_pattern_common_postset_place_eq_sink
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {place : Place}
+    {left right : Trans}
+    (hleft : part left)
+    (hright : ¬ part right)
+    (hleftFlow : net.transToPlace left place)
+    (hrightFlow : net.transToPlace right place) :
+    place = net.sink := by
+  apply (net.uniqueSink place).1
+  intro succ hsuccFlow
+  have hsuccPart : part succ :=
+    lemma1_xor_pattern_place_successor_mem_of_predecessor_mem
+      hpattern hpart hleft hleftFlow hsuccFlow
+  exact hright
+    (lemma1_xor_pattern_place_predecessor_mem_of_successor_mem
+      hpattern hpart hsuccPart hrightFlow hsuccFlow)
+
+theorem lemma1_xor_pattern_shared_touching_place_source_or_sink
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    {place : Place}
+    (hselected :
+      PetriNet.placesTouching net.toPetriNet part place)
+    (hexternal :
+      ∃ trans, ¬ part trans ∧
+        (net.placeToTrans place trans ∨
+          net.transToPlace trans place)) :
+    place = net.source ∨ place = net.sink := by
+  rcases hselected with ⟨selected, hselectedPart, hselectedIn | hselectedOut⟩
+  · rcases hexternal with ⟨external, hexternalPart, hexternalIn | hexternalOut⟩
+    · exact Or.inl
+        (lemma1_xor_pattern_common_preset_place_eq_source
+          hpattern hpart hselectedPart hexternalPart
+          hselectedIn hexternalIn)
+    · exact False.elim
+        (lemma1_xor_pattern_no_place_flow_from_complement_to_part
+          hpattern hpart hexternalPart hselectedPart
+          hexternalOut hselectedIn)
+  · rcases hexternal with ⟨external, hexternalPart, hexternalIn | hexternalOut⟩
+    · exact False.elim
+        (lemma1_xor_pattern_no_place_flow_from_part_to_complement
+          hpattern hpart hselectedPart hexternalPart
+          hselectedOut hexternalIn)
+    · exact Or.inr
+        (lemma1_xor_pattern_common_postset_place_eq_sink
+          hpattern hpart hselectedPart hexternalPart
+          hselectedOut hexternalOut)
+
+theorem lemma1_xor_pattern_distinct_parts_shared_touching_place_source_or_sink
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {leftPart rightPart : Set Trans}
+    (hleftMem : leftPart ∈ partition.parts)
+    (hrightMem : rightPart ∈ partition.parts)
+    (hdistinct : leftPart ≠ rightPart)
+    {place : Place}
+    (hleftTouch :
+      PetriNet.placesTouching net.toPetriNet leftPart place)
+    (hrightTouch :
+      PetriNet.placesTouching net.toPetriNet rightPart place) :
+    place = net.source ∨ place = net.sink := by
+  rcases hrightTouch with ⟨right, hrightPart, hrightFlow⟩
+  have hnotLeft : ¬ leftPart right := by
+    intro hleftPart
+    exact hdistinct
+      (partition.disjoint
+        hleftMem hrightMem hleftPart hrightPart)
+  exact
+    lemma1_xor_pattern_shared_touching_place_source_or_sink
+      hpattern hleftMem hleftTouch
+      ⟨right, hnotLeft, hrightFlow⟩
+
 theorem lemma1_xor_projection_accepting_trace_part_mem_of_reachable_to_or_from_hit
     {Place : Type u}
     {Trans : Type v}
