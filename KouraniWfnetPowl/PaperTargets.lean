@@ -4990,6 +4990,75 @@ theorem lemma3_partial_order_projection_restricted_normalized_no_dead_transition
   Patterns.partialOrderProjectionRestrictedNormalized_noDeadTransitions_of_witnesses
     net hconnected horiginal hexit
 
+theorem lemma3_partial_order_projection_restricted_normalized_safe_and_no_dead_transitions_of_witnesses
+    {Place : Type u}
+    {Trans : Type v}
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩))
+    (horiginal :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ marking,
+          WorkflowNet.reachable
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected)
+              (WorkflowNet.initial
+                (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                  net part hconnected))
+              (lemma3_partial_order_projection_normalized_marking
+                net part marking) ∧
+            WorkflowNet.enabled net marking trans.val ∧
+            (∀ entry, WorkflowNet.entryPoints net part entry ->
+              marking entry > 0) ∧
+            (∀ exit, WorkflowNet.exitPoints net part exit ->
+              marking exit > 0))
+    (hexit :
+      ∃ marking,
+        WorkflowNet.reachable
+            (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+              net part hconnected)
+            (WorkflowNet.initial
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected))
+            (lemma3_partial_order_projection_normalized_marking
+              net part marking) ∧
+          (∀ exit, WorkflowNet.exitPoints net part exit ->
+            marking exit > 0))
+    (hsafe :
+      WorkflowNet.safe
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected)) :
+    WorkflowNet.safe
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) ∧
+      WorkflowNet.noDeadTransitions
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) :=
+  ⟨hsafe,
+    lemma3_partial_order_projection_restricted_normalized_no_dead_transitions_of_witnesses
+      net hconnected horiginal hexit⟩
+
 theorem lemma3_partial_order_projection_restricted_normalized_sound_of_witnesses
     {Place : Type u}
     {Trans : Type v}
@@ -5419,6 +5488,170 @@ theorem lemma3_partial_order_projection_restricted_normalized_safe_of_original_s
     (WorkflowNet.safeAndSound_safe horiginalSafeSound)
     hshape
 
+theorem lemma3_partial_order_projection_restricted_normalized_safe_and_no_dead_transitions_of_original_reachable_shape
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩))
+    (horiginal :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ marking,
+          WorkflowNet.reachable
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected)
+              (WorkflowNet.initial
+                (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                  net part hconnected))
+              (lemma3_partial_order_projection_normalized_marking
+                net part marking) ∧
+            WorkflowNet.enabled net marking trans.val ∧
+            (∀ entry, WorkflowNet.entryPoints net part entry ->
+              marking entry > 0) ∧
+            (∀ exit, WorkflowNet.exitPoints net part exit ->
+              marking exit > 0))
+    (hexit :
+      ∃ marking,
+        WorkflowNet.reachable
+            (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+              net part hconnected)
+            (WorkflowNet.initial
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected))
+            (lemma3_partial_order_projection_normalized_marking
+              net part marking) ∧
+          (∀ exit, WorkflowNet.exitPoints net part exit ->
+            marking exit > 0))
+    (horiginalSafe : WorkflowNet.safe net)
+    (hshape :
+      ∀ projected,
+        WorkflowNet.reachable
+            (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+              net part hconnected)
+            (WorkflowNet.initial
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected))
+            projected ->
+          ∃ original,
+            WorkflowNet.reachable net (WorkflowNet.initial net) original ∧
+              projected =
+                lemma3_partial_order_projection_normalized_marking
+                  net part original) :
+    WorkflowNet.safe
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) ∧
+      WorkflowNet.noDeadTransitions
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) :=
+  ⟨lemma3_partial_order_projection_restricted_normalized_safe_of_original_reachable_shape
+      net hconnected horiginalSafe hshape,
+    lemma3_partial_order_projection_restricted_normalized_no_dead_transitions_of_witnesses
+      net hconnected horiginal hexit⟩
+
+theorem lemma3_partial_order_projection_restricted_normalized_safe_and_no_dead_transitions_of_original_safe_and_sound_reachable_shape
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩))
+    (horiginal :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ marking,
+          WorkflowNet.reachable
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected)
+              (WorkflowNet.initial
+                (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                  net part hconnected))
+              (lemma3_partial_order_projection_normalized_marking
+                net part marking) ∧
+            WorkflowNet.enabled net marking trans.val ∧
+            (∀ entry, WorkflowNet.entryPoints net part entry ->
+              marking entry > 0) ∧
+            (∀ exit, WorkflowNet.exitPoints net part exit ->
+              marking exit > 0))
+    (hexit :
+      ∃ marking,
+        WorkflowNet.reachable
+            (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+              net part hconnected)
+            (WorkflowNet.initial
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected))
+            (lemma3_partial_order_projection_normalized_marking
+              net part marking) ∧
+          (∀ exit, WorkflowNet.exitPoints net part exit ->
+            marking exit > 0))
+    (horiginalSafeSound : WorkflowNet.safeAndSound net)
+    (hshape :
+      ∀ projected,
+        WorkflowNet.reachable
+            (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+              net part hconnected)
+            (WorkflowNet.initial
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected))
+            projected ->
+          ∃ original,
+            WorkflowNet.reachable net (WorkflowNet.initial net) original ∧
+              projected =
+                lemma3_partial_order_projection_normalized_marking
+                  net part original) :
+    WorkflowNet.safe
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) ∧
+      WorkflowNet.noDeadTransitions
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) :=
+  lemma3_partial_order_projection_restricted_normalized_safe_and_no_dead_transitions_of_original_reachable_shape
+    net hconnected horiginal hexit
+    (WorkflowNet.safeAndSound_safe horiginalSafeSound)
+    hshape
+
 theorem lemma3_partial_order_projection_restricted_normalized_safe_and_sound_of_original_reachable_shape
     {Place : Type u}
     {Trans : Type v}
@@ -5682,6 +5915,164 @@ theorem lemma3_partial_order_projection_restricted_normalized_safe_of_original_s
         net part hconnected) :=
   lemma3_partial_order_projection_restricted_normalized_safe_of_original_three_way_reachable_shape
     net hconnected
+    (WorkflowNet.safeAndSound_safe horiginalSafeSound)
+    hshape
+
+theorem lemma3_partial_order_projection_restricted_normalized_safe_and_no_dead_transitions_of_original_three_way_reachable_shape
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩))
+    (horiginal :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ marking,
+          WorkflowNet.reachable
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected)
+              (WorkflowNet.initial
+                (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                  net part hconnected))
+              (lemma3_partial_order_projection_normalized_marking
+                net part marking) ∧
+            WorkflowNet.enabled net marking trans.val ∧
+            (∀ entry, WorkflowNet.entryPoints net part entry ->
+              marking entry > 0) ∧
+            (∀ exit, WorkflowNet.exitPoints net part exit ->
+              marking exit > 0))
+    (hexit :
+      ∃ marking,
+        WorkflowNet.reachable
+            (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+              net part hconnected)
+            (WorkflowNet.initial
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected))
+            (lemma3_partial_order_projection_normalized_marking
+              net part marking) ∧
+          (∀ exit, WorkflowNet.exitPoints net part exit ->
+            marking exit > 0))
+    (horiginalSafe : WorkflowNet.safe net)
+    (hshape :
+      ∀ projected,
+        WorkflowNet.reachable
+            (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+              net part hconnected)
+            (WorkflowNet.initial
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected))
+            projected ->
+          lemma3_partial_order_projection_restricted_normalized_reachable_shape
+            net part hconnected projected) :
+    WorkflowNet.safe
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) ∧
+      WorkflowNet.noDeadTransitions
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) :=
+  ⟨lemma3_partial_order_projection_restricted_normalized_safe_of_original_three_way_reachable_shape
+      net hconnected horiginalSafe hshape,
+    lemma3_partial_order_projection_restricted_normalized_no_dead_transitions_of_witnesses
+      net hconnected horiginal hexit⟩
+
+theorem lemma3_partial_order_projection_restricted_normalized_safe_and_no_dead_transitions_of_original_safe_and_sound_three_way_reachable_shape
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})]
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.start,
+                Patterns.partialOrderProjectionPlaces_start net part⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.partialOrderProjectionRestricted net part)
+            node
+            (PetriNet.Node.place
+              ⟨Patterns.BoundaryPlace.end_,
+                Patterns.partialOrderProjectionPlaces_end net part⟩))
+    (horiginal :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ marking,
+          WorkflowNet.reachable
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected)
+              (WorkflowNet.initial
+                (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                  net part hconnected))
+              (lemma3_partial_order_projection_normalized_marking
+                net part marking) ∧
+            WorkflowNet.enabled net marking trans.val ∧
+            (∀ entry, WorkflowNet.entryPoints net part entry ->
+              marking entry > 0) ∧
+            (∀ exit, WorkflowNet.exitPoints net part exit ->
+              marking exit > 0))
+    (hexit :
+      ∃ marking,
+        WorkflowNet.reachable
+            (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+              net part hconnected)
+            (WorkflowNet.initial
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected))
+            (lemma3_partial_order_projection_normalized_marking
+              net part marking) ∧
+          (∀ exit, WorkflowNet.exitPoints net part exit ->
+            marking exit > 0))
+    (horiginalSafeSound : WorkflowNet.safeAndSound net)
+    (hshape :
+      ∀ projected,
+        WorkflowNet.reachable
+            (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+              net part hconnected)
+            (WorkflowNet.initial
+              (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+                net part hconnected))
+            projected ->
+          lemma3_partial_order_projection_restricted_normalized_reachable_shape
+            net part hconnected projected) :
+    WorkflowNet.safe
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) ∧
+      WorkflowNet.noDeadTransitions
+        (lemma3_partial_order_projection_restricted_normalized_workflow_net_of_connected
+          net part hconnected) :=
+  lemma3_partial_order_projection_restricted_normalized_safe_and_no_dead_transitions_of_original_three_way_reachable_shape
+    net hconnected horiginal hexit
     (WorkflowNet.safeAndSound_safe horiginalSafeSound)
     hshape
 
@@ -10088,6 +10479,85 @@ def local_certified_conversion_xor_of_subtype_conversions
               word)
         (Iff.symm (hdecompose word))
 
+theorem lemma4_xor_pattern_language_preservation_of_local_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (_hpattern : Patterns.xorPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.xor
+            (branches.map
+              (fun branch => Powl.map Subtype.val branch.2.model)))
+          word ↔
+        WorkflowNet.language net label word := by
+  intro word
+  rw [Powl.xor_language_iff_unionList]
+  exact Iff.trans
+    (by
+      simpa [List.map_map] using
+        Language.unionList_map_congr
+          branches
+          (fun branch =>
+            Powl.language label
+              (Powl.map Subtype.val branch.2.model))
+          (fun branch =>
+            WorkflowNet.localSubtypeTraceLanguage
+              net label branch.1.val net.source net.sink)
+          (fun branch word =>
+            local_subtype_certified_conversion_mapped_language
+              branch.2 word)
+          word)
+    (Iff.symm (hdecompose word))
+
+theorem lemma4_xor_pattern_language_eq_of_local_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.xorPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.unionList
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    Powl.language label
+        (Powl.xor
+          (branches.map
+            (fun branch => Powl.map Subtype.val branch.2.model))) =
+      WorkflowNet.language net label :=
+  Language.ext
+    (lemma4_xor_pattern_language_preservation_of_local_subtype_conversions
+      hpattern branches hdecompose)
+
 def local_certified_conversion_loop_of_mapped_subtype_components
     {Place : Type u}
     {Trans : Type v}
@@ -10192,6 +10662,97 @@ def local_certified_conversion_loop_of_subtype_conversions
         (fun word => Iff.symm (redo.certificate word))
         hdecompose
         word)
+
+theorem lemma5_loop_pattern_language_preservation_of_local_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {bodyPart redoPart : Set Trans}
+    (_hpattern : Patterns.loopPattern label net partition)
+    (body :
+      LocalSubtypeCertifiedConversion
+        net label bodyPart net.source net.sink)
+    (redo :
+      LocalSubtypeCertifiedConversion
+        net label redoPart net.sink net.source)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.concat
+            (WorkflowNet.localSubtypeTraceLanguage
+              net label bodyPart net.source net.sink)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label redoPart net.sink net.source)
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label bodyPart net.source net.sink)))
+            word) :
+    ∀ word,
+      Powl.language label
+          (Powl.loop
+            (Powl.map Subtype.val body.model)
+            (Powl.map Subtype.val redo.model))
+          word ↔
+        WorkflowNet.language net label word := by
+  intro word
+  exact
+    Iff.trans
+      (local_loop_language_preservation_of_mapped_subtype_components
+        (fun item => Iff.symm (body.certificate item))
+        (fun item => Iff.symm (redo.certificate item))
+        (fun item =>
+          Iff.trans
+            (Iff.symm
+              (WorkflowNet.language_iff_localLanguage_source_sink
+                net label item))
+            (hdecompose item))
+        word)
+      (Iff.symm
+        (WorkflowNet.language_iff_localLanguage_source_sink
+          net label word))
+
+theorem lemma5_loop_pattern_language_eq_of_local_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    {bodyPart redoPart : Set Trans}
+    (hpattern : Patterns.loopPattern label net partition)
+    (body :
+      LocalSubtypeCertifiedConversion
+        net label bodyPart net.source net.sink)
+    (redo :
+      LocalSubtypeCertifiedConversion
+        net label redoPart net.sink net.source)
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Language.concat
+            (WorkflowNet.localSubtypeTraceLanguage
+              net label bodyPart net.source net.sink)
+            (Language.Star
+              (Language.concat
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label redoPart net.sink net.source)
+                (WorkflowNet.localSubtypeTraceLanguage
+                  net label bodyPart net.source net.sink)))
+            word) :
+    Powl.language label
+        (Powl.loop
+          (Powl.map Subtype.val body.model)
+          (Powl.map Subtype.val redo.model)) =
+      WorkflowNet.language net label :=
+  Language.ext
+    (lemma5_loop_pattern_language_preservation_of_local_subtype_conversions
+      hpattern body redo hdecompose)
 
 def local_certified_conversion_partial_order_of_mapped_branch_models
     {Place : Type u}
@@ -10417,6 +10978,42 @@ theorem lemma6_partial_order_pattern_strict_order_language_preservation_of_local
   exact
     (lemma6_partial_order_pattern_language_preservation_of_local_subtype_conversions
       hpattern branches hdecompose).2
+
+theorem lemma6_partial_order_pattern_strict_order_language_eq_of_local_subtype_conversions
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (branches : List
+      (Σ part : {part : Set Trans // part ∈ partition.parts},
+        LocalSubtypeCertifiedConversion
+          net label part.val net.source net.sink))
+    (hdecompose :
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.partialOrderComponentLanguage
+            (TransGen (Patterns.executionOrder net partition))
+            (branches.map
+              (fun branch =>
+                WorkflowNet.localSubtypeTraceLanguage
+                  net label branch.1.val net.source net.sink))
+            word) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) ∧
+        Powl.language label
+            (Powl.partialOrder order.rel
+              (branches.map
+                (fun branch => Powl.map Subtype.val branch.2.model))) =
+          WorkflowNet.language net label := by
+  rcases
+    lemma6_partial_order_pattern_strict_order_language_preservation_of_local_subtype_conversions
+      hpattern branches hdecompose with
+    ⟨order, horder, hlanguage⟩
+  exact ⟨order, horder, Language.ext hlanguage⟩
 
 theorem theorem2_local_certified_conversion_language_preservation
     {Place : Type u}

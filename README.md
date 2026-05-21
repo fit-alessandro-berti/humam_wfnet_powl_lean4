@@ -206,9 +206,11 @@ The current proof spine is:
   in the normalized projection, and fresh enter/exit witnesses now combine with
   the wrapped-original witnesses into a full `noDeadTransitions` constructor
   under explicit reachability and boundary-marking hypotheses. These witnesses
-  now package into normalized projection `sound` and `safeAndSound` facts when
-  the remaining completion, proper-completion, and safeness obligations are
-  supplied. Pointwise marking bounds now show that restricted and normalized
+  now package into normalized projection safe/no-dead, `sound`, and
+  `safeAndSound` facts when the remaining completion, proper-completion, and
+  safeness obligations are supplied, with matching safe/no-dead wrappers for
+  original reachable-shape and three-way reachable-shape safeness transfers.
+  Pointwise marking bounds now show that restricted and normalized
   projection markings preserve safeness from original markings, and a
   three-way reachable-shape invariant, covering the fresh initial marking,
   projected original reachable markings, and the fresh final marking, turns
@@ -232,10 +234,12 @@ The current proof spine is:
   POWL transition-map language preservation facts for recursively translated
   projection models, union-list/component-equivalence variants for the XOR,
   loop, and partial-order language preservation arguments, including explicitly
-  indexed Lemma 4 and Lemma 6 component-list forms, plus a Lemma 6
-  partial-order-pattern theorem that combines execution-order asymmetry with
-  local subtype branch conversions and exposes the induced strict partial
-  order. The target map now also
+  indexed Lemma 4 and Lemma 6 component-list forms, direct Lemma 4 XOR and
+  Lemma 5 loop pattern local-subtype conversion preservation/equality forms,
+  plus a Lemma 6 partial-order-pattern theorem that combines execution-order
+  asymmetry with local subtype branch conversions and exposes the induced
+  strict partial order, including the corresponding strict-order language
+  equality form. The target map now also
   includes mapped-component variants of the XOR, loop, and partial-order
   preservation wrappers, so recursive submodel equivalences can be transported
   through transition embeddings before applying the top-level pattern semantics;
