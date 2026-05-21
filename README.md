@@ -422,7 +422,9 @@ The current proof spine is:
   acyclicity accessors, direct Definition 13 field accessors and exact bundled
   generic/Case 3 `↔` forms through irreflexive execution order,
   existential strict partial orders with named constructor/projector bridges,
-  execution-order no-return, and contraction no-return/acyclicity, transition-flow
+  execution-order no-return, contraction no-return/acyclicity, direct
+  boundary/active contraction certificate no-return/acyclicity, and certificate-level
+  existential strict-order witnesses, transition-flow
   strict-order existence equivalences and marked-graph sound/safe-and-sound
   existence wrappers, and a
   bundled contraction certificate that builds the partial-order pattern and
@@ -471,7 +473,7 @@ The current proof spine is:
   reachable-incidence loop-projection constructors, including the
   incidence-based full restricted loop-projection
   connectedness target and pattern-level do/redo loop-projection WF-net
-  existence plus `safeAndSound` constructor theorems, and
+  existence plus no-dead, safe/no-dead, `sound`, and `safeAndSound` constructor theorems, and
   Lemma 3
   partial-order projection boundary/internal edge, one-step path, and
   raw-`PathIn` constructor/path-lifting facts plus bidirectional
@@ -483,7 +485,7 @@ The current proof spine is:
   reachable-shape-based safeness and `safeAndSound` packaging, including
   variants that consume the original net's `safeAndSound` hypothesis directly,
   indexed partial-order-pattern projection WF-net existence plus
-  accepting-trace and no-dead-witness `safeAndSound` constructor theorems
+  accepting-trace/no-dead-witness no-dead, safe/no-dead, `sound`, and `safeAndSound` constructor theorems
   under incidence obligations, sound
   packaging under supplied residual obligations, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
