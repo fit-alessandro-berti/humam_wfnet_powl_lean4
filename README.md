@@ -3,6 +3,24 @@
 This is a Lean 4-only formalization effort for arXiv:2503.20363,
 "Translating Workflow Nets into the Partially Ordered Workflow Language".
 
+## Paper Proof Progress
+
+The current plan is to close the paper obligations in order: Lemma 1, Lemma 2,
+Lemma 3, Lemma 4, Lemma 5, Lemma 6, Theorem 1, then Theorem 2. Percentages are
+conservative engineering estimates from the checked Lean surface, not claims of
+paper-level completion.
+
+| Paper result | Current Lean status | Estimated completion |
+| --- | --- | ---: |
+| Lemma 1: XOR projection structural guarantees | Projection construction, path/reachability lifting, no-dead/safeness/soundness wrappers, and indexed pattern constructors are checked; remaining work is to compress the residual accepting/completion/proper-completion assumptions into the exact paper statement. | 75% |
+| Lemma 2: loop projection structural guarantees | Loop projection construction, boundary/connectivity facts, no-dead/safeness/soundness wrappers, and reachable-incidence variants are checked; residual completion/proper-completion packaging still needs to be discharged theorem-by-theorem. | 65% |
+| Lemma 3: partial-order projection structural guarantees | Restricted/normalized projection construction, boundary/internal edge facts, marking/reachability/no-dead/safeness wrappers, and strict-order pattern interfaces are checked; residual completion/proper-completion and normalization-language obligations remain. | 70% |
+| Lemma 4: XOR pattern language preservation | XOR language preservation is checked for projected branches and subtype-conversion based pattern APIs, with explicit and existential POWL-model wrappers. | 90% |
+| Lemma 5: loop pattern language preservation | Loop language preservation is checked for body/redo subtype conversions and theorem-facing loop-pattern APIs, with explicit and existential POWL-model wrappers. | 88% |
+| Lemma 6: partial-order pattern language preservation | Partial-order language preservation/equality is checked for supplied strict orders, execution-order transitive closure, and theorem-facing partial-order pattern APIs. | 88% |
+| Theorem 1: correctness | Base, XOR, loop, and normalized partial-order correctness combinators plus semantic conversion wrappers are checked; the remaining gap is a single paper-style algorithm induction object tying all branches to an executable success predicate. | 80% |
+| Theorem 2: completeness | Semi-block case/certificate APIs, Case 1/2/3 constructors, concrete generated-POWL witnesses, and many safe/language/visible-activity consequences are checked; remaining work is to finish the ordered structural lemmas and package the complete recursive algorithm proof. | 78% |
+
 The current proof spine is:
 
 - `KouraniWfnetPowl.Basic`: sets-as-predicates, relations, transitive closure,
@@ -392,7 +410,8 @@ The current proof spine is:
   corresponding strict-partial-order object; raw pattern cases and bundled
   pattern certificates bridge directly into the raw
   `SemiBlockCompletenessCertificate` algorithm-certificate API and both expose
-  the same completeness consequence surface.
+  the same completeness consequence surface, including direct concrete
+  generated-POWL language, existential-model, and visible-activity witnesses.
   Named constructors now package the single-transition,
   XOR-pattern, loop-pattern, and partial-order-pattern cases directly as
   pattern completeness certificates, and direct theorem wrappers turn each
@@ -458,7 +477,8 @@ The current proof spine is:
   language-preservation/equality, existential-model pointwise/language-equality,
   and visible-witness forms, direct safe language-equality forms for both the
   concrete POWL witness and generated algorithm certificate,
-  direct concrete safe language-preservation and visible-witness forms, plus
+  direct concrete language-equality, pointwise existential-model,
+  safe language-preservation, and visible-witness forms, plus
   direct generated-algorithm safe language-preservation and visible-witness
   forms, existential generated-model pointwise equivalence with safe paired
   variants, safe existential generated-model language-equality and
