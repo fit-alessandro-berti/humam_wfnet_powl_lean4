@@ -263,7 +263,9 @@ The current proof spine is:
   interface for Theorem 1, with explicit global and local single-transition
   base-case constructors and object-level successful-conversion constructors
   for XOR, loop, ordinary partial-order, and normalized partial-order recursive
-  cases. Normalized partial-order component certificates now also expose direct
+  cases, plus direct existential model, safe-paired language-equivalence, and
+  visible-activity witness consequences. Normalized partial-order component
+  certificates now also expose direct
   Theorem 1 language preservation/equality, semantic conversion, and existential
   POWL-model equality wrappers. A global `SubtypeCertifiedConversion` interface
   supplies mapped language preservation/equality and XOR, loop, and partial-order
@@ -273,7 +275,8 @@ The current proof spine is:
   conversions, and subtype-composed XOR/loop/partial-order models, with
   theorem-facing aliases for the Theorem 1 semantic conversion statement,
   including the paper-style `L(N) = L(ψ)` equality form and an explicit
-  existential POWL-model form. Visible-activity WF-net language witnesses
+  existential POWL-model form, plus safe-paired, existential language-equality,
+  and visible-witness consequences. Visible-activity WF-net language witnesses
   transfer across semantic conversions to accepted POWL-model words. Theorem 2
   now has checked targets for the safe-and-sound,
   explicit-decision-point, split/join pairing, paired branch-equivalence, and
@@ -336,7 +339,8 @@ The current proof spine is:
   languages, and local-to-global language preservation for source/sink
   certified conversions, including packaging source/sink local conversions as
   global `SemanticCertifiedConversion`s and explicit existential POWL-model
-  statements. A `SemiBlockCertifiedConversion` interface packages the
+  statements, plus safe-paired language/existential and visible-witness
+  consequences. A `SemiBlockCertifiedConversion` interface packages the
   semi-block completeness hypothesis with a successful source/sink conversion
   and exposes safe-and-soundness, pointwise language preservation, safe paired
   language preservation, language equality, direct safe language equality,
@@ -439,10 +443,11 @@ The current proof spine is:
   specializations used by the completeness argument, and Lemma 2 loop trace
   closure plus loop projection boundary, restricted-projection lifting, and
   connected-projection-to-`WorkflowNet` packaging facts, no-dead-transition,
-  soundness, and `safeAndSound` packaging for connected loop projections from
-  accepting-trace/completion/proper-completion obligations, with matching
-  no-dead/sound/`safeAndSound` wrappers for reachable-incidence loop-projection
-  constructors, including the incidence-based full restricted loop-projection
+  safe/no-dead, soundness, and `safeAndSound` packaging for connected loop
+  projections from accepting-trace/completion/proper-completion obligations,
+  with matching no-dead, safe/no-dead, sound, and `safeAndSound` wrappers for
+  reachable-incidence loop-projection constructors, including the
+  incidence-based full restricted loop-projection
   connectedness target and pattern-level do/redo loop-projection WF-net
   existence plus `safeAndSound` constructor theorems, and
   Lemma 3

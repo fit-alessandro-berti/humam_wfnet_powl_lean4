@@ -7572,6 +7572,207 @@ theorem certified_conversion_language_eq
   Language.ext
     (certified_conversion_language_preservation conversion)
 
+theorem certified_conversion_exists_model
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  ⟨conversion.OutTrans,
+    conversion.outLabel,
+    conversion.model,
+    certified_conversion_language_preservation conversion⟩
+
+theorem certified_conversion_exists_model_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  ⟨conversion.OutTrans,
+    conversion.outLabel,
+    conversion.model,
+    certified_conversion_language_eq conversion⟩
+
+theorem certified_conversion_safe_and_language_preservation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language conversion.outLabel conversion.model word :=
+  ⟨hsafeSound,
+    certified_conversion_language_preservation conversion⟩
+
+theorem certified_conversion_safe_and_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      WorkflowNet.language net label =
+        Powl.language conversion.outLabel conversion.model :=
+  ⟨hsafeSound,
+    certified_conversion_language_eq conversion⟩
+
+theorem certified_conversion_safe_and_exists_model
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  ⟨hsafeSound,
+    certified_conversion_exists_model conversion⟩
+
+theorem certified_conversion_safe_and_exists_model_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            WorkflowNet.language net label =
+              Powl.language outLabel model :=
+  ⟨hsafeSound,
+    certified_conversion_exists_model_language_eq conversion⟩
+
+theorem certified_conversion_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language conversion.outLabel conversion.model word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word :=
+by
+  rcases WorkflowNet.safeAndSound_visible_activity_language_witness
+      hsafeSound hlabel with
+    ⟨word, hnet, hactivity, _htrace⟩
+  exact
+    ⟨word,
+      (certified_conversion_language_preservation conversion word).mp hnet,
+      hactivity,
+      hnet⟩
+
+theorem certified_conversion_exists_model_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  ⟨conversion.OutTrans,
+    conversion.outLabel,
+    conversion.model,
+    certified_conversion_visible_activity_language_witness
+      conversion hsafeSound hlabel⟩
+
+theorem certified_conversion_safe_and_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ word,
+        Powl.language conversion.outLabel conversion.model word ∧
+          activity ∈ word ∧
+            WorkflowNet.language net label word :=
+  ⟨hsafeSound,
+    certified_conversion_visible_activity_language_witness
+      conversion hsafeSound hlabel⟩
+
+theorem certified_conversion_safe_and_exists_model_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∃ word,
+              Powl.language outLabel model word ∧
+                activity ∈ word ∧
+                  WorkflowNet.language net label word :=
+  ⟨hsafeSound,
+    certified_conversion_exists_model_visible_activity_language_witness
+      conversion hsafeSound hlabel⟩
+
 theorem theorem1_correctness_of_certified_successful_conversion
     {Place : Type u}
     {Trans : Type v}
@@ -7596,6 +7797,188 @@ theorem theorem1_correctness_language_eq_of_certified_successful_conversion
     WorkflowNet.language net label =
       Powl.language conversion.outLabel conversion.model :=
   certified_conversion_language_eq conversion
+
+theorem theorem1_correctness_exists_model_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∀ word,
+            WorkflowNet.language net label word ↔
+              Powl.language outLabel model word :=
+  certified_conversion_exists_model conversion
+
+theorem theorem1_correctness_exists_model_language_eq_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          WorkflowNet.language net label =
+            Powl.language outLabel model :=
+  certified_conversion_exists_model_language_eq conversion
+
+theorem theorem1_correctness_safe_and_language_preservation_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language conversion.outLabel conversion.model word :=
+  certified_conversion_safe_and_language_preservation
+    conversion hsafeSound
+
+theorem theorem1_correctness_safe_and_language_eq_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      WorkflowNet.language net label =
+        Powl.language conversion.outLabel conversion.model :=
+  certified_conversion_safe_and_language_eq conversion hsafeSound
+
+theorem theorem1_correctness_safe_and_exists_model_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  certified_conversion_safe_and_exists_model
+    conversion hsafeSound
+
+theorem theorem1_correctness_safe_and_exists_model_language_eq_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            WorkflowNet.language net label =
+              Powl.language outLabel model :=
+  certified_conversion_safe_and_exists_model_language_eq
+    conversion hsafeSound
+
+theorem theorem1_correctness_visible_activity_language_witness_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ word,
+      Powl.language conversion.outLabel conversion.model word ∧
+        activity ∈ word ∧
+          WorkflowNet.language net label word :=
+  certified_conversion_visible_activity_language_witness
+    conversion hsafeSound hlabel
+
+theorem theorem1_correctness_exists_model_visible_activity_language_witness_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  certified_conversion_exists_model_visible_activity_language_witness
+    conversion hsafeSound hlabel
+
+theorem theorem1_correctness_safe_and_visible_activity_language_witness_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ word,
+        Powl.language conversion.outLabel conversion.model word ∧
+          activity ∈ word ∧
+            WorkflowNet.language net label word :=
+  certified_conversion_safe_and_visible_activity_language_witness
+    conversion hsafeSound hlabel
+
+theorem theorem1_correctness_safe_and_exists_model_visible_activity_language_witness_of_certified_successful_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : CertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∃ word,
+              Powl.language outLabel model word ∧
+                activity ∈ word ∧
+                  WorkflowNet.language net label word :=
+  certified_conversion_safe_and_exists_model_visible_activity_language_witness
+    conversion hsafeSound hlabel
 
 def certified_conversion_atom
     {Place : Type u}
@@ -8499,6 +8882,74 @@ theorem semantic_certified_conversion_exists_model_language_eq
     conversion.model,
     semantic_certified_conversion_language_eq conversion⟩
 
+theorem semantic_certified_conversion_safe_and_language_preservation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language conversion.outLabel conversion.model word :=
+  ⟨hsafeSound,
+    semantic_certified_conversion_language_preservation conversion⟩
+
+theorem semantic_certified_conversion_safe_and_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      WorkflowNet.language net label =
+        Powl.language conversion.outLabel conversion.model :=
+  ⟨hsafeSound,
+    semantic_certified_conversion_language_eq conversion⟩
+
+theorem semantic_certified_conversion_safe_and_exists_model
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  ⟨hsafeSound,
+    semantic_certified_conversion_exists_model conversion⟩
+
+theorem semantic_certified_conversion_safe_and_exists_model_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            WorkflowNet.language net label =
+              Powl.language outLabel model :=
+  ⟨hsafeSound,
+    semantic_certified_conversion_exists_model_language_eq conversion⟩
+
 theorem semantic_certified_conversion_visible_activity_language_witness
     {Place : Type u}
     {Trans : Type v}
@@ -8520,6 +8971,76 @@ by
       hsafeSound hlabel with
     ⟨word, hnet, hactivity, _htrace⟩
   exact ⟨word, (conversion.certificate word).mp hnet, hactivity, hnet⟩
+
+theorem semantic_certified_conversion_exists_model_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  ⟨conversion.OutTrans,
+    conversion.outLabel,
+    conversion.model,
+    semantic_certified_conversion_visible_activity_language_witness
+      conversion hsafeSound hlabel⟩
+
+theorem semantic_certified_conversion_safe_and_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ word,
+        Powl.language conversion.outLabel conversion.model word ∧
+          activity ∈ word ∧
+            WorkflowNet.language net label word :=
+  ⟨hsafeSound,
+    semantic_certified_conversion_visible_activity_language_witness
+      conversion hsafeSound hlabel⟩
+
+theorem semantic_certified_conversion_safe_and_exists_model_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∃ word,
+              Powl.language outLabel model word ∧
+                activity ∈ word ∧
+                  WorkflowNet.language net label word :=
+  ⟨hsafeSound,
+    semantic_certified_conversion_exists_model_visible_activity_language_witness
+      conversion hsafeSound hlabel⟩
 
 def semantic_certified_conversion_of_certified_conversion
     {Place : Type u}
@@ -8785,6 +9306,74 @@ theorem theorem1_semantic_conversion_exists_model_language_eq
             Powl.language outLabel model :=
   semantic_certified_conversion_exists_model_language_eq conversion
 
+theorem theorem1_semantic_conversion_safe_and_language_preservation
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language conversion.outLabel conversion.model word :=
+  semantic_certified_conversion_safe_and_language_preservation
+    conversion hsafeSound
+
+theorem theorem1_semantic_conversion_safe_and_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      WorkflowNet.language net label =
+        Powl.language conversion.outLabel conversion.model :=
+  semantic_certified_conversion_safe_and_language_eq
+    conversion hsafeSound
+
+theorem theorem1_semantic_conversion_safe_and_exists_model
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  semantic_certified_conversion_safe_and_exists_model
+    conversion hsafeSound
+
+theorem theorem1_semantic_conversion_safe_and_exists_model_language_eq
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            WorkflowNet.language net label =
+              Powl.language outLabel model :=
+  semantic_certified_conversion_safe_and_exists_model_language_eq
+    conversion hsafeSound
+
 theorem theorem1_semantic_conversion_visible_activity_language_witness
     {Place : Type u}
     {Trans : Type v}
@@ -8802,6 +9391,71 @@ theorem theorem1_semantic_conversion_visible_activity_language_witness
         activity ∈ word ∧
           WorkflowNet.language net label word :=
   semantic_certified_conversion_visible_activity_language_witness
+    conversion hsafeSound hlabel
+
+theorem theorem1_semantic_conversion_exists_model_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  semantic_certified_conversion_exists_model_visible_activity_language_witness
+    conversion hsafeSound hlabel
+
+theorem theorem1_semantic_conversion_safe_and_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ word,
+        Powl.language conversion.outLabel conversion.model word ∧
+          activity ∈ word ∧
+            WorkflowNet.language net label word :=
+  semantic_certified_conversion_safe_and_visible_activity_language_witness
+    conversion hsafeSound hlabel
+
+theorem theorem1_semantic_conversion_safe_and_exists_model_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion : SemanticCertifiedConversion net label)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∃ word,
+              Powl.language outLabel model word ∧
+                activity ∈ word ∧
+                  WorkflowNet.language net label word :=
+  semantic_certified_conversion_safe_and_exists_model_visible_activity_language_witness
     conversion hsafeSound hlabel
 
 def theorem1_semantic_conversion_of_certified_conversion
@@ -9818,6 +10472,41 @@ theorem theorem2_global_language_eq_of_local_certified_conversion
       Powl.language conversion.outLabel conversion.model :=
   local_certified_conversion_global_language_eq conversion
 
+theorem theorem2_global_safe_and_language_preservation_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language conversion.outLabel conversion.model word :=
+  ⟨hsafeSound,
+    theorem2_global_language_preservation_of_local_certified_conversion
+      conversion⟩
+
+theorem theorem2_global_safe_and_language_eq_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      WorkflowNet.language net label =
+        Powl.language conversion.outLabel conversion.model :=
+  ⟨hsafeSound,
+    theorem2_global_language_eq_of_local_certified_conversion
+      conversion⟩
+
 def theorem2_semantic_conversion_of_local_certified_conversion
     {Place : Type u}
     {Trans : Type v}
@@ -9871,6 +10560,52 @@ theorem theorem2_semantic_conversion_language_eq_of_local_certified_conversion
     (theorem2_semantic_conversion_of_local_certified_conversion
       conversion)
 
+theorem theorem2_semantic_conversion_safe_and_language_preservation_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∀ word,
+        WorkflowNet.language net label word ↔
+          Powl.language
+            (theorem2_semantic_conversion_of_local_certified_conversion
+              conversion).outLabel
+            (theorem2_semantic_conversion_of_local_certified_conversion
+              conversion).model
+            word :=
+  semantic_certified_conversion_safe_and_language_preservation
+    (theorem2_semantic_conversion_of_local_certified_conversion
+      conversion)
+    hsafeSound
+
+theorem theorem2_semantic_conversion_safe_and_language_eq_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      WorkflowNet.language net label =
+        Powl.language
+          (theorem2_semantic_conversion_of_local_certified_conversion
+            conversion).outLabel
+          (theorem2_semantic_conversion_of_local_certified_conversion
+            conversion).model :=
+  semantic_certified_conversion_safe_and_language_eq
+    (theorem2_semantic_conversion_of_local_certified_conversion
+      conversion)
+    hsafeSound
+
 theorem theorem2_local_certified_conversion_visible_activity_language_witness
     {Place : Type u}
     {Trans : Type v}
@@ -9894,6 +10629,28 @@ theorem theorem2_local_certified_conversion_visible_activity_language_witness
     hsafeSound
     hlabel
 
+theorem theorem2_local_certified_conversion_safe_and_visible_activity_language_witness
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ word,
+        Powl.language conversion.outLabel conversion.model word ∧
+          activity ∈ word ∧
+            WorkflowNet.language net label word :=
+  ⟨hsafeSound,
+    theorem2_local_certified_conversion_visible_activity_language_witness
+      conversion hsafeSound hlabel⟩
+
 theorem theorem2_exists_powl_model_of_local_certified_conversion
     {Place : Type u}
     {Trans : Type v}
@@ -9913,6 +10670,27 @@ theorem theorem2_exists_powl_model_of_local_certified_conversion
     (theorem2_semantic_conversion_of_local_certified_conversion
       conversion)
 
+theorem theorem2_safe_and_exists_powl_model_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∀ word,
+              WorkflowNet.language net label word ↔
+                Powl.language outLabel model word :=
+  ⟨hsafeSound,
+    theorem2_exists_powl_model_of_local_certified_conversion
+      conversion⟩
+
 theorem theorem2_exists_powl_model_language_eq_of_local_certified_conversion
     {Place : Type u}
     {Trans : Type v}
@@ -9930,6 +10708,77 @@ theorem theorem2_exists_powl_model_language_eq_of_local_certified_conversion
   semantic_certified_conversion_exists_model_language_eq
     (theorem2_semantic_conversion_of_local_certified_conversion
       conversion)
+
+theorem theorem2_safe_and_exists_powl_model_language_eq_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            WorkflowNet.language net label =
+              Powl.language outLabel model :=
+  ⟨hsafeSound,
+    theorem2_exists_powl_model_language_eq_of_local_certified_conversion
+      conversion⟩
+
+theorem theorem2_exists_powl_model_visible_activity_language_witness_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    ∃ OutTrans : Type v,
+      ∃ outLabel : OutTrans -> TransitionLabel Activity,
+        ∃ model : Powl OutTrans,
+          ∃ word,
+            Powl.language outLabel model word ∧
+              activity ∈ word ∧
+                WorkflowNet.language net label word :=
+  semantic_certified_conversion_exists_model_visible_activity_language_witness
+    (theorem2_semantic_conversion_of_local_certified_conversion
+      conversion)
+    hsafeSound
+    hlabel
+
+theorem theorem2_safe_and_exists_powl_model_visible_activity_language_witness_of_local_certified_conversion
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {label : Trans -> TransitionLabel Activity}
+    (conversion :
+      LocalCertifiedConversion net label net.source net.sink)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    {trans : Trans}
+    {activity : Activity}
+    (hlabel : label trans = TransitionLabel.visible activity) :
+    WorkflowNet.safeAndSound net ∧
+      ∃ OutTrans : Type v,
+        ∃ outLabel : OutTrans -> TransitionLabel Activity,
+          ∃ model : Powl OutTrans,
+            ∃ word,
+              Powl.language outLabel model word ∧
+                activity ∈ word ∧
+                  WorkflowNet.language net label word :=
+  ⟨hsafeSound,
+    theorem2_exists_powl_model_visible_activity_language_witness_of_local_certified_conversion
+      conversion hsafeSound hlabel⟩
 
 structure SemiBlockCertifiedConversion
     {Place : Type u}
@@ -40209,6 +41058,62 @@ theorem lemma2_loop_projection_no_dead_transitions_of_accepting_trace_mem
         net part startPlace endPlace hsourceSink hconnected)
     haccepting
 
+theorem lemma2_loop_projection_safe_and_no_dead_transitions_of_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hconnected :
+      ∀ node :
+        PetriNet.Node
+          {place : Place //
+            Patterns.loopProjectionPlaces net part startPlace endPlace place}
+          {trans : Trans // part trans},
+        PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            (PetriNet.Node.place
+              ⟨net.source,
+                Patterns.loopProjectionPlaces_source
+                  net part startPlace endPlace⟩)
+            node ∧
+          PetriNet.Path
+            (Patterns.loopProjectionRestricted net part startPlace endPlace)
+            node
+            (PetriNet.Node.place
+              ⟨net.sink,
+                Patterns.loopProjectionPlaces_sink
+                  net part startPlace endPlace⟩))
+    (hsafe :
+      WorkflowNet.safe
+        (lemma2_loop_projection_workflow_net_of_connected
+          net part startPlace endPlace hsourceSink hconnected))
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              (lemma2_loop_projection_workflow_net_of_connected
+                net part startPlace endPlace hsourceSink hconnected)
+              (WorkflowNet.initial
+                (lemma2_loop_projection_workflow_net_of_connected
+                  net part startPlace endPlace hsourceSink hconnected))
+              trace
+              (WorkflowNet.final
+                (lemma2_loop_projection_workflow_net_of_connected
+                  net part startPlace endPlace hsourceSink hconnected)) ∧
+            trans ∈ trace) :
+    WorkflowNet.safe
+        (lemma2_loop_projection_workflow_net_of_connected
+          net part startPlace endPlace hsourceSink hconnected) ∧
+      WorkflowNet.noDeadTransitions
+        (lemma2_loop_projection_workflow_net_of_connected
+          net part startPlace endPlace hsourceSink hconnected) :=
+  ⟨hsafe,
+    lemma2_loop_projection_no_dead_transitions_of_accepting_trace_mem
+      net part startPlace endPlace hsourceSink hconnected haccepting⟩
+
 theorem lemma2_loop_projection_sound_of_accepting_trace_mem
     {Place : Type u}
     {Trans : Type v}
@@ -40426,6 +41331,69 @@ theorem lemma2_loop_projection_reachable_incident_no_dead_transitions_of_accepti
         net part startPlace endPlace hsourceSink hpartReach
         hnoInStart hnonempty hincoming houtgoing)
     haccepting
+
+theorem lemma2_loop_projection_reachable_incident_safe_and_no_dead_transitions_of_accepting_trace_mem
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    (net : WorkflowNet Place Trans)
+    (part : Set Trans)
+    (startPlace endPlace : Place)
+    (hsourceSink : net.source ≠ net.sink)
+    (hpartReach :
+      ∀ candidate,
+        part candidate ↔
+          PetriNet.reachableTransitionsBetweenPlaces
+            net.toPetriNet startPlace endPlace candidate)
+    (hnoInStart : ∀ candidate, part candidate ->
+      ¬ net.transToPlace candidate startPlace)
+    (hnonempty : ∃ trans, part trans)
+    (hincoming :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.transToPlace trans place)
+    (houtgoing :
+      ∀ {place : Place},
+        PetriNet.placesTouching net.toPetriNet part place ->
+        place ≠ startPlace ->
+        place ≠ endPlace ->
+          ∃ trans, part trans ∧ net.placeToTrans place trans)
+    (hsafe :
+      WorkflowNet.safe
+        (lemma2_loop_projection_workflow_net_of_reachable_incident
+          net part startPlace endPlace hsourceSink hpartReach
+          hnoInStart hnonempty hincoming houtgoing))
+    (haccepting :
+      ∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              (lemma2_loop_projection_workflow_net_of_reachable_incident
+                net part startPlace endPlace hsourceSink hpartReach
+                hnoInStart hnonempty hincoming houtgoing)
+              (WorkflowNet.initial
+                (lemma2_loop_projection_workflow_net_of_reachable_incident
+                  net part startPlace endPlace hsourceSink hpartReach
+                  hnoInStart hnonempty hincoming houtgoing))
+              trace
+              (WorkflowNet.final
+                (lemma2_loop_projection_workflow_net_of_reachable_incident
+                  net part startPlace endPlace hsourceSink hpartReach
+                  hnoInStart hnonempty hincoming houtgoing)) ∧
+            trans ∈ trace) :
+    WorkflowNet.safe
+        (lemma2_loop_projection_workflow_net_of_reachable_incident
+          net part startPlace endPlace hsourceSink hpartReach
+          hnoInStart hnonempty hincoming houtgoing) ∧
+      WorkflowNet.noDeadTransitions
+        (lemma2_loop_projection_workflow_net_of_reachable_incident
+          net part startPlace endPlace hsourceSink hpartReach
+          hnoInStart hnonempty hincoming houtgoing) :=
+  ⟨hsafe,
+    lemma2_loop_projection_reachable_incident_no_dead_transitions_of_accepting_trace_mem
+      net part startPlace endPlace hsourceSink hpartReach hnoInStart hnonempty
+      hincoming houtgoing haccepting⟩
 
 theorem lemma2_loop_projection_reachable_incident_sound_of_accepting_trace_mem
     {Place : Type u}
