@@ -250,8 +250,8 @@ The current proof spine is:
   soundness, and `safeAndSound` transfer from selected accepting sequences
   plus supplied completion/proper-completion obligations, including variants
   that consume the original net's `safeAndSound` hypothesis directly, indexed
-  XOR-pattern projection WF-net and no-dead/safe-no-dead/sound/`safeAndSound`
-  constructor witnesses, with direct original-safe-and-sound indexed `safe`,
+  XOR-pattern projection WF-net, selected accepting-trace transfer, and
+  no-dead/safe-no-dead/sound/`safeAndSound` constructor witnesses, with direct original-safe-and-sound indexed `safe`,
   safe/no-dead, and `safeAndSound` wrappers, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, a mapped recursive
@@ -476,7 +476,9 @@ The current proof spine is:
   reachable-incidence loop-projection constructors, including the
   incidence-based full restricted loop-projection
   connectedness target and pattern-level do/redo loop-projection WF-net
-  existence plus no-dead, safe/no-dead, `sound`, and `safeAndSound` constructor theorems, and
+  existence plus a no-dead/completion-to-accepting-trace bridge, direct
+  no-dead/completion/proper-completion sound bridges, and no-dead,
+  safe/no-dead, `sound`, and `safeAndSound` constructor theorems, and
   Lemma 3
   partial-order projection boundary/internal edge, one-step path, and
   raw-`PathIn` constructor/path-lifting facts plus bidirectional
@@ -489,7 +491,8 @@ The current proof spine is:
   variants that consume the original net's `safeAndSound` hypothesis directly,
   indexed partial-order-pattern projection WF-net existence plus
   accepting-trace/no-dead-witness no-dead, safe/no-dead, `sound`, and `safeAndSound` constructor theorems
-  under incidence obligations, reachable-shape safe/safe-no-dead/`safeAndSound`
+  under incidence obligations, direct no-dead/completion/proper-completion
+  sound bridges, reachable-shape safe/safe-no-dead/`safeAndSound`
   pattern bridges that consume original `safeAndSound`, sound
   packaging under supplied residual obligations, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance

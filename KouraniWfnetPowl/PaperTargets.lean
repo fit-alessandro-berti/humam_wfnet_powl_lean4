@@ -2402,6 +2402,31 @@ theorem workflow_safe_and_sound_of_accepting_trace_mem_option_proper
   WorkflowNet.safeAndSound_of_accepting_trace_mem_option_proper
     hsafe haccepting hcomplete hproper
 
+theorem workflow_sound_of_no_dead_transitions_option_proper
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    (hproper : WorkflowNet.properCompletion net) :
+    WorkflowNet.sound net :=
+  ⟨hnoDead, hcomplete, hproper⟩
+
+theorem workflow_safe_and_sound_of_safe_no_dead_transitions_option_proper
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    (hsafe : WorkflowNet.safe net)
+    (hnoDead : WorkflowNet.noDeadTransitions net)
+    (hcomplete : WorkflowNet.optionToComplete net)
+    (hproper : WorkflowNet.properCompletion net) :
+    WorkflowNet.safeAndSound net :=
+  ⟨hsafe,
+    workflow_sound_of_no_dead_transitions_option_proper
+      hnoDead hcomplete hproper⟩
+
 theorem workflow_no_dead_transition_option_to_complete_accepting_witness
     {Place : Type u}
     {Trans : Type v}
@@ -6967,6 +6992,147 @@ theorem lemma3_partial_order_pattern_projection_safe_and_no_dead_transitions_con
             (net := projection)
             haccepting⟩⟩
 
+theorem lemma3_partial_order_pattern_projection_sound_of_no_dead_and_complete_of_incidence
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {index : Nat}
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})]
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hentry :
+      ∀ trans, part trans ->
+        ∃ entry,
+          WorkflowNet.entryPoints net part entry ∧
+            net.placeToTrans entry trans)
+    (hexit :
+      ∀ trans, part trans ->
+        ∃ exit,
+          WorkflowNet.exitPoints net part exit ∧
+            net.transToPlace trans exit)
+    (hincoming :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.transToPlace trans place ∧
+              ∃ entry,
+                WorkflowNet.entryPoints net part entry ∧
+                  net.placeToTrans entry trans)
+    (houtgoing :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.placeToTrans place trans ∧
+              ∃ exit,
+                WorkflowNet.exitPoints net part exit ∧
+                  net.transToPlace trans exit) :
+    ∃ projection :
+      WorkflowNet
+        (PetriNet.NormalizedPlace
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place})
+        (PetriNet.NormalizedTrans {trans : Trans // part trans}),
+      WorkflowNet.noDeadTransitions projection ->
+      WorkflowNet.optionToComplete projection ->
+      WorkflowNet.properCompletion projection ->
+        WorkflowNet.sound projection := by
+  have _hpatternParts : partition.hasAtLeastTwoParts := hpattern.1
+  have hnonempty : ∃ trans, part trans :=
+    Partition.nonempty_of_listGet? partition hpart
+  let projection :
+      WorkflowNet
+        (PetriNet.NormalizedPlace
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place})
+        (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
+    lemma3_partial_order_projection_restricted_normalized_workflow_net_of_incidence
+      net part hnonempty hentry hexit hincoming houtgoing
+  exact
+    ⟨projection,
+      fun hnoDead hcomplete hproper =>
+        workflow_sound_of_no_dead_transitions_option_proper
+          hnoDead hcomplete hproper⟩
+
+theorem lemma3_partial_order_pattern_projection_safe_and_sound_of_safe_no_dead_and_complete_of_incidence
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    {index : Nat}
+    {part : Set Trans}
+    [DecidableEq
+      (PetriNet.NormalizedPlace
+        {place : Patterns.BoundaryPlace Place //
+          Patterns.partialOrderProjectionPlaces net part place})]
+    (hpattern : Patterns.partialOrderPattern net partition)
+    (hpart : Powl.listGet? partition.parts index = some part)
+    (hentry :
+      ∀ trans, part trans ->
+        ∃ entry,
+          WorkflowNet.entryPoints net part entry ∧
+            net.placeToTrans entry trans)
+    (hexit :
+      ∀ trans, part trans ->
+        ∃ exit,
+          WorkflowNet.exitPoints net part exit ∧
+            net.transToPlace trans exit)
+    (hincoming :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.transToPlace trans place ∧
+              ∃ entry,
+                WorkflowNet.entryPoints net part entry ∧
+                  net.placeToTrans entry trans)
+    (houtgoing :
+      ∀ {place : Place},
+        Patterns.partialOrderProjectionPlaces
+            net part (Patterns.BoundaryPlace.original place) ->
+          ∃ trans,
+            part trans ∧
+              net.placeToTrans place trans ∧
+              ∃ exit,
+                WorkflowNet.exitPoints net part exit ∧
+                  net.transToPlace trans exit) :
+    ∃ projection :
+      WorkflowNet
+        (PetriNet.NormalizedPlace
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place})
+        (PetriNet.NormalizedTrans {trans : Trans // part trans}),
+      WorkflowNet.safe projection ->
+      WorkflowNet.noDeadTransitions projection ->
+      WorkflowNet.optionToComplete projection ->
+      WorkflowNet.properCompletion projection ->
+        WorkflowNet.safeAndSound projection := by
+  have _hpatternParts : partition.hasAtLeastTwoParts := hpattern.1
+  have hnonempty : ∃ trans, part trans :=
+    Partition.nonempty_of_listGet? partition hpart
+  let projection :
+      WorkflowNet
+        (PetriNet.NormalizedPlace
+          {place : Patterns.BoundaryPlace Place //
+            Patterns.partialOrderProjectionPlaces net part place})
+        (PetriNet.NormalizedTrans {trans : Trans // part trans}) :=
+    lemma3_partial_order_projection_restricted_normalized_workflow_net_of_incidence
+      net part hnonempty hentry hexit hincoming houtgoing
+  exact
+    ⟨projection,
+      fun hsafe hnoDead hcomplete hproper =>
+        workflow_safe_and_sound_of_safe_no_dead_transitions_option_proper
+          hsafe hnoDead hcomplete hproper⟩
+
 theorem lemma3_partial_order_pattern_projection_safe_and_sound_constructor_of_incidence
     {Place : Type u}
     {Trans : Type v}
@@ -8187,6 +8353,54 @@ theorem lemma1_xor_pattern_projection_workflow_net_of_indexed_part
   ⟨lemma1_xor_projection_workflow_net
     hpattern
     (Partition.mem_of_listGet? partition hpart)⟩
+
+theorem lemma1_xor_pattern_projection_accepting_trace_mem_of_indexed_part
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {index : Nat}
+    {part : Set Trans}
+    (hpart : Powl.listGet? partition.parts index = some part) :
+    ∃ projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans},
+      (∀ trans : {trans : Trans // part trans},
+        ∃ trace : List {trans : Trans // part trans},
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net) ∧
+            trans ∈ trace) ->
+        ∀ trans : {trans : Trans // part trans},
+          ∃ trace : List {trans : Trans // part trans},
+            WorkflowNet.FiringSequence
+                projection
+                (WorkflowNet.initial projection)
+                trace
+                (WorkflowNet.final projection) ∧
+              trans ∈ trace := by
+  have hpartMem : part ∈ partition.parts :=
+    Partition.mem_of_listGet? partition hpart
+  let projection :
+      WorkflowNet
+        {place : Place // PetriNet.placesTouching net.toPetriNet part place}
+        {trans : Trans // part trans} :=
+    Patterns.xorProjectionWorkflowNet hpattern hpartMem
+  exact
+    ⟨projection,
+      fun haccepting trans =>
+        by
+          rcases haccepting trans with ⟨trace, sequence, hmem⟩
+          exact
+            ⟨trace,
+              lemma1_xor_projection_selected_accepting_sequence_restricts
+                hpattern hpartMem sequence,
+              hmem⟩⟩
 
 theorem lemma1_xor_pattern_projection_no_dead_transitions_constructor_of_indexed_part
     {Place : Type u}
@@ -44714,6 +44928,268 @@ theorem lemma2_loop_pattern_projection_workflow_nets_of_internal_incidence
       Patterns.loopProjectionWorkflowNetOfConnected
         net redoPart predo pdo hsourceSink
         (hredoConnected hincoming houtgoing)⟩
+
+theorem lemma2_loop_pattern_projection_accepting_trace_mem_of_no_dead_and_complete_of_internal_incidence
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      ((∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet doPart place ->
+          place ≠ pdo ->
+          place ≠ predo ->
+            ∃ trans, doPart trans ∧ net.transToPlace trans place) ->
+        (∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet doPart place ->
+          place ≠ pdo ->
+          place ≠ predo ->
+            ∃ trans, doPart trans ∧ net.placeToTrans place trans) ->
+        ∃ projection :
+          WorkflowNet
+            {place : Place //
+              Patterns.loopProjectionPlaces
+                net doPart pdo predo place}
+            {trans : Trans // doPart trans},
+          WorkflowNet.noDeadTransitions projection ->
+          WorkflowNet.optionToComplete projection ->
+          ∀ trans : {trans : Trans // doPart trans},
+            ∃ trace : List {trans : Trans // doPart trans},
+              WorkflowNet.FiringSequence
+                projection
+                (WorkflowNet.initial projection)
+                trace
+                (WorkflowNet.final projection) ∧
+                trans ∈ trace) ∧
+      ((∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet redoPart place ->
+          place ≠ predo ->
+          place ≠ pdo ->
+            ∃ trans, redoPart trans ∧ net.transToPlace trans place) ->
+        (∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet redoPart place ->
+          place ≠ predo ->
+          place ≠ pdo ->
+            ∃ trans, redoPart trans ∧ net.placeToTrans place trans) ->
+        ∃ projection :
+          WorkflowNet
+            {place : Place //
+              Patterns.loopProjectionPlaces
+                net redoPart predo pdo place}
+            {trans : Trans // redoPart trans},
+          WorkflowNet.noDeadTransitions projection ->
+          WorkflowNet.optionToComplete projection ->
+          ∀ trans : {trans : Trans // redoPart trans},
+            ∃ trace : List {trans : Trans // redoPart trans},
+              WorkflowNet.FiringSequence
+                projection
+                (WorkflowNet.initial projection)
+                trace
+                (WorkflowNet.final projection) ∧
+                trans ∈ trace) := by
+  rcases
+    Patterns.loopPattern_projection_restricted_connected_of_internal_incidence
+      hpattern with
+    ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem,
+      hdoConnected, hredoConnected⟩
+  have hsourceSink : net.source ≠ net.sink :=
+    Patterns.loopPattern_source_ne_sink hpattern
+  refine
+    ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem, ?_, ?_⟩
+  · intro hincoming houtgoing
+    let projection :
+        WorkflowNet
+          {place : Place //
+            Patterns.loopProjectionPlaces net doPart pdo predo place}
+          {trans : Trans // doPart trans} :=
+      Patterns.loopProjectionWorkflowNetOfConnected
+        net doPart pdo predo hsourceSink
+        (hdoConnected hincoming houtgoing)
+    exact
+      ⟨projection,
+        fun hnoDead hcomplete trans =>
+          workflow_no_dead_transition_option_to_complete_accepting_trace_mem
+            (net := projection)
+            hnoDead
+            hcomplete
+            trans⟩
+  · intro hincoming houtgoing
+    let projection :
+        WorkflowNet
+          {place : Place //
+            Patterns.loopProjectionPlaces net redoPart predo pdo place}
+          {trans : Trans // redoPart trans} :=
+      Patterns.loopProjectionWorkflowNetOfConnected
+        net redoPart predo pdo hsourceSink
+        (hredoConnected hincoming houtgoing)
+    exact
+      ⟨projection,
+        fun hnoDead hcomplete trans =>
+          workflow_no_dead_transition_option_to_complete_accepting_trace_mem
+            (net := projection)
+            hnoDead
+            hcomplete
+            trans⟩
+
+theorem lemma2_loop_pattern_projection_sound_of_no_dead_and_complete_of_internal_incidence
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      ((∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet doPart place ->
+          place ≠ pdo ->
+          place ≠ predo ->
+            ∃ trans, doPart trans ∧ net.transToPlace trans place) ->
+        (∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet doPart place ->
+          place ≠ pdo ->
+          place ≠ predo ->
+            ∃ trans, doPart trans ∧ net.placeToTrans place trans) ->
+        ∃ projection :
+          WorkflowNet
+            {place : Place //
+              Patterns.loopProjectionPlaces
+                net doPart pdo predo place}
+            {trans : Trans // doPart trans},
+          WorkflowNet.noDeadTransitions projection ->
+          WorkflowNet.optionToComplete projection ->
+          WorkflowNet.properCompletion projection ->
+            WorkflowNet.sound projection) ∧
+      ((∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet redoPart place ->
+          place ≠ predo ->
+          place ≠ pdo ->
+            ∃ trans, redoPart trans ∧ net.transToPlace trans place) ->
+        (∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet redoPart place ->
+          place ≠ predo ->
+          place ≠ pdo ->
+            ∃ trans, redoPart trans ∧ net.placeToTrans place trans) ->
+        ∃ projection :
+          WorkflowNet
+            {place : Place //
+              Patterns.loopProjectionPlaces
+                net redoPart predo pdo place}
+            {trans : Trans // redoPart trans},
+          WorkflowNet.noDeadTransitions projection ->
+          WorkflowNet.optionToComplete projection ->
+          WorkflowNet.properCompletion projection ->
+            WorkflowNet.sound projection) := by
+  rcases
+    lemma2_loop_pattern_projection_accepting_trace_mem_of_no_dead_and_complete_of_internal_incidence
+      hpattern with
+    ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem,
+      hdoAccepting, hredoAccepting⟩
+  refine
+    ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem, ?_, ?_⟩
+  · intro hincoming houtgoing
+    rcases hdoAccepting hincoming houtgoing with
+      ⟨projection, _haccepting⟩
+    exact
+      ⟨projection,
+        fun hnoDead hcomplete hproper =>
+          workflow_sound_of_no_dead_transitions_option_proper
+            hnoDead hcomplete hproper⟩
+  · intro hincoming houtgoing
+    rcases hredoAccepting hincoming houtgoing with
+      ⟨projection, _haccepting⟩
+    exact
+      ⟨projection,
+        fun hnoDead hcomplete hproper =>
+          workflow_sound_of_no_dead_transitions_option_proper
+            hnoDead hcomplete hproper⟩
+
+theorem lemma2_loop_pattern_projection_safe_and_sound_of_safe_no_dead_and_complete_of_internal_incidence
+    {Place : Type u}
+    {Trans : Type v}
+    {Activity : Type w}
+    [DecidableEq Place]
+    {label : Trans -> TransitionLabel Activity}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.loopPattern label net partition) :
+    ∃ doPart redoPart pdo predo,
+      doPart ∈ partition.parts ∧
+      redoPart ∈ partition.parts ∧
+      ((∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet doPart place ->
+          place ≠ pdo ->
+          place ≠ predo ->
+            ∃ trans, doPart trans ∧ net.transToPlace trans place) ->
+        (∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet doPart place ->
+          place ≠ pdo ->
+          place ≠ predo ->
+            ∃ trans, doPart trans ∧ net.placeToTrans place trans) ->
+        ∃ projection :
+          WorkflowNet
+            {place : Place //
+              Patterns.loopProjectionPlaces
+                net doPart pdo predo place}
+            {trans : Trans // doPart trans},
+          WorkflowNet.safe projection ->
+          WorkflowNet.noDeadTransitions projection ->
+          WorkflowNet.optionToComplete projection ->
+          WorkflowNet.properCompletion projection ->
+            WorkflowNet.safeAndSound projection) ∧
+      ((∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet redoPart place ->
+          place ≠ predo ->
+          place ≠ pdo ->
+            ∃ trans, redoPart trans ∧ net.transToPlace trans place) ->
+        (∀ {place : Place},
+          PetriNet.placesTouching net.toPetriNet redoPart place ->
+          place ≠ predo ->
+          place ≠ pdo ->
+            ∃ trans, redoPart trans ∧ net.placeToTrans place trans) ->
+        ∃ projection :
+          WorkflowNet
+            {place : Place //
+              Patterns.loopProjectionPlaces
+                net redoPart predo pdo place}
+            {trans : Trans // redoPart trans},
+          WorkflowNet.safe projection ->
+          WorkflowNet.noDeadTransitions projection ->
+          WorkflowNet.optionToComplete projection ->
+          WorkflowNet.properCompletion projection ->
+            WorkflowNet.safeAndSound projection) := by
+  rcases
+    lemma2_loop_pattern_projection_accepting_trace_mem_of_no_dead_and_complete_of_internal_incidence
+      hpattern with
+    ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem,
+      hdoAccepting, hredoAccepting⟩
+  refine
+    ⟨doPart, redoPart, pdo, predo, hdoMem, hredoMem, ?_, ?_⟩
+  · intro hincoming houtgoing
+    rcases hdoAccepting hincoming houtgoing with
+      ⟨projection, _haccepting⟩
+    exact
+      ⟨projection,
+        fun hsafe hnoDead hcomplete hproper =>
+          workflow_safe_and_sound_of_safe_no_dead_transitions_option_proper
+            hsafe hnoDead hcomplete hproper⟩
+  · intro hincoming houtgoing
+    rcases hredoAccepting hincoming houtgoing with
+      ⟨projection, _haccepting⟩
+    exact
+      ⟨projection,
+        fun hsafe hnoDead hcomplete hproper =>
+          workflow_safe_and_sound_of_safe_no_dead_transitions_option_proper
+            hsafe hnoDead hcomplete hproper⟩
 
 theorem lemma2_loop_pattern_projection_sound_constructors_of_internal_incidence
     {Place : Type u}
