@@ -8526,6 +8526,517 @@ theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound
     hcomplete
     hproper
 
+theorem lemma1_xor_projection_accepting_traces_of_original_safe_and_sound_and_trace_closed
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {part : Set Trans}
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (htraceClosed :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∃ typedTrace : List {trans : Trans // part trans},
+                typedTrace.map Subtype.val = trace ∧
+                  trans ∈ typedTrace) :
+    ∀ trans : {trans : Trans // part trans},
+      ∃ trace : List {trans : Trans // part trans},
+        WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            (trace.map Subtype.val)
+            (WorkflowNet.final net) ∧
+          trans ∈ trace := by
+  intro trans
+  rcases
+      WorkflowNet.safeAndSound_accepting_trace_mem
+        hsafeSound trans.val with
+    ⟨trace, hsequence, hmem⟩
+  rcases htraceClosed trans trace hsequence hmem with
+    ⟨typedTrace, hmap, htypedMem⟩
+  exact ⟨typedTrace, by simpa [hmap] using hsequence, htypedMem⟩
+
+theorem lemma1_xor_projection_safe_and_no_dead_transitions_of_original_safe_and_sound_and_trace_closed
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (htraceClosed :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∃ typedTrace : List {trans : Trans // part trans},
+                typedTrace.map Subtype.val = trace ∧
+                  trans ∈ typedTrace) :
+    WorkflowNet.safe (Patterns.xorProjectionWorkflowNet hpattern hpart) ∧
+      WorkflowNet.noDeadTransitions
+        (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_no_dead_transitions_of_original_safe_and_sound
+    hpattern hpart hsafeSound
+    (lemma1_xor_projection_accepting_traces_of_original_safe_and_sound_and_trace_closed
+      hsafeSound htraceClosed)
+
+theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_trace_closed
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (htraceClosed :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∃ typedTrace : List {trans : Trans // part trans},
+                typedTrace.map Subtype.val = trace ∧
+                  trans ∈ typedTrace)
+    (hcomplete :
+      WorkflowNet.optionToComplete
+        (Patterns.xorProjectionWorkflowNet hpattern hpart))
+    (hproper :
+      WorkflowNet.properCompletion
+        (Patterns.xorProjectionWorkflowNet hpattern hpart)) :
+    WorkflowNet.safeAndSound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound
+    hpattern hpart hsafeSound
+    (lemma1_xor_projection_accepting_traces_of_original_safe_and_sound_and_trace_closed
+      hsafeSound htraceClosed)
+    hcomplete
+    hproper
+
+theorem lemma1_xor_projection_proper_completion_of_original_safe_and_sound
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net) :
+    WorkflowNet.properCompletion
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) := by
+  intro marking hreachable hsinkPositive
+  let projection := Patterns.xorProjectionWorkflowNet hpattern hpart
+  have hlifted :
+      WorkflowNet.reachable
+        net
+        (WorkflowNet.initial net)
+        (Marking.extend marking) :=
+    lemma1_xor_projection_reachable_lifts
+      hpattern hpart hreachable
+  have hsinkOriginal : Marking.extend marking net.sink > 0 := by
+    change Marking.extend marking projection.sink.val > 0
+    simpa using hsinkPositive
+  have horiginalFinal :
+      Marking.extend marking = WorkflowNet.final net :=
+    WorkflowNet.safeAndSound_properCompletion
+      hsafeSound
+      (Marking.extend marking)
+      hlifted
+      hsinkOriginal
+  have hrestrictExtend :
+      Marking.restrict (Marking.extend marking) = marking := by
+    funext place
+    simp [Marking.restrict]
+  calc
+    marking = Marking.restrict (Marking.extend marking) := hrestrictExtend.symm
+    _ = Marking.restrict (WorkflowNet.final net) := by rw [horiginalFinal]
+    _ = WorkflowNet.final projection := by
+      exact WorkflowNet.restricted_final_eq net projection (by rfl)
+
+theorem lemma1_xor_projection_option_to_complete_of_original_safe_and_sound_and_completion_trace_closed
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (hcompletionTraceClosed :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (Marking.extend marking)
+              trace
+              (WorkflowNet.final net) ->
+            ∃ typedTrace : List {trans : Trans // part trans},
+              typedTrace.map Subtype.val = trace) :
+    WorkflowNet.optionToComplete
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) := by
+  intro marking hreachable
+  let projection := Patterns.xorProjectionWorkflowNet hpattern hpart
+  have hlifted :
+      WorkflowNet.reachable
+        net
+        (WorkflowNet.initial net)
+        (Marking.extend marking) :=
+    lemma1_xor_projection_reachable_lifts
+      hpattern hpart hreachable
+  rcases
+      WorkflowNet.safeAndSound_optionToComplete
+        hsafeSound
+        (Marking.extend marking)
+        hlifted with
+    ⟨trace, hcompletion⟩
+  rcases hcompletionTraceClosed marking trace hcompletion with
+    ⟨typedTrace, htypedTrace⟩
+  have hcompletionTyped :
+      WorkflowNet.FiringSequence
+        net
+        (Marking.extend marking)
+        (typedTrace.map Subtype.val)
+        (WorkflowNet.final net) := by
+    simpa [htypedTrace] using hcompletion
+  have hprojectedCompletion :
+      WorkflowNet.FiringSequence
+        projection
+        (Marking.restrict (Marking.extend marking))
+        typedTrace
+        (Marking.restrict (WorkflowNet.final net)) :=
+    lemma1_xor_projection_selected_sequence_restricts
+      hpattern hpart hcompletionTyped
+  have hrestrictExtend :
+      Marking.restrict (Marking.extend marking) = marking := by
+    funext place
+    simp [Marking.restrict]
+  have hfinalRestrict :
+      Marking.restrict (WorkflowNet.final net) =
+        WorkflowNet.final projection :=
+    WorkflowNet.restricted_final_eq net projection (by rfl)
+  exact
+    ⟨typedTrace,
+      by
+        simpa [hrestrictExtend, hfinalRestrict]
+          using hprojectedCompletion⟩
+
+theorem lemma1_xor_projection_option_to_complete_of_branch_completion_witnesses
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hcompletionWitness :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            (Patterns.xorProjectionWorkflowNet hpattern hpart)
+            (WorkflowNet.initial
+              (Patterns.xorProjectionWorkflowNet hpattern hpart))
+            marking ->
+          ∃ trace : List {trans : Trans // part trans},
+            WorkflowNet.FiringSequence
+              net
+              (Marking.extend marking)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net)) :
+    WorkflowNet.optionToComplete
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) := by
+  intro marking hreachable
+  let projection := Patterns.xorProjectionWorkflowNet hpattern hpart
+  rcases hcompletionWitness marking hreachable with
+    ⟨trace, hcompletion⟩
+  have hprojectedCompletion :
+      WorkflowNet.FiringSequence
+        projection
+        (Marking.restrict (Marking.extend marking))
+        trace
+        (Marking.restrict (WorkflowNet.final net)) :=
+    lemma1_xor_projection_selected_sequence_restricts
+      hpattern hpart hcompletion
+  have hrestrictExtend :
+      Marking.restrict (Marking.extend marking) = marking := by
+    funext place
+    simp [Marking.restrict]
+  have hfinalRestrict :
+      Marking.restrict (WorkflowNet.final net) =
+        WorkflowNet.final projection :=
+    WorkflowNet.restricted_final_eq net projection (by rfl)
+  exact
+    ⟨trace,
+      by
+        simpa [hrestrictExtend, hfinalRestrict]
+          using hprojectedCompletion⟩
+
+theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_closed_traces
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (htraceClosed :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∃ typedTrace : List {trans : Trans // part trans},
+                typedTrace.map Subtype.val = trace ∧
+                  trans ∈ typedTrace)
+    (hcompletionTraceClosed :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (Marking.extend marking)
+              trace
+              (WorkflowNet.final net) ->
+            ∃ typedTrace : List {trans : Trans // part trans},
+              typedTrace.map Subtype.val = trace) :
+    WorkflowNet.safeAndSound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_trace_closed
+    hpattern hpart hsafeSound htraceClosed
+    (lemma1_xor_projection_option_to_complete_of_original_safe_and_sound_and_completion_trace_closed
+      hpattern hpart hsafeSound hcompletionTraceClosed)
+    (lemma1_xor_projection_proper_completion_of_original_safe_and_sound
+      hpattern hpart hsafeSound)
+
+theorem lemma1_xor_projection_accepting_traces_of_original_safe_and_sound_and_completion_trace_closed
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (hcompletionTraceClosed :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (Marking.extend marking)
+              trace
+              (WorkflowNet.final net) ->
+            ∃ typedTrace : List {trans : Trans // part trans},
+              typedTrace.map Subtype.val = trace) :
+    ∀ trans : {trans : Trans // part trans},
+      ∃ trace : List {trans : Trans // part trans},
+        WorkflowNet.FiringSequence
+            net
+            (WorkflowNet.initial net)
+            (trace.map Subtype.val)
+            (WorkflowNet.final net) ∧
+          trans ∈ trace := by
+  intro trans
+  let projection := Patterns.xorProjectionWorkflowNet hpattern hpart
+  rcases
+      WorkflowNet.safeAndSound_accepting_trace_mem
+        hsafeSound trans.val with
+    ⟨trace, hsequence, hmem⟩
+  have hinitialExtend :
+      Marking.extend (WorkflowNet.initial projection) =
+        WorkflowNet.initial net :=
+    WorkflowNet.restricted_initial_extend_eq net projection (by rfl)
+  have hsequenceFromProjectionInitial :
+      WorkflowNet.FiringSequence
+        net
+        (Marking.extend (WorkflowNet.initial projection))
+        trace
+        (WorkflowNet.final net) := by
+    simpa [hinitialExtend] using hsequence
+  rcases
+      hcompletionTraceClosed
+        (WorkflowNet.initial projection)
+        trace
+        hsequenceFromProjectionInitial with
+    ⟨typedTrace, htypedTrace⟩
+  have htypedValueMem : trans.val ∈ typedTrace.map Subtype.val := by
+    simpa [htypedTrace] using hmem
+  rcases List.mem_map.mp htypedValueMem with
+    ⟨typedTrans, htypedMem, htypedValue⟩
+  have htypedEq : typedTrans = trans := Subtype.ext htypedValue
+  exact
+    ⟨typedTrace,
+      by simpa [htypedTrace] using hsequence,
+      by simpa [htypedEq] using htypedMem⟩
+
+theorem lemma1_xor_projection_safe_and_no_dead_transitions_of_original_safe_and_sound_and_completion_trace_closed
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (hcompletionTraceClosed :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (Marking.extend marking)
+              trace
+              (WorkflowNet.final net) ->
+            ∃ typedTrace : List {trans : Trans // part trans},
+              typedTrace.map Subtype.val = trace) :
+    WorkflowNet.safe (Patterns.xorProjectionWorkflowNet hpattern hpart) ∧
+      WorkflowNet.noDeadTransitions
+        (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_no_dead_transitions_of_original_safe_and_sound
+    hpattern hpart hsafeSound
+    (lemma1_xor_projection_accepting_traces_of_original_safe_and_sound_and_completion_trace_closed
+      hpattern hpart hsafeSound hcompletionTraceClosed)
+
+theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_completion_trace_closed
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (hcompletionTraceClosed :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (Marking.extend marking)
+              trace
+              (WorkflowNet.final net) ->
+            ∃ typedTrace : List {trans : Trans // part trans},
+              typedTrace.map Subtype.val = trace) :
+    WorkflowNet.safeAndSound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_closed_traces
+    hpattern hpart hsafeSound
+    (fun trans trace hsequence hmem =>
+      by
+        rcases
+            hcompletionTraceClosed
+              (WorkflowNet.initial
+                (Patterns.xorProjectionWorkflowNet hpattern hpart))
+              trace
+              (by
+                have hinitialExtend :
+                    Marking.extend
+                        (WorkflowNet.initial
+                          (Patterns.xorProjectionWorkflowNet hpattern hpart)) =
+                      WorkflowNet.initial net :=
+                  WorkflowNet.restricted_initial_extend_eq
+                    net
+                    (Patterns.xorProjectionWorkflowNet hpattern hpart)
+                    (by rfl)
+                simpa [hinitialExtend] using hsequence) with
+          ⟨typedTrace, htypedTrace⟩
+        have htypedValueMem : trans.val ∈ typedTrace.map Subtype.val := by
+          simpa [htypedTrace] using hmem
+        rcases List.mem_map.mp htypedValueMem with
+          ⟨typedTrans, htypedMem, htypedValue⟩
+        have htypedEq : typedTrans = trans := Subtype.ext htypedValue
+        exact
+          ⟨typedTrace,
+            htypedTrace,
+            by simpa [htypedEq] using htypedMem⟩)
+    hcompletionTraceClosed
+
+theorem lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_branch_completion_witnesses
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hpattern : Patterns.xorPattern net partition)
+    {part : Set Trans}
+    (hpart : part ∈ partition.parts)
+    (hsafeSound : WorkflowNet.safeAndSound net)
+    (htraceClosed :
+      ∀ trans : {trans : Trans // part trans},
+        ∀ trace : List Trans,
+          WorkflowNet.FiringSequence
+              net
+              (WorkflowNet.initial net)
+              trace
+              (WorkflowNet.final net) ->
+            trans.val ∈ trace ->
+              ∃ typedTrace : List {trans : Trans // part trans},
+                typedTrace.map Subtype.val = trace ∧
+                  trans ∈ typedTrace)
+    (hcompletionWitness :
+      ∀ marking :
+          Marking
+            {place : Place //
+              PetriNet.placesTouching net.toPetriNet part place},
+        WorkflowNet.reachable
+            (Patterns.xorProjectionWorkflowNet hpattern hpart)
+            (WorkflowNet.initial
+              (Patterns.xorProjectionWorkflowNet hpattern hpart))
+            marking ->
+          ∃ trace : List {trans : Trans // part trans},
+            WorkflowNet.FiringSequence
+              net
+              (Marking.extend marking)
+              (trace.map Subtype.val)
+              (WorkflowNet.final net)) :
+    WorkflowNet.safeAndSound
+      (Patterns.xorProjectionWorkflowNet hpattern hpart) :=
+  lemma1_xor_projection_safe_and_sound_of_original_safe_and_sound_and_trace_closed
+    hpattern hpart hsafeSound htraceClosed
+    (lemma1_xor_projection_option_to_complete_of_branch_completion_witnesses
+      hpattern hpart hcompletionWitness)
+    (lemma1_xor_projection_proper_completion_of_original_safe_and_sound
+      hpattern hpart hsafeSound)
+
 theorem lemma1_xor_pattern_projection_workflow_net_of_indexed_part
     {Place : Type u}
     {Trans : Type v}

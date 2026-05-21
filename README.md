@@ -12,7 +12,7 @@ paper-level completion.
 
 | Paper result | Current Lean status | Estimated completion |
 | --- | --- | ---: |
-| Lemma 1: XOR projection structural guarantees | Projection construction, path/reachability lifting, no-dead/safeness/soundness wrappers, and indexed pattern constructors are checked; remaining work is to compress the residual accepting/completion/proper-completion assumptions into the exact paper statement. | 75% |
+| Lemma 1: XOR projection structural guarantees | Projection construction, path/reachability lifting, no-dead/safeness/soundness wrappers, indexed pattern constructors, original proper-completion transfer, and branch-completion witness wrappers are checked; remaining work is to prove the selected accepting-trace closure and branch-completion witnesses from the XOR pattern itself. | 83% |
 | Lemma 2: loop projection structural guarantees | Loop projection construction, boundary/connectivity facts, no-dead/safeness/soundness wrappers, and reachable-incidence variants are checked; residual completion/proper-completion packaging still needs to be discharged theorem-by-theorem. | 65% |
 | Lemma 3: partial-order projection structural guarantees | Restricted/normalized projection construction, boundary/internal edge facts, marking/reachability/no-dead/safeness wrappers, and strict-order pattern interfaces are checked; residual completion/proper-completion and normalization-language obligations remain. | 70% |
 | Lemma 4: XOR pattern language preservation | XOR language preservation is checked for projected branches and subtype-conversion based pattern APIs, with explicit and existential POWL-model wrappers. | 90% |
