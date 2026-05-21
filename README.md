@@ -410,7 +410,9 @@ The current proof spine is:
   direct no-decision non-boundary unique-place-flow wrappers with exact `↔`
   rewrite forms and transition-equality corollaries, Case 3 contraction,
   contracted marked-graph equivalence, no-return, acyclicity wrappers, direct
-  no-return/acyclic strict-order relation wrappers, and a
+  reusable execution-order no-return and partition-contraction no-return/acyclic
+  strict-order wrappers with relation equalities, direct partition-contraction
+  no-return partial-order pattern wrappers, and a
   bundled contraction certificate that builds the partial-order pattern and
   strict partial order, with explicit relation-equality wrappers for all
   contraction-certificate variants, plus sound-contraction and
