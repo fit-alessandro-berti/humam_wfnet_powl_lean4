@@ -298,21 +298,21 @@ The current proof spine is:
   requirements-level certificate builders,
   source-to-sink bridges from those bundled certificates into the main
   `SemiBlockCompletenessCase` XOR/partial-order cases and theorem-facing
-  certified-conversion, global language preservation/equality, explicit
-  concrete-model XOR/partial-order language preservation/equality with
-  safe-and-sound, original-transition existential model, concrete
-  visible-activity witness, and original-transition existential
+  certified-conversion, global language preservation/equality with safe paired
+  preservation, explicit concrete-model XOR/partial-order language
+  preservation/equality with safe-and-sound, original-transition existential
+  model, concrete visible-activity witness, and original-transition existential
   visible-activity witness consequences, abstract existential-model
   pointwise/equality, and abstract visible-activity witness consequences, plus
   package-level
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` constructors,
   abstract certified-conversion language preservation/equality plus safe paired
   preservation, abstract existential-model pointwise/equality and
-  visible-activity witness wrappers, source-to-sink global explicit language,
-  safe paired explicit language preservation/equality, explicit
-  original-transition existential-model pointwise/equality, safe existential
-  language-equality, and visible-activity witness wrappers for certified branch
-  data,
+  visible-activity witness wrappers with safe paired variants, source-to-sink
+  global explicit language, safe paired explicit language preservation/equality,
+  explicit original-transition existential-model pointwise/equality, safe
+  existential language-equality, and visible-activity witness wrappers for
+  certified branch data,
   sigma-valued requirements-to-package continuations for generic
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` outputs,
   requirements-to-package continuations for source-to-sink global abstract
@@ -333,20 +333,24 @@ The current proof spine is:
   global `SemanticCertifiedConversion`s and explicit existential POWL-model
   statements. A `SemiBlockCertifiedConversion` interface packages the
   semi-block completeness hypothesis with a successful source/sink conversion
-  and exposes safe-and-soundness, pointwise language preservation, language
-  equality, existential POWL-model, and visible-activity witness consequences;
-  combined completeness statements now package safe-and-soundness together
-  with existential pointwise-equivalent and language-equal POWL models, and
-  existentially package visible-activity witness words with the generated
-  POWL model;
+  and exposes safe-and-soundness, pointwise language preservation, safe paired
+  language preservation, language equality, existential POWL-model, and
+  visible-activity witness consequences with safe paired direct and
+  existential-model forms; main case, algorithm-certificate, pattern-case, and
+  pattern-certificate APIs expose the same safe paired preservation and
+  visible-activity witness bridges; combined completeness statements now
+  package safe-and-soundness together with existential pointwise-equivalent and
+  language-equal POWL models, and existentially package visible-activity
+  witness words with the generated POWL model;
   theorem-facing constructors now cover the single-transition base case and
   the XOR, loop, and partial-order recursive cases from supplied local subtype
   conversions and global language decompositions, with an additional
   partial-order-pattern package that carries the induced strict partial order
   through to the semi-block certified conversion and combined safe/equivalent
-  POWL-model consequence, plus explicit language-equality and visible-activity
-  witness theorems for the concrete atom, XOR, loop, and partial-order POWL
-  models, bundled into a `ConcretePowlWitness` case/certificate eliminator
+  POWL-model consequence, plus explicit pointwise language-preservation,
+  language-equality, and visible-activity witness theorems for the concrete
+  atom, XOR, loop, and partial-order POWL models, bundled into a
+  `ConcretePowlWitness` case/certificate eliminator
   with reusable preservation, safe+existence, and existential
   visible-activity-witness consequences, and a
   `SemiBlockCompletenessCase`/`SemiBlockCompletenessCertificate` layer packages
