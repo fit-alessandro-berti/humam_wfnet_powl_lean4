@@ -249,7 +249,10 @@ The current proof spine is:
   selected-sequence restriction, safeness preservation, no-dead-transition,
   soundness, and `safeAndSound` transfer from selected accepting sequences
   plus supplied completion/proper-completion obligations, including variants
-  that consume the original net's `safeAndSound` hypothesis directly, a checked XOR
+  that consume the original net's `safeAndSound` hypothesis directly, indexed
+  XOR-pattern projection WF-net and no-dead/safe-no-dead/sound/`safeAndSound`
+  constructor witnesses, with direct original-safe-and-sound indexed `safe`,
+  safe/no-dead, and `safeAndSound` wrappers, a checked XOR
   branch-language-to-original-language inclusion, XOR branch-projection
   language equivalence with typed original subtraces, a mapped recursive
   XOR-branch model-to-typed-subtrace equivalence, and a mapped branch-list
@@ -486,7 +489,8 @@ The current proof spine is:
   variants that consume the original net's `safeAndSound` hypothesis directly,
   indexed partial-order-pattern projection WF-net existence plus
   accepting-trace/no-dead-witness no-dead, safe/no-dead, `sound`, and `safeAndSound` constructor theorems
-  under incidence obligations, sound
+  under incidence obligations, reachable-shape safe/safe-no-dead/`safeAndSound`
+  pattern bridges that consume original `safeAndSound`, sound
   packaging under supplied residual obligations, generic normalization,
   normalized-firing forward/reverse local, sequence, and boundary-acceptance
   invariants, fresh-boundary enabledness/preservation facts, and
