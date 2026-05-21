@@ -4668,6 +4668,154 @@ theorem partialOrderPattern_of_partitionContraction_acyclic
     hentry
     hexit
 
+theorem partialOrderPattern_of_partitionContractionBoundaryNet_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    partialOrderPattern net partition :=
+  partialOrderPattern_of_partitionContraction_noReturn
+    net
+    partition
+    hparts
+    hsamePart
+    ((partitionContractionBoundaryNet_transitionFlowNoReturn_iff
+      net partition).mp hnoReturn)
+    hentry
+    hexit
+
+theorem partialOrderPattern_of_partitionContractionBoundaryNet_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    partialOrderPattern net partition :=
+  partialOrderPattern_of_partitionContraction_acyclic
+    net
+    partition
+    hparts
+    hsamePart
+    ((partitionContractionBoundaryNet_transitionFlowAcyclic_iff
+      net partition).mp hacyclic)
+    hentry
+    hexit
+
+theorem partialOrderPattern_of_partitionContractionActiveBoundaryNet_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    partialOrderPattern net partition :=
+  partialOrderPattern_of_partitionContraction_noReturn
+    net
+    partition
+    hparts
+    hsamePart
+    ((partitionContractionActiveBoundaryNet_transitionFlowNoReturn_iff
+      net partition).mp hnoReturn)
+    hentry
+    hexit
+
+theorem partialOrderPattern_of_partitionContractionActiveBoundaryNet_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    partialOrderPattern net partition :=
+  partialOrderPattern_of_partitionContraction_acyclic
+    net
+    partition
+    hparts
+    hsamePart
+    ((partitionContractionActiveBoundaryNet_transitionFlowAcyclic_iff
+      net partition).mp hacyclic)
+    hentry
+    hexit
+
 theorem partialOrderPattern_iff_no_execution_order_return
     (net : WorkflowNet Place Trans)
     (partition : Partition Trans) :
@@ -4794,6 +4942,186 @@ theorem partialOrderPattern_iff_partitionContraction_acyclic
   · intro hpattern
     exact
       partialOrderPattern_of_partitionContraction_acyclic
+        net
+        partition
+        hpattern.1
+        hpattern.2.1
+        hpattern.2.2.1
+        hpattern.2.2.2.1
+        hpattern.2.2.2.2
+
+theorem partialOrderPattern_iff_partitionContractionBoundaryNet_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionBoundaryNet net partition) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) := by
+  constructor
+  · intro hpattern
+    exact
+      ⟨hpattern.1,
+        hpattern.2.1,
+        ((partitionContractionBoundaryNet_transitionFlowNoReturn_iff
+          net partition).mpr
+          ((partialOrderPattern_iff_partitionContraction_noReturn
+            net partition).mp hpattern).2.2.1),
+        hpattern.2.2.2.1,
+        hpattern.2.2.2.2⟩
+  · intro hpattern
+    exact
+      partialOrderPattern_of_partitionContractionBoundaryNet_noReturn
+        net
+        partition
+        hpattern.1
+        hpattern.2.1
+        hpattern.2.2.1
+        hpattern.2.2.2.1
+        hpattern.2.2.2.2
+
+theorem partialOrderPattern_iff_partitionContractionBoundaryNet_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionBoundaryNet net partition) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) := by
+  constructor
+  · intro hpattern
+    exact
+      ⟨hpattern.1,
+        hpattern.2.1,
+        ((partitionContractionBoundaryNet_transitionFlowAcyclic_iff
+          net partition).mpr
+          ((partialOrderPattern_iff_partitionContraction_acyclic
+            net partition).mp hpattern).2.2.1),
+        hpattern.2.2.2.1,
+        hpattern.2.2.2.2⟩
+  · intro hpattern
+    exact
+      partialOrderPattern_of_partitionContractionBoundaryNet_acyclic
+        net
+        partition
+        hpattern.1
+        hpattern.2.1
+        hpattern.2.2.1
+        hpattern.2.2.2.1
+        hpattern.2.2.2.2
+
+theorem partialOrderPattern_iff_partitionContractionActiveBoundaryNet_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionActiveBoundaryNet net partition) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) := by
+  constructor
+  · intro hpattern
+    exact
+      ⟨hpattern.1,
+        hpattern.2.1,
+        ((partitionContractionActiveBoundaryNet_transitionFlowNoReturn_iff
+          net partition).mpr
+          ((partialOrderPattern_iff_partitionContraction_noReturn
+            net partition).mp hpattern).2.2.1),
+        hpattern.2.2.2.1,
+        hpattern.2.2.2.2⟩
+  · intro hpattern
+    exact
+      partialOrderPattern_of_partitionContractionActiveBoundaryNet_noReturn
+        net
+        partition
+        hpattern.1
+        hpattern.2.1
+        hpattern.2.2.1
+        hpattern.2.2.2.1
+        hpattern.2.2.2.2
+
+theorem partialOrderPattern_iff_partitionContractionActiveBoundaryNet_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans) :
+    partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionActiveBoundaryNet net partition) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) := by
+  constructor
+  · intro hpattern
+    exact
+      ⟨hpattern.1,
+        hpattern.2.1,
+        ((partitionContractionActiveBoundaryNet_transitionFlowAcyclic_iff
+          net partition).mpr
+          ((partialOrderPattern_iff_partitionContraction_acyclic
+            net partition).mp hpattern).2.2.1),
+        hpattern.2.2.2.1,
+        hpattern.2.2.2.2⟩
+  · intro hpattern
+    exact
+      partialOrderPattern_of_partitionContractionActiveBoundaryNet_acyclic
         net
         partition
         hpattern.1
@@ -4964,6 +5292,390 @@ theorem partialOrderPattern_exists_strictPartialOrder
     ∃ order : StrictPartialOrder Nat,
       order.rel = TransGen (executionOrder net partition) :=
   ⟨partialOrderPattern_strictPartialOrder net partition hpattern, rfl⟩
+
+def partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    StrictPartialOrder Nat :=
+  partialOrderPattern_strictPartialOrder
+    net
+    partition
+    (partialOrderPattern_of_partitionContractionBoundaryNet_noReturn
+      net partition hparts hsamePart hnoReturn hentry hexit)
+
+theorem partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_noReturn_rel
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    (partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_noReturn
+      net partition hparts hsamePart hnoReturn hentry hexit).rel =
+      TransGen (executionOrder net partition) :=
+  rfl
+
+theorem partialOrderPattern_exists_strictPartialOrder_of_partitionContractionBoundaryNet_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition) :=
+  ⟨partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_noReturn
+      net partition hparts hsamePart hnoReturn hentry hexit,
+    rfl⟩
+
+def partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    StrictPartialOrder Nat :=
+  partialOrderPattern_strictPartialOrder
+    net
+    partition
+    (partialOrderPattern_of_partitionContractionBoundaryNet_acyclic
+      net partition hparts hsamePart hacyclic hentry hexit)
+
+theorem partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_acyclic_rel
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    (partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_acyclic
+      net partition hparts hsamePart hacyclic hentry hexit).rel =
+      TransGen (executionOrder net partition) :=
+  rfl
+
+theorem partialOrderPattern_exists_strictPartialOrder_of_partitionContractionBoundaryNet_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition) :=
+  ⟨partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_acyclic
+      net partition hparts hsamePart hacyclic hentry hexit,
+    rfl⟩
+
+def partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    StrictPartialOrder Nat :=
+  partialOrderPattern_strictPartialOrder
+    net
+    partition
+    (partialOrderPattern_of_partitionContractionActiveBoundaryNet_noReturn
+      net partition hparts hsamePart hnoReturn hentry hexit)
+
+theorem partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_noReturn_rel
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    (partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_noReturn
+      net partition hparts hsamePart hnoReturn hentry hexit).rel =
+      TransGen (executionOrder net partition) :=
+  rfl
+
+theorem partialOrderPattern_exists_strictPartialOrder_of_partitionContractionActiveBoundaryNet_noReturn
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition) :=
+  ⟨partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_noReturn
+      net partition hparts hsamePart hnoReturn hentry hexit,
+    rfl⟩
+
+def partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    StrictPartialOrder Nat :=
+  partialOrderPattern_strictPartialOrder
+    net
+    partition
+    (partialOrderPattern_of_partitionContractionActiveBoundaryNet_acyclic
+      net partition hparts hsamePart hacyclic hentry hexit)
+
+theorem partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_acyclic_rel
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    (partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_acyclic
+      net partition hparts hsamePart hacyclic hentry hexit).rel =
+      TransGen (executionOrder net partition) :=
+  rfl
+
+theorem partialOrderPattern_exists_strictPartialOrder_of_partitionContractionActiveBoundaryNet_acyclic
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        reachesFromPostset net place left ->
+        reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (executionOrder net partition) :=
+  ⟨partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_acyclic
+      net partition hparts hsamePart hacyclic hentry hexit,
+    rfl⟩
 
 theorem partialOrderPattern_of_strictPartialOrder
     (net : WorkflowNet Place Trans)

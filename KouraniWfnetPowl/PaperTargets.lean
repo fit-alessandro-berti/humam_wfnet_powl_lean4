@@ -14270,6 +14270,18 @@ theorem theorem2_case3_partition_contraction_boundary_flow_acyclic_iff
   Patterns.partitionContractionBoundaryNet_transitionFlowAcyclic_iff
     net partition
 
+theorem theorem2_case3_partition_contraction_boundary_flow_no_return_iff
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition) ↔
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContraction net partition) :=
+  Patterns.partitionContractionBoundaryNet_transitionFlowNoReturn_iff
+    net partition
+
 theorem theorem2_case3_partition_contraction_active_boundary_flow_iff
     {Place : Type u}
     {Trans : Type v}
@@ -14558,6 +14570,35 @@ theorem theorem2_case3_boundary_workflow_sound_contraction_certificate_no_return
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
       certificate)
 
+theorem theorem2_case3_boundary_sound_contraction_certificate_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3BoundarySoundContractionCertificate net partition) :
+    PetriNet.transitionFlowNoReturn
+      (Patterns.partitionContractionBoundaryNet net partition) :=
+  (theorem2_case3_partition_contraction_boundary_flow_no_return_iff).mpr
+    (theorem2_case3_boundary_sound_contraction_certificate_no_return
+      certificate)
+
+theorem theorem2_case3_boundary_workflow_sound_contraction_certificate_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3BoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowNoReturn
+      (Patterns.partitionContractionBoundaryNet net partition) :=
+  theorem2_case3_boundary_sound_contraction_certificate_boundary_no_return
+    (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+
 theorem theorem2_case3_active_boundary_sound_contraction_certificate_no_return
     {Place : Type u}
     {Trans : Type v}
@@ -14590,6 +14631,36 @@ theorem theorem2_case3_active_boundary_workflow_sound_contraction_certificate_no
     PetriNet.transitionFlowNoReturn
       (Patterns.partitionContraction net partition) :=
   theorem2_case3_active_boundary_sound_contraction_certificate_no_return
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+
+theorem theorem2_case3_active_boundary_sound_contraction_certificate_active_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowNoReturn
+      (Patterns.partitionContractionActiveBoundaryNet net partition) :=
+  (theorem2_case3_partition_contraction_active_boundary_flow_no_return_iff).mpr
+    (theorem2_case3_active_boundary_sound_contraction_certificate_no_return
+      certificate)
+
+theorem theorem2_case3_active_boundary_workflow_sound_contraction_certificate_active_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowNoReturn
+      (Patterns.partitionContractionActiveBoundaryNet net partition) :=
+  theorem2_case3_active_boundary_sound_contraction_certificate_active_boundary_no_return
     (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
 
@@ -14642,6 +14713,35 @@ theorem theorem2_case3_boundary_workflow_sound_contraction_certificate_transitio
     (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
       certificate)
 
+theorem theorem2_case3_boundary_sound_contraction_certificate_boundary_transition_flow_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3BoundarySoundContractionCertificate net partition) :
+    PetriNet.transitionFlowAcyclic
+      (Patterns.partitionContractionBoundaryNet net partition) :=
+  (theorem2_case3_partition_contraction_boundary_flow_acyclic_iff).mpr
+    (theorem2_case3_boundary_sound_contraction_certificate_transition_flow_acyclic
+      certificate)
+
+theorem theorem2_case3_boundary_workflow_sound_contraction_certificate_boundary_transition_flow_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3BoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowAcyclic
+      (Patterns.partitionContractionBoundaryNet net partition) :=
+  theorem2_case3_boundary_sound_contraction_certificate_boundary_transition_flow_acyclic
+    (theorem2_case3_boundary_sound_contraction_certificate_of_boundary_workflow_sound_contraction_certificate
+      certificate)
+
 theorem theorem2_case3_active_boundary_sound_contraction_certificate_transition_flow_acyclic
     {Place : Type u}
     {Trans : Type v}
@@ -14672,6 +14772,36 @@ theorem theorem2_case3_active_boundary_workflow_sound_contraction_certificate_tr
     PetriNet.transitionFlowAcyclic
       (Patterns.partitionContraction net partition) :=
   theorem2_case3_active_boundary_sound_contraction_certificate_transition_flow_acyclic
+    (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
+      certificate)
+
+theorem theorem2_case3_active_boundary_sound_contraction_certificate_active_boundary_transition_flow_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowAcyclic
+      (Patterns.partitionContractionActiveBoundaryNet net partition) :=
+  (theorem2_case3_partition_contraction_active_boundary_flow_acyclic_iff).mpr
+    (theorem2_case3_active_boundary_sound_contraction_certificate_transition_flow_acyclic
+      certificate)
+
+theorem theorem2_case3_active_boundary_workflow_sound_contraction_certificate_active_boundary_transition_flow_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    PetriNet.transitionFlowAcyclic
+      (Patterns.partitionContractionActiveBoundaryNet net partition) :=
+  theorem2_case3_active_boundary_sound_contraction_certificate_active_boundary_transition_flow_acyclic
     (theorem2_case3_active_boundary_sound_contraction_certificate_of_active_boundary_workflow_sound_contraction_certificate
       certificate)
 
@@ -14951,6 +15081,19 @@ theorem theorem2_case3_strict_partial_order_of_contraction_certificate_rel
       TransGen (Patterns.executionOrder net partition) :=
   rfl
 
+theorem theorem2_case3_exists_strict_partial_order_of_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ContractionCertificate net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  ⟨theorem2_case3_strict_partial_order_of_contraction_certificate
+      certificate,
+    rfl⟩
+
 def theorem2_case3_strict_partial_order_of_sound_contraction_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -14978,6 +15121,20 @@ theorem theorem2_case3_strict_partial_order_of_sound_contraction_certificate_rel
       certificate).rel =
       TransGen (Patterns.executionOrder net partition) :=
   rfl
+
+theorem theorem2_case3_exists_strict_partial_order_of_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3SoundContractionCertificate net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  ⟨theorem2_case3_strict_partial_order_of_sound_contraction_certificate
+      certificate,
+    rfl⟩
 
 def theorem2_case3_strict_partial_order_of_boundary_sound_contraction_certificate
     {Place : Type u}
@@ -15007,6 +15164,20 @@ theorem theorem2_case3_strict_partial_order_of_boundary_sound_contraction_certif
       TransGen (Patterns.executionOrder net partition) :=
   rfl
 
+theorem theorem2_case3_exists_strict_partial_order_of_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3BoundarySoundContractionCertificate net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  ⟨theorem2_case3_strict_partial_order_of_boundary_sound_contraction_certificate
+      certificate,
+    rfl⟩
+
 def theorem2_case3_strict_partial_order_of_boundary_workflow_sound_contraction_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -15034,6 +15205,21 @@ theorem theorem2_case3_strict_partial_order_of_boundary_workflow_sound_contracti
       certificate).rel =
       TransGen (Patterns.executionOrder net partition) :=
   rfl
+
+theorem theorem2_case3_exists_strict_partial_order_of_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3BoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  ⟨theorem2_case3_strict_partial_order_of_boundary_workflow_sound_contraction_certificate
+      certificate,
+    rfl⟩
 
 def theorem2_case3_strict_partial_order_of_active_boundary_sound_contraction_certificate
     {Place : Type u}
@@ -15065,6 +15251,21 @@ theorem theorem2_case3_strict_partial_order_of_active_boundary_sound_contraction
       TransGen (Patterns.executionOrder net partition) :=
   rfl
 
+theorem theorem2_case3_exists_strict_partial_order_of_active_boundary_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundarySoundContractionCertificate
+        net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  ⟨theorem2_case3_strict_partial_order_of_active_boundary_sound_contraction_certificate
+      certificate,
+    rfl⟩
+
 def theorem2_case3_strict_partial_order_of_active_boundary_workflow_sound_contraction_certificate
     {Place : Type u}
     {Trans : Type v}
@@ -15092,6 +15293,21 @@ theorem theorem2_case3_strict_partial_order_of_active_boundary_workflow_sound_co
       certificate).rel =
       TransGen (Patterns.executionOrder net partition) :=
   rfl
+
+theorem theorem2_case3_exists_strict_partial_order_of_active_boundary_workflow_sound_contraction_certificate
+    {Place : Type u}
+    {Trans : Type v}
+    [DecidableEq Place]
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (certificate :
+      Theorem2Case3ActiveBoundaryWorkflowSoundContractionCertificate
+        net partition) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  ⟨theorem2_case3_strict_partial_order_of_active_boundary_workflow_sound_contraction_certificate
+      certificate,
+    rfl⟩
 
 def theorem2_case3_partial_order_pattern_certificate_of_contraction_certificate
     {Place : Type u}
@@ -21325,6 +21541,118 @@ theorem theorem2_case3_partial_order_pattern_iff_partition_contraction_acyclic
   Patterns.partialOrderPattern_iff_partitionContraction_acyclic
     net partition
 
+theorem theorem2_case3_partial_order_pattern_iff_partition_contraction_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    Patterns.partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :=
+  Patterns.partialOrderPattern_iff_partitionContractionBoundaryNet_noReturn
+    net partition
+
+theorem theorem2_case3_partial_order_pattern_iff_partition_contraction_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    Patterns.partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionBoundaryNet net partition) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :=
+  Patterns.partialOrderPattern_iff_partitionContractionBoundaryNet_acyclic
+    net partition
+
+theorem theorem2_case3_partial_order_pattern_iff_partition_contraction_active_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    Patterns.partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :=
+  Patterns.partialOrderPattern_iff_partitionContractionActiveBoundaryNet_noReturn
+    net partition
+
+theorem theorem2_case3_partial_order_pattern_iff_partition_contraction_active_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    Patterns.partialOrderPattern net partition ↔
+      partition.hasAtLeastTwoParts ∧
+      (∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right) ∧
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) ∧
+      (∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :=
+  Patterns.partialOrderPattern_iff_partitionContractionActiveBoundaryNet_acyclic
+    net partition
+
 theorem theorem2_case3_partial_order_pattern_iff_exists_strict_partial_order
     {Place : Type u}
     {Trans : Type v}
@@ -21871,6 +22199,158 @@ theorem theorem2_case3_partial_order_pattern_of_partition_contraction_acyclic
     hentry
     hexit
 
+theorem theorem2_case3_partial_order_pattern_of_partition_contraction_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    Patterns.partialOrderPattern net partition :=
+  Patterns.partialOrderPattern_of_partitionContractionBoundaryNet_noReturn
+    net
+    partition
+    hparts
+    hsamePart
+    hnoReturn
+    hentry
+    hexit
+
+theorem theorem2_case3_partial_order_pattern_of_partition_contraction_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    Patterns.partialOrderPattern net partition :=
+  Patterns.partialOrderPattern_of_partitionContractionBoundaryNet_acyclic
+    net
+    partition
+    hparts
+    hsamePart
+    hacyclic
+    hentry
+    hexit
+
+theorem theorem2_case3_partial_order_pattern_of_partition_contraction_active_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    Patterns.partialOrderPattern net partition :=
+  Patterns.partialOrderPattern_of_partitionContractionActiveBoundaryNet_noReturn
+    net
+    partition
+    hparts
+    hsamePart
+    hnoReturn
+    hentry
+    hexit
+
+theorem theorem2_case3_partial_order_pattern_of_partition_contraction_active_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    Patterns.partialOrderPattern net partition :=
+  Patterns.partialOrderPattern_of_partitionContractionActiveBoundaryNet_acyclic
+    net
+    partition
+    hparts
+    hsamePart
+    hacyclic
+    hentry
+    hexit
+
 def theorem2_case3_strict_partial_order_of_no_return
     {Place : Type u}
     {Trans : Type v}
@@ -22072,6 +22552,398 @@ theorem theorem2_case3_strict_partial_order_of_partition_contraction_acyclic_rel
       hparts hsamePart hacyclic hentry hexit).rel =
       TransGen (Patterns.executionOrder net partition) :=
   rfl
+
+def theorem2_case3_strict_partial_order_of_partition_contraction_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    StrictPartialOrder Nat :=
+  Patterns.partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_noReturn
+    net partition hparts hsamePart hnoReturn hentry hexit
+
+theorem theorem2_case3_strict_partial_order_of_partition_contraction_boundary_no_return_rel
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    (theorem2_case3_strict_partial_order_of_partition_contraction_boundary_no_return
+      hparts hsamePart hnoReturn hentry hexit).rel =
+      TransGen (Patterns.executionOrder net partition) :=
+  rfl
+
+theorem theorem2_case3_exists_strict_partial_order_of_partition_contraction_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.partialOrderPattern_exists_strictPartialOrder_of_partitionContractionBoundaryNet_noReturn
+    net partition hparts hsamePart hnoReturn hentry hexit
+
+def theorem2_case3_strict_partial_order_of_partition_contraction_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    StrictPartialOrder Nat :=
+  Patterns.partialOrderPattern_strictPartialOrder_of_partitionContractionBoundaryNet_acyclic
+    net partition hparts hsamePart hacyclic hentry hexit
+
+theorem theorem2_case3_strict_partial_order_of_partition_contraction_boundary_acyclic_rel
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    (theorem2_case3_strict_partial_order_of_partition_contraction_boundary_acyclic
+      hparts hsamePart hacyclic hentry hexit).rel =
+      TransGen (Patterns.executionOrder net partition) :=
+  rfl
+
+theorem theorem2_case3_exists_strict_partial_order_of_partition_contraction_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.partialOrderPattern_exists_strictPartialOrder_of_partitionContractionBoundaryNet_acyclic
+    net partition hparts hsamePart hacyclic hentry hexit
+
+def theorem2_case3_strict_partial_order_of_partition_contraction_active_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    StrictPartialOrder Nat :=
+  Patterns.partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_noReturn
+    net partition hparts hsamePart hnoReturn hentry hexit
+
+theorem theorem2_case3_strict_partial_order_of_partition_contraction_active_boundary_no_return_rel
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    (theorem2_case3_strict_partial_order_of_partition_contraction_active_boundary_no_return
+      hparts hsamePart hnoReturn hentry hexit).rel =
+      TransGen (Patterns.executionOrder net partition) :=
+  rfl
+
+theorem theorem2_case3_exists_strict_partial_order_of_partition_contraction_active_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.partialOrderPattern_exists_strictPartialOrder_of_partitionContractionActiveBoundaryNet_noReturn
+    net partition hparts hsamePart hnoReturn hentry hexit
+
+def theorem2_case3_strict_partial_order_of_partition_contraction_active_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    StrictPartialOrder Nat :=
+  Patterns.partialOrderPattern_strictPartialOrder_of_partitionContractionActiveBoundaryNet_acyclic
+    net partition hparts hsamePart hacyclic hentry hexit
+
+theorem theorem2_case3_strict_partial_order_of_partition_contraction_active_boundary_acyclic_rel
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    (theorem2_case3_strict_partial_order_of_partition_contraction_active_boundary_acyclic
+      hparts hsamePart hacyclic hentry hexit).rel =
+      TransGen (Patterns.executionOrder net partition) :=
+  rfl
+
+theorem theorem2_case3_exists_strict_partial_order_of_partition_contraction_active_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hparts : partition.hasAtLeastTwoParts)
+    (hsamePart :
+      ∀ place left right,
+        Patterns.reachesFromPostset net place left ->
+        Patterns.reachesFromPostset net place right ->
+          partition.samePart left right)
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition))
+    (hentry :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.entryPoints net part leftPlace ->
+        WorkflowNet.entryPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace)
+    (hexit :
+      ∀ index part leftPlace rightPlace,
+        Powl.listGet? partition.parts index = some part ->
+        WorkflowNet.exitPoints net part leftPlace ->
+        WorkflowNet.exitPoints net part rightPlace ->
+          PetriNet.placeEquivalentWrt
+            net.toPetriNet part leftPlace rightPlace) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.partialOrderPattern_exists_strictPartialOrder_of_partitionContractionActiveBoundaryNet_acyclic
+    net partition hparts hsamePart hacyclic hentry hexit
 
 theorem theorem2_completeness_safe_and_sound_of_pattern_certificate
     {Place : Type u}

@@ -415,7 +415,9 @@ The current proof spine is:
   witnesses, and reverse/`↔` bridges, including direct boundary and active-index
   contraction no-return/acyclic strict-order equivalences, constructors,
   relation equalities, and existential witnesses, direct
-  partition-contraction no-return partial-order pattern wrappers, generic partial-order-pattern
+  partition-contraction no-return partial-order pattern wrappers plus direct
+  boundary and active-index contraction no-return/acyclic pattern `↔` forms
+  with strict-order constructors and existential witnesses, generic partial-order-pattern
   strict-order relation, irreflexivity, transitivity, no-return, and contraction
   acyclicity accessors, direct Definition 13 field accessors and exact bundled
   generic/Case 3 `↔` forms through irreflexive execution order,
