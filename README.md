@@ -413,10 +413,12 @@ The current proof spine is:
   certificate forms, including the boundary-workflow and active-index forms, now
   feed the partial-order branch into the raw algorithm-certificate layer, certified
   conversion, language-equivalence, concrete POWL-witness, and
-  visible-activity-witness pipeline, including direct semi-block safe
-  language-preservation/equality and existential-model pointwise forms, direct
-  safe language-equality forms for both the concrete POWL witness and generated
-  algorithm certificate,
+  visible-activity-witness pipeline, including standalone safe-and-sound
+  consequences for the algorithm, semi-block, and concrete-witness layers,
+  direct semi-block safe
+  language-preservation/equality, existential-model pointwise/language-equality,
+  and visible-witness forms, direct safe language-equality forms for both the
+  concrete POWL witness and generated algorithm certificate,
   direct concrete safe language-preservation and visible-witness forms, plus
   direct generated-algorithm safe language-preservation and visible-witness
   forms, existential generated-model pointwise equivalence with safe paired
