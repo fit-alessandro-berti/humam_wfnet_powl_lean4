@@ -307,7 +307,8 @@ The current proof spine is:
   package-level
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` constructors,
   abstract certified-conversion language preservation/equality plus safe paired
-  preservation, abstract existential-model pointwise/equality and
+  preservation and direct safe language-equality, abstract existential-model
+  pointwise/equality and
   visible-activity witness wrappers with direct safe paired variants,
   source-to-sink
   global explicit language, safe paired explicit language preservation/equality,
@@ -317,7 +318,8 @@ The current proof spine is:
   sigma-valued requirements-to-package continuations for generic
   `SemiBlockCompletenessCase` and `SemiBlockCertifiedConversion` outputs,
   requirements-to-package continuations for source-to-sink global abstract
-  language preservation/equality, abstract existential-model pointwise/equality,
+  language preservation/equality including direct safe language-equality,
+  abstract existential-model pointwise/equality,
   abstract visible-activity witnesses with direct safe paired continuations,
   explicit language preservation/equality
   plus original-transition existential-model pointwise/equality,
@@ -337,7 +339,8 @@ The current proof spine is:
   statements. A `SemiBlockCertifiedConversion` interface packages the
   semi-block completeness hypothesis with a successful source/sink conversion
   and exposes safe-and-soundness, pointwise language preservation, safe paired
-  language preservation, language equality, existential POWL-model, and
+  language preservation, language equality, direct safe language equality,
+  existential POWL-model, and
   visible-activity witness consequences with safe paired direct and
   existential-model forms; main case, algorithm-certificate, pattern-case, and
   pattern-certificate APIs expose the same safe paired preservation and
@@ -410,8 +413,9 @@ The current proof spine is:
   certificate forms, including the boundary-workflow and active-index forms, now
   feed the partial-order branch into the raw algorithm-certificate layer, certified
   conversion, language-equivalence, concrete POWL-witness, and
-  visible-activity-witness pipeline, including existential generated-model
-  visible-witness forms, plus checked
+  visible-activity-witness pipeline, including direct safe language-equality
+  forms for both the concrete POWL witness and generated algorithm certificate,
+  plus existential generated-model visible-witness forms, plus checked
   marked-graph soundness wrappers showing that transition-flow successors must
   occur, and can be split out as firings, in the completion suffix after their
   predecessors fire, ruling out direct transition-flow self-loops, and ruling
