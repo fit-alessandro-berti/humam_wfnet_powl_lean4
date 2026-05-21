@@ -647,6 +647,48 @@ theorem transitionFlowNoReturn_iff_acyclic
     transitionFlowNoReturn net ↔ transitionFlowAcyclic net :=
   (transitionFlowAcyclic_iff_noReturn net).symm
 
+def transitionFlowStrictPartialOrder
+    (net : PetriNet Place Trans)
+    (hacyclic : transitionFlowAcyclic net) :
+    StrictPartialOrder Trans where
+  rel := TransGen (transitionFlow net)
+  irrefl := hacyclic
+  trans := TransGen.trans
+
+theorem transitionFlowStrictPartialOrder_rel
+    (net : PetriNet Place Trans)
+    (hacyclic : transitionFlowAcyclic net) :
+    (transitionFlowStrictPartialOrder net hacyclic).rel =
+      TransGen (transitionFlow net) :=
+  rfl
+
+def transitionFlowNoReturnStrictPartialOrder
+    (net : PetriNet Place Trans)
+    (hnoReturn : transitionFlowNoReturn net) :
+    StrictPartialOrder Trans :=
+  transitionFlowStrictPartialOrder
+    net
+    ((transitionFlowNoReturn_iff_acyclic net).mp hnoReturn)
+
+theorem transitionFlowNoReturnStrictPartialOrder_rel
+    (net : PetriNet Place Trans)
+    (hnoReturn : transitionFlowNoReturn net) :
+    (transitionFlowNoReturnStrictPartialOrder net hnoReturn).rel =
+      TransGen (transitionFlow net) :=
+  rfl
+
+theorem transitionFlowAcyclic_asymmetric
+    {net : PetriNet Place Trans}
+    (hacyclic : transitionFlowAcyclic net) :
+    Asymmetric (TransGen (transitionFlow net)) :=
+  (transitionFlowStrictPartialOrder net hacyclic).asymmetric
+
+theorem transitionFlowNoReturn_asymmetric
+    {net : PetriNet Place Trans}
+    (hnoReturn : transitionFlowNoReturn net) :
+    Asymmetric (TransGen (transitionFlow net)) :=
+  (transitionFlowNoReturnStrictPartialOrder net hnoReturn).asymmetric
+
 theorem path_from_place_first_transition_aux
     (net : PetriNet Place Trans)
     {sourceNode target : Node Place Trans}

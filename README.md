@@ -409,10 +409,12 @@ The current proof spine is:
   structural package that carries free-choiceness, bundled marked-graph and
   direct no-decision non-boundary unique-place-flow wrappers with exact `↔`
   rewrite forms and transition-equality corollaries, Case 3 contraction,
-  contracted marked-graph equivalence, no-return, acyclicity wrappers, and a
+  contracted marked-graph equivalence, no-return, acyclicity wrappers, direct
+  no-return/acyclic strict-order relation wrappers, and a
   bundled contraction certificate that builds the partial-order pattern and
-  strict partial order, plus sound-contraction and boundary-sound-contraction
-  certificates that derive acyclicity from marked-graph soundness before
+  strict partial order, with explicit relation-equality wrappers for all
+  contraction-certificate variants, plus sound-contraction and
+  boundary-sound-contraction certificates that derive acyclicity from marked-graph soundness before
   feeding the same pipeline, along with a boundary-workflow-sound certificate
   form that constructs the boundary contraction WF-net from structural
   connectedness evidence before applying the same bridge, plus active-index
@@ -435,7 +437,9 @@ The current proof spine is:
   marked-graph soundness wrappers showing that transition-flow successors must
   occur, and can be split out as firings, in the completion suffix after their
   predecessors fire, ruling out direct transition-flow self-loops, and ruling
-  out direct two-edge transition-flow cycles via asymmetry, plus a reusable
+  out direct two-edge transition-flow cycles via asymmetry, with a reusable
+  transition-flow acyclicity/no-return-to-`StrictPartialOrder` bridge and
+  marked-graph sound/safe-and-sound strict-order wrappers, plus a reusable
   finite place-cycle support/no-completion invariant with a checked two-edge
   transition-flow support constructor, a generic firing-support contradiction
   under soundness, prepend constructors for place-support and firing-support,

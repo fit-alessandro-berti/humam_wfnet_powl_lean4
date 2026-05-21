@@ -4072,6 +4072,33 @@ theorem executionOrderNoReturn_iff_irreflexive
     (TransGen.irrefl_iff_no_return
       (r := executionOrder net partition)).symm
 
+def executionOrderNoReturnStrictPartialOrder
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hnoReturn : executionOrderNoReturn net partition) :
+    StrictPartialOrder Nat where
+  rel := TransGen (executionOrder net partition)
+  irrefl := executionOrderNoReturn_irreflexive
+    net partition hnoReturn
+  trans := TransGen.trans
+
+theorem executionOrderNoReturnStrictPartialOrder_rel
+    (net : WorkflowNet Place Trans)
+    (partition : Partition Trans)
+    (hnoReturn : executionOrderNoReturn net partition) :
+    (executionOrderNoReturnStrictPartialOrder
+      net partition hnoReturn).rel =
+      TransGen (executionOrder net partition) :=
+  rfl
+
+theorem executionOrderNoReturn_asymmetric
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hnoReturn : executionOrderNoReturn net partition) :
+    Asymmetric (TransGen (executionOrder net partition)) :=
+  (executionOrderNoReturnStrictPartialOrder
+    net partition hnoReturn).asymmetric
+
 def partialOrderPattern
     (net : WorkflowNet Place Trans)
     (partition : Partition Trans) : Prop :=
