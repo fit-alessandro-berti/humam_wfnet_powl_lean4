@@ -21478,6 +21478,58 @@ theorem theorem2_case3_execution_order_exists_strict_partial_order_iff_partition
   Patterns.executionOrder_exists_strictPartialOrder_iff_partitionContraction_acyclic
     net partition
 
+theorem theorem2_case3_execution_order_exists_strict_partial_order_iff_partition_contraction_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    (∃ order : StrictPartialOrder Nat,
+      order.rel =
+        TransGen (Patterns.executionOrder net partition)) ↔
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_iff_partitionContractionBoundaryNet_noReturn
+    net partition
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_iff_partition_contraction_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    (∃ order : StrictPartialOrder Nat,
+      order.rel =
+        TransGen (Patterns.executionOrder net partition)) ↔
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionBoundaryNet net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_iff_partitionContractionBoundaryNet_acyclic
+    net partition
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_iff_partition_contraction_active_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    (∃ order : StrictPartialOrder Nat,
+      order.rel =
+        TransGen (Patterns.executionOrder net partition)) ↔
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_iff_partitionContractionActiveBoundaryNet_noReturn
+    net partition
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_iff_partition_contraction_active_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans} :
+    (∃ order : StrictPartialOrder Nat,
+      order.rel =
+        TransGen (Patterns.executionOrder net partition)) ↔
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_iff_partitionContractionActiveBoundaryNet_acyclic
+    net partition
+
 def theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_no_return
     {Place : Type u}
     {Trans : Type v}
@@ -21552,6 +21604,158 @@ theorem theorem2_case3_execution_order_exists_strict_partial_order_of_partition_
     ∃ order : StrictPartialOrder Nat,
       order.rel = TransGen (Patterns.executionOrder net partition) :=
   Patterns.executionOrder_exists_strictPartialOrder_of_partitionContraction_acyclic
+    net partition hacyclic
+
+def theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition)) :
+    StrictPartialOrder Nat :=
+  Patterns.executionOrderStrictPartialOrder_of_partitionContractionBoundaryNet_noReturn
+    net partition hnoReturn
+
+theorem theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_boundary_no_return_rel
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition)) :
+    (theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_boundary_no_return
+      hnoReturn).rel =
+      TransGen (Patterns.executionOrder net partition) :=
+  rfl
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_of_partition_contraction_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionBoundaryNet net partition)) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_of_partitionContractionBoundaryNet_noReturn
+    net partition hnoReturn
+
+def theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionBoundaryNet net partition)) :
+    StrictPartialOrder Nat :=
+  Patterns.executionOrderStrictPartialOrder_of_partitionContractionBoundaryNet_acyclic
+    net partition hacyclic
+
+theorem theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_boundary_acyclic_rel
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionBoundaryNet net partition)) :
+    (theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_boundary_acyclic
+      hacyclic).rel =
+      TransGen (Patterns.executionOrder net partition) :=
+  rfl
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_of_partition_contraction_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionBoundaryNet net partition)) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_of_partitionContractionBoundaryNet_acyclic
+    net partition hacyclic
+
+def theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_active_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition)) :
+    StrictPartialOrder Nat :=
+  Patterns.executionOrderStrictPartialOrder_of_partitionContractionActiveBoundaryNet_noReturn
+    net partition hnoReturn
+
+theorem theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_active_boundary_no_return_rel
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition)) :
+    (theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_active_boundary_no_return
+      hnoReturn).rel =
+      TransGen (Patterns.executionOrder net partition) :=
+  rfl
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_of_partition_contraction_active_boundary_no_return
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hnoReturn :
+      PetriNet.transitionFlowNoReturn
+        (Patterns.partitionContractionActiveBoundaryNet net partition)) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_of_partitionContractionActiveBoundaryNet_noReturn
+    net partition hnoReturn
+
+def theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_active_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition)) :
+    StrictPartialOrder Nat :=
+  Patterns.executionOrderStrictPartialOrder_of_partitionContractionActiveBoundaryNet_acyclic
+    net partition hacyclic
+
+theorem theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_active_boundary_acyclic_rel
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition)) :
+    (theorem2_case3_execution_order_strict_partial_order_of_partition_contraction_active_boundary_acyclic
+      hacyclic).rel =
+      TransGen (Patterns.executionOrder net partition) :=
+  rfl
+
+theorem theorem2_case3_execution_order_exists_strict_partial_order_of_partition_contraction_active_boundary_acyclic
+    {Place : Type u}
+    {Trans : Type v}
+    {net : WorkflowNet Place Trans}
+    {partition : Partition Trans}
+    (hacyclic :
+      PetriNet.transitionFlowAcyclic
+        (Patterns.partitionContractionActiveBoundaryNet net partition)) :
+    ∃ order : StrictPartialOrder Nat,
+      order.rel = TransGen (Patterns.executionOrder net partition) :=
+  Patterns.executionOrder_exists_strictPartialOrder_of_partitionContractionActiveBoundaryNet_acyclic
     net partition hacyclic
 
 theorem theorem2_case3_partial_order_pattern_of_no_return

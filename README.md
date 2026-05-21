@@ -412,8 +412,10 @@ The current proof spine is:
   contracted marked-graph equivalence, no-return, acyclicity wrappers, direct
   reusable execution-order no-return and partition-contraction no-return/acyclic
   strict-order wrappers with relation equalities, existential strict-order
-  witnesses, and reverse/`↔` bridges, direct partition-contraction no-return
-  partial-order pattern wrappers, generic partial-order-pattern
+  witnesses, and reverse/`↔` bridges, including direct boundary and active-index
+  contraction no-return/acyclic strict-order equivalences, constructors,
+  relation equalities, and existential witnesses, direct
+  partition-contraction no-return partial-order pattern wrappers, generic partial-order-pattern
   strict-order relation, irreflexivity, transitivity, no-return, and contraction
   acyclicity accessors, direct Definition 13 field accessors and exact bundled
   generic/Case 3 `↔` forms through irreflexive execution order,
