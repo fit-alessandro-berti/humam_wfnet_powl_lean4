@@ -376,7 +376,11 @@ The current proof spine is:
   POWL models, bundled into a
   `ConcretePowlWitness` case/certificate eliminator
   with reusable preservation, safe+existence, and existential
-  visible-activity-witness consequences, and a
+  visible-activity-witness consequences, plus matching concrete witness
+  builders for the raw `SemiBlockCompletenessCase` and
+  `SemiBlockCompletenessCertificate` layers with direct concrete
+  safe-and-soundness, language-preservation/equality, existential-model, and
+  visible-activity-witness wrappers, and a
   `SemiBlockCompletenessCase`/`SemiBlockCompletenessCertificate` layer packages
   that case split into one algorithm-certificate object; the raw case evidence
   and bundled algorithm certificates both expose language preservation/equality,
